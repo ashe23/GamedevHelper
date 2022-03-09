@@ -1,15 +1,15 @@
-// Copyright Ashot Barkhudaryan. All Rights Reserved.
+﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "GamedevHelper.h"
+#include "GamedevTester.h"
 
-#define LOCTEXT_NAMESPACE "FGamedevHelperModule"
+#define LOCTEXT_NAMESPACE "FGamedevTesterModule"
 
-void FGamedevHelperModule::StartupModule()
+void FGamedevTesterModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 }
 
-void FGamedevHelperModule::ShutdownModule()
+void FGamedevTesterModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
@@ -17,4 +17,4 @@ void FGamedevHelperModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FGamedevHelperModule, GamedevHelper)
+IMPLEMENT_MODULE(FGamedevTesterModule, GamedevTester)

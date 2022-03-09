@@ -1,24 +1,29 @@
 {
-	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "1.0.0",
-	"FriendlyName": "GamedevHelper",
-	"Description": "Collection of reusable functions and tools used in game development for unreal engine.",
-	"Category": "Developer",
-	"CreatedBy": "Ashot Barkhudaryan",
-	"CreatedByURL": "https://github.com/ashe23",
-	"DocsURL": "",
-	"MarketplaceURL": "",
-	"SupportURL": "",
-	"CanContainContent": true,
-	"IsBetaVersion": true,
-	"IsExperimentalVersion": false,
-	"Installed": false,
-	"Modules": [
-		{
-			"Name": "GamedevHelper",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		}
-	]
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0.0",
+  "FriendlyName": "GamedevHelper",
+  "Description": "Collection of reusable functions and tools used in game development for unreal engine.",
+  "Category": "Developer",
+  "CreatedBy": "Ashot Barkhudaryan",
+  "CreatedByURL": "https://github.com/ashe23",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": true,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "GamedevUtility",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "GamedevTester",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
 }

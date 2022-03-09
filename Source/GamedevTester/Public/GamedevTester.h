@@ -1,11 +1,11 @@
-// Copyright Ashot Barkhudaryan. All Rights Reserved.
+﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleInterface.h"
 
-class FGamedevHelperModule : public IModuleInterface
+class FGamedevTesterModule : public IModuleInterface
 {
 public:
 
