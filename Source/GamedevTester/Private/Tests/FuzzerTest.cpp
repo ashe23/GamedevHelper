@@ -45,9 +45,11 @@ bool FFuzzerGetRandomStringTest::RunTest(const FString& Parameters)
 	FTestRunner TestRunner;
 	const FFuzzer Fuzzer;
 
-	// 0 len string or empty dictionary must return empty string
-	const auto EmptyString = Fuzzer.GetRandomString(0, TEXT(""));
-	TestRunner.ExpectTrue(EmptyString.IsEmpty(), EmptyString, TEXT("EmptyString"));
+	// <0 len string or empty dictionary must return empty string
+	const auto EmptyStringZero = Fuzzer.GetRandomString(0, TEXT(""));
+	const auto EmptyStringNegative = Fuzzer.GetRandomString(-1, TEXT(""));
+	TestRunner.ExpectTrue(EmptyStringZero.IsEmpty(), EmptyStringZero, TEXT("EmptyStringZero"));
+	TestRunner.ExpectTrue(EmptyStringNegative.IsEmpty(), EmptyStringNegative, TEXT("EmptyStringNegative"));
 
 	// random length string must be correct length
 	for (int32 i = 1; i <= 100; ++i)

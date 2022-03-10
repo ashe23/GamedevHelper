@@ -43,6 +43,8 @@ todo
 - UGamedevTesterTestRunner
     - AddTestCase
     - RegisterFuzzer (optional)
+    - ExpectTrue
+    - ExpectFalse
     - GetResult
 - UGamedevTesterFuzzer
     - GetRandomString(len, dictionary)
