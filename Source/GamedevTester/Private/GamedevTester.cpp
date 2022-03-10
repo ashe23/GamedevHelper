@@ -2,6 +2,8 @@
 
 #include "GamedevTester.h"
 
+DEFINE_LOG_CATEGORY(LogGamedevTester);
+
 #define LOCTEXT_NAMESPACE "FGamedevTesterModule"
 
 void FGamedevTesterModule::StartupModule()
