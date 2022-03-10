@@ -12,8 +12,16 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FFuzzerGetRandomStringFormatTest,
+	"Plugins.GamedevHelper.Tester.Fuzzer.GetRandomStringFormat",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
 bool ContainsOnly(const FString& Input, const FString& Dict, const ESearchCase::Type SearchCase)
 {
+	if (Input.IsEmpty() || Dict.IsEmpty()) return false;
+
 	for (int32 i = 0; i < Input.Len(); ++i)
 	{
 		const auto SingleChar = UKismetStringLibrary::GetSubstring(Input, i, 1);
@@ -28,6 +36,8 @@ bool ContainsOnly(const FString& Input, const FString& Dict, const ESearchCase::
 
 bool Contains(const FString& Input, const FString& Dict, const ESearchCase::Type SearchCase)
 {
+	if (Input.IsEmpty() || Dict.IsEmpty()) return false;
+
 	for (int32 i = 0; i < Input.Len(); ++i)
 	{
 		const auto SingleChar = UKismetStringLibrary::GetSubstring(Input, i, 1);
@@ -68,6 +78,78 @@ bool FFuzzerGetRandomStringTest::RunTest(const FString& Parameters)
 	TestRunner.ExpectTrue(ContainsOnly(DigitString, Fuzzer::Digits, ESearchCase::CaseSensitive), DigitString, TEXT("DictionaryDigits"));
 	TestRunner.ExpectTrue(ContainsOnly(SpecialString, Fuzzer::Specials, ESearchCase::CaseSensitive), SpecialString, TEXT("DictionarySpecials"));
 	TestRunner.ExpectFalse(ContainsOnly(MixedString, TEXT(".[]"), ESearchCase::CaseSensitive), MixedString, TEXT("DictionaryInvalid"));
+
+	return TestRunner.GetResult();
+}
+
+bool FFuzzerGetRandomStringFormatTest::RunTest(const FString& Parameters)
+{
+	FTestRunner TestRunner;
+	const FFuzzer Fuzzer;
+	constexpr int32 DefaultStringLen = 10;
+
+	// <0 len string or string format none must return empty string
+	const auto EmptyStringZero = Fuzzer.GetRandomString(0, Fuzzer::EStringFormat::None);
+	const auto EmptyStringNegative = Fuzzer.GetRandomString(-1, Fuzzer::EStringFormat::None);
+	TestRunner.ExpectTrue(EmptyStringZero.IsEmpty(), EmptyStringZero, TEXT("EmptyStringZero"));
+	TestRunner.ExpectTrue(EmptyStringNegative.IsEmpty(), EmptyStringNegative, TEXT("EmptyStringNegative"));
+
+	// string must contain only lower case letters
+	const auto LowerCaseString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::Lower);
+	TestRunner.ExpectTrue(ContainsOnly(LowerCaseString, Fuzzer::Alpha, ESearchCase::CaseSensitive), LowerCaseString, TEXT("LowerCase"));
+
+	// string must contain only upper case letters
+	const auto UpperCaseString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::Upper);
+	TestRunner.ExpectTrue(ContainsOnly(UpperCaseString, Fuzzer::Alpha.ToUpper(), ESearchCase::CaseSensitive), UpperCaseString, TEXT("UpperCase"));
+
+	// string must contain only alphabet letters in any case
+	const auto MixedCaseString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::Mixed);
+	TestRunner.ExpectTrue(ContainsOnly(MixedCaseString, Fuzzer::Alpha + Fuzzer::Alpha.ToUpper(), ESearchCase::IgnoreCase), MixedCaseString, TEXT("MixedCase"));
+
+	// string must contain only digits
+	const auto DigitString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::Digit);
+	TestRunner.ExpectTrue(ContainsOnly(DigitString, Fuzzer::Digits, ESearchCase::IgnoreCase), DigitString, TEXT("Digits: Must contain only digits"));
+
+	// string must contain only special chars
+	const auto SpecialsString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::Special);
+	TestRunner.ExpectTrue(ContainsOnly(SpecialsString, Fuzzer::Specials, ESearchCase::IgnoreCase), SpecialsString, TEXT("Specials: Must contain only special chars"));
+
+	// string first letter must be upper case others lower case
+	const auto StartUpperString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::StartUpper);
+	const auto StartUpperFirstLetter = UKismetStringLibrary::GetSubstring(StartUpperString, 0, 1);
+	const auto StartUpperFirstLetterRemoved = StartUpperString.RightChop(1);
+	TestRunner.ExpectTrue(ContainsOnly(StartUpperFirstLetter, Fuzzer::Alpha.ToUpper(), ESearchCase::CaseSensitive), StartUpperFirstLetter, TEXT("StartUpper: Must be upper case"));
+	TestRunner.ExpectTrue(ContainsOnly(StartUpperFirstLetterRemoved, Fuzzer::Alpha, ESearchCase::CaseSensitive), StartUpperFirstLetterRemoved, TEXT("StartUpper: Must be lower case"));
+
+	// string last letter must be upper case other lower case
+	const auto EndUpperString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::EndUpper);
+	const auto EndUpperStringLastLetter = EndUpperString.RightChop(EndUpperString.Len() - 1);
+	const auto EndUpperLastLetterRemoved = EndUpperString.LeftChop(1);
+	TestRunner.ExpectTrue(ContainsOnly(EndUpperStringLastLetter, Fuzzer::Alpha.ToUpper(), ESearchCase::CaseSensitive), EndUpperStringLastLetter, TEXT("EndUpper: Must be upper case"));
+	TestRunner.ExpectTrue(ContainsOnly(EndUpperLastLetterRemoved, Fuzzer::Alpha, ESearchCase::CaseSensitive), EndUpperLastLetterRemoved, TEXT("EndUpper: Must be lower case"));
+
+	// string first letter must be lower case other upper case
+	const auto StartLowerString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::StartLower);
+	const auto StartLowerFirstLetter = UKismetStringLibrary::GetSubstring(StartLowerString, 0, 1);
+	const auto StartLowerFirstLetterRemoved = StartLowerString.RightChop(1);
+	TestRunner.ExpectTrue(ContainsOnly(StartLowerFirstLetter, Fuzzer::Alpha, ESearchCase::CaseSensitive), StartLowerFirstLetter, TEXT("StartLower: Must be lower case"));
+	TestRunner.ExpectTrue(ContainsOnly(StartLowerFirstLetterRemoved, Fuzzer::Alpha.ToUpper(), ESearchCase::CaseSensitive), StartLowerFirstLetterRemoved, TEXT("StartLower: Must be upper case"));
+
+	// string last letter must be lower case other upper case
+	const auto EndLowerString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::EndLower);
+	const auto EndLowerLastLetter = EndLowerString.RightChop(EndLowerString.Len() - 1);
+	const auto EndLowerLastLetterRemoved = EndLowerString.LeftChop(1);
+	TestRunner.ExpectTrue(ContainsOnly(EndLowerLastLetter, Fuzzer::Alpha, ESearchCase::CaseSensitive), EndLowerLastLetter, TEXT("EndLower: Must be lower case"));
+	TestRunner.ExpectTrue(ContainsOnly(EndLowerLastLetterRemoved, Fuzzer::Alpha.ToUpper(), ESearchCase::CaseSensitive), EndLowerLastLetterRemoved, TEXT("EndLower: Must be upper case"));
+
+	// string must be in PascalCase
+	// must start with Upper case
+	// must end with Lower case
+	// must contain only alpha + digits
+	const auto PascalCaseString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::PascalCase);
+	const auto PascalCaseFirstLetter = UKismetStringLibrary::GetSubstring(PascalCaseString, 0, 1);
+	const auto PascalCaseLastLetter = PascalCaseString.LeftChop(1);
+
 
 	return TestRunner.GetResult();
 }

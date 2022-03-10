@@ -31,3 +31,60 @@ FString FFuzzer::GetRandomString(const int32 Len, const FString& Dictionary) con
 
 	return FinalString;
 }
+
+FString FFuzzer::GetRandomString(const int32 Len, const Fuzzer::EStringFormat StringFormat) const
+{
+	using namespace Fuzzer;
+	if (Len <= 0 || StringFormat == EStringFormat::None)
+	{
+		return FString{};
+	}
+
+	if (StringFormat == EStringFormat::Lower)
+	{
+		return GetRandomString(Len, Alpha);
+	}
+
+	if (StringFormat == EStringFormat::Upper)
+	{
+		return GetRandomString(Len, Alpha.ToUpper());
+	}
+
+	if (StringFormat == EStringFormat::Mixed)
+	{
+		return GetRandomString(Len, Alpha + Alpha.ToUpper());
+	}
+
+	if (StringFormat == EStringFormat::Digit)
+	{
+		return GetRandomString(Len, Digits);
+	}
+
+	if (StringFormat == EStringFormat::Special)
+	{
+		return GetRandomString(Len, Specials);
+	}
+
+	if (StringFormat == EStringFormat::StartUpper)
+	{
+		const FString FirstLetter = GetRandomString(1, Alpha.ToUpper());
+		const FString RestOfStr = GetRandomString(Len - 1, Alpha);
+		return FirstLetter + RestOfStr;
+	}
+
+	if (StringFormat == EStringFormat::EndUpper)
+	{
+		const FString LastLetter = GetRandomString(1, Alpha.ToUpper());
+		const FString RestOfStr = GetRandomString(Len - 1, Alpha);
+		return RestOfStr + LastLetter;
+	}
+
+	// if (StringFormat == EStringFormat::StartUpper)
+	// {
+	// 	const FString FirstLetter = GetRandomString(1, Alpha.ToUpper());
+	// 	const FString RestOfStr = GetRandomString(Len - 1, Alpha);
+	// 	return FirstLetter + RestOfStr;
+	// }
+
+	return FString{};
+}

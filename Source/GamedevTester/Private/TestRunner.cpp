@@ -39,10 +39,8 @@ bool FTestRunner::GetResult()
 		{
 			UE_LOG(LogGamedevTester, Error, TEXT("TestCase [%s][%d] - failed"), *Tests[TestId].Name, TestId);
 			UE_LOG(LogGamedevTester, Error, TEXT("Expected %s Got %s"), Tests[TestId].bExpected ? TEXT("True") : TEXT("False"), Tests[TestId].bActual ? TEXT("True") : TEXT("False"));
-			if (!Tests[TestId].Input.IsEmpty())
-			{
-				UE_LOG(LogGamedevTester, Error, TEXT("Input    : %s"), Tests[TestId].Input.IsEmpty() ? TEXT("Empty String") : *Tests[TestId].Input);
-			}
+			UE_LOG(LogGamedevTester, Error, TEXT("Input    : %s"), Tests[TestId].Input.IsEmpty() ? TEXT("Empty String") : *Tests[TestId].Input);
+			
 			if (!Tests[TestId].Expected.IsEmpty())
 			{
 				UE_LOG(LogGamedevTester, Error, TEXT("Expected : %s"), Tests[TestId].Expected.IsEmpty() ? TEXT("Empty String") : *Tests[TestId].Expected);

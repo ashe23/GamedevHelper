@@ -60,6 +60,13 @@ struct FFuzzer
 	 * @return FString
 	 */
 	FString GetRandomString(const int32 Len, const FString& Dictionary) const;
+	/**
+	 * @brief Returns randomly generated string with given string and string format 
+	 * @param Len int32 
+	 * @param StringFormat EFuzzerStringFormat
+	 * @return FString
+	 */
+	FString GetRandomString(const int32 Len, const Fuzzer::EStringFormat StringFormat) const;
 private:
 	int32 Seed;
 	FRandomStream RandomStream;
