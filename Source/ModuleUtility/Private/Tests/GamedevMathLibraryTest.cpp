@@ -60,9 +60,15 @@ bool FGamedevHelperMathLibraryGetIntegerPartitionsTest::RunTest(const FString& P
 			Sum += Part;
 		}
 
-		if (Sum != i || Parts.Num() != RequiredPartsNum)
+		if (Parts.Num() != RequiredPartsNum)
 		{
 			UE_LOG(LogModuleUtility, Error, TEXT("Input[%d] Expected parts %d got %d"), i, RequiredPartsNum, Parts.Num());
+			return false;
+		}
+
+		if (Sum != i)
+		{
+			UE_LOG(LogModuleUtility, Error, TEXT("Input[%d] Expected parts sum to be %d got %d"), i, i, Sum);
 			return false;
 		}
 	

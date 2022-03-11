@@ -6,14 +6,12 @@
 void UGamedevHelperMathLibrary::GetIntegerPartitions(const int32 OriginalValue, const int32 PartsNum, TArray<int32>& Parts)
 {
 	// https://en.wikipedia.org/wiki/Partition_(number_theory)
-	
 	if (PartsNum <= 1 || OriginalValue <= 1)
 	{
 		Parts.Add(OriginalValue);
 		return;
 	}
-	
-	
+
 	Parts.Reserve(PartsNum);
 
 	int32 Sum = OriginalValue;
