@@ -18,3 +18,4 @@ void FGamedevUtilityModule::ShutdownModule()
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(FGamedevUtilityModule, GamedevUtility)
+DEFINE_LOG_CATEGORY(LogGamedevUtility);
