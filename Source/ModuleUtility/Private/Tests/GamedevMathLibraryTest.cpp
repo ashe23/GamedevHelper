@@ -2,8 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
-#include "GamedevUtility/Classes/GamedevMathLibrary.h"
-#include "GamedevUtility.h"
+#include "GamedevMathLibrary.h"
+#include "ModuleUtility.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FGamedevHelperMathLibraryGetIntegerPartitionsTest,
@@ -19,7 +19,7 @@ bool FGamedevHelperMathLibraryGetIntegerPartitionsTest::RunTest(const FString& P
 
 	if (Parts.Num() != 1)
 	{
-		UE_LOG(LogGamedevUtility, Error, TEXT("[OriginalValue=0]Expected Parts num 1 got %d"), Parts.Num());
+		UE_LOG(LogModuleUtility, Error, TEXT("[OriginalValue=0]Expected Parts num 1 got %d"), Parts.Num());
 		return false;
 	}
 
@@ -27,7 +27,7 @@ bool FGamedevHelperMathLibraryGetIntegerPartitionsTest::RunTest(const FString& P
 	UGamedevHelperMathLibrary::GetIntegerPartitions(1, 0, Parts);
 	if (Parts.Num() != 1)
 	{
-		UE_LOG(LogGamedevUtility, Error, TEXT("[OriginalValue=1]Expected Parts num 1 got %d"), Parts.Num());
+		UE_LOG(LogModuleUtility, Error, TEXT("[OriginalValue=1]Expected Parts num 1 got %d"), Parts.Num());
 		return false;
 	}
 
@@ -35,7 +35,7 @@ bool FGamedevHelperMathLibraryGetIntegerPartitionsTest::RunTest(const FString& P
 	UGamedevHelperMathLibrary::GetIntegerPartitions(10, 0, Parts);
 	if (Parts.Num() != 1)
 	{
-		UE_LOG(LogGamedevUtility, Error, TEXT("[PartsNum=0]Expected Parts num 1 got %d"), Parts.Num());
+		UE_LOG(LogModuleUtility, Error, TEXT("[PartsNum=0]Expected Parts num 1 got %d"), Parts.Num());
 		return false;
 	}
 
@@ -43,7 +43,7 @@ bool FGamedevHelperMathLibraryGetIntegerPartitionsTest::RunTest(const FString& P
 	UGamedevHelperMathLibrary::GetIntegerPartitions(10, 1, Parts);
 	if (Parts.Num() != 1)
 	{
-		UE_LOG(LogGamedevUtility, Error, TEXT("[PartsNum=1]Expected Parts num 1 got %d"), Parts.Num());
+		UE_LOG(LogModuleUtility, Error, TEXT("[PartsNum=1]Expected Parts num 1 got %d"), Parts.Num());
 		return false;
 	}
 
@@ -62,7 +62,7 @@ bool FGamedevHelperMathLibraryGetIntegerPartitionsTest::RunTest(const FString& P
 
 		if (Sum != i || Parts.Num() != RequiredPartsNum)
 		{
-			UE_LOG(LogGamedevUtility, Error, TEXT("Input[%d] Expected parts %d got %d"), i, RequiredPartsNum, Parts.Num());
+			UE_LOG(LogModuleUtility, Error, TEXT("Input[%d] Expected parts %d got %d"), i, RequiredPartsNum, Parts.Num());
 			return false;
 		}
 	

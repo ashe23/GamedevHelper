@@ -144,12 +144,17 @@ bool FFuzzerGetRandomStringFormatTest::RunTest(const FString& Parameters)
 
 	// string must be in PascalCase
 	// must start with Upper case
-	// must end with Lower case
 	// must contain only alpha + digits
+	// must not contain Upper case letter before any digit or digit sequence
 	const auto PascalCaseString = Fuzzer.GetRandomString(DefaultStringLen, Fuzzer::EStringFormat::PascalCase);
 	const auto PascalCaseFirstLetter = UKismetStringLibrary::GetSubstring(PascalCaseString, 0, 1);
-	const auto PascalCaseLastLetter = PascalCaseString.LeftChop(1);
+	TestRunner.ExpectTrue(ContainsOnly(PascalCaseFirstLetter, Fuzzer::Alpha.ToUpper(), ESearchCase::CaseSensitive), PascalCaseFirstLetter, TEXT("PascalCase: First letter must be upper case"));
+	TestRunner.ExpectTrue(ContainsOnly(PascalCaseString, Fuzzer::Alpha + Fuzzer::Alpha.ToUpper() + Fuzzer::Digits, ESearchCase::CaseSensitive), PascalCaseString,TEXT("PascalCase: Must contain only alpha and digits"));
 
+	// string must in Pascal_Snake_Case
+	// must start with Upper case
+	// must contain only alpha + digits + underscore
+	// underscore must be before every Upper Case letter and any digit or digit sequence
 
 	return TestRunner.GetResult();
 }

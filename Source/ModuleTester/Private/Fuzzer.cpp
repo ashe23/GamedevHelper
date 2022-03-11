@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "Fuzzer.h"
+// #include "GamedevUtility/Classes/GamedevMathLibrary.h"
 
 FFuzzer::FFuzzer(const int32 Seed)
 {
@@ -79,12 +80,35 @@ FString FFuzzer::GetRandomString(const int32 Len, const Fuzzer::EStringFormat St
 		return RestOfStr + LastLetter;
 	}
 
-	// if (StringFormat == EStringFormat::StartUpper)
-	// {
-	// 	const FString FirstLetter = GetRandomString(1, Alpha.ToUpper());
-	// 	const FString RestOfStr = GetRandomString(Len - 1, Alpha);
-	// 	return FirstLetter + RestOfStr;
-	// }
+	if (StringFormat == EStringFormat::StartLower)
+	{
+		const FString FirstLetter = GetRandomString(1, Alpha);
+		const FString RestOfStr = GetRandomString(Len - 1, Alpha.ToUpper());
+		return FirstLetter + RestOfStr;
+	}
+
+	if (StringFormat == EStringFormat::EndLower)
+	{
+		const FString LastLetter = GetRandomString(1, Alpha);
+		const FString RestOfStr = GetRandomString(Len - 1, Alpha.ToUpper());
+		return RestOfStr + LastLetter;
+	}
+
+	if (StringFormat == EStringFormat::PascalCase)
+	{
+		TArray<int32> Parts;
+		// UGamedevHelperMathLibrary::GetIntegerPartitions(Len, RandomStream.RandRange(2, 8), Parts);
+		FString PascalCaseString;
+		for (const auto& Part : Parts)
+		{
+			PascalCaseString += GetRandomString(Part, EStringFormat::StartUpper);
+		}
+		return PascalCaseString;
+	}
+
+	if (StringFormat == EStringFormat::PascalSnakeCase)
+	{
+	}
 
 	return FString{};
 }

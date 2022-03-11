@@ -16,12 +16,12 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "GamedevUtility",
+      "Name": "ModuleTester",
       "Type": "Runtime",
       "LoadingPhase": "Default"
     },
     {
-      "Name": "GamedevTester",
+      "Name": "ModuleUtility",
       "Type": "Runtime",
       "LoadingPhase": "Default"
     }

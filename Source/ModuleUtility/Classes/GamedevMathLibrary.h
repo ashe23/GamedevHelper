@@ -7,7 +7,7 @@
 #include "GamedevMathLibrary.generated.h"
 
 UCLASS()
-class UGamedevHelperMathLibrary : public UBlueprintFunctionLibrary
+class MODULEUTILITY_API UGamedevHelperMathLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:

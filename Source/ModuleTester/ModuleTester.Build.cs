@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class GamedevTester : ModuleRules
+public class ModuleTester : ModuleRules
 {
-	public GamedevTester(ReadOnlyTargetRules Target) : base(Target)
+	public ModuleTester(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -28,6 +28,7 @@ public class GamedevTester : ModuleRules
 			new string[]
 			{
 				"Core",
+				"ModuleUtility"
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
