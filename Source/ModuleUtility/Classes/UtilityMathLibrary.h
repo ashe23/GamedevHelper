@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "GamedevMathLibrary.generated.h"
+#include "UtilityMathLibrary.generated.h"
 
 UCLASS()
 class MODULEUTILITY_API UGamedevHelperMathLibrary : public UBlueprintFunctionLibrary

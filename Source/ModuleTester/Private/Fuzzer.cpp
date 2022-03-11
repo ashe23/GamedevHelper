@@ -1,7 +1,8 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "Fuzzer.h"
-// #include "GamedevUtility/Classes/GamedevMathLibrary.h"
+
+#include "UtilityMathLibrary.h"
 
 FFuzzer::FFuzzer(const int32 Seed)
 {
@@ -97,7 +98,8 @@ FString FFuzzer::GetRandomString(const int32 Len, const Fuzzer::EStringFormat St
 	if (StringFormat == EStringFormat::PascalCase)
 	{
 		TArray<int32> Parts;
-		// UGamedevHelperMathLibrary::GetIntegerPartitions(Len, RandomStream.RandRange(2, 8), Parts);
+		UGamedevHelperMathLibrary::GetIntegerPartitions(Len, RandomStream.RandRange(2,8), Parts);
+		
 		FString PascalCaseString;
 		for (const auto& Part : Parts)
 		{

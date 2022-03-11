@@ -1,6 +1,6 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "GamedevMathLibrary.h"
+#include "UtilityMathLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UGamedevHelperMathLibrary::GetIntegerPartitions(const int32 OriginalValue, const int32 PartsNum, TArray<int32>& Parts)

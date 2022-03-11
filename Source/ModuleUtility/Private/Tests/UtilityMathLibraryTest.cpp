@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
-#include "GamedevMathLibrary.h"
+#include "UtilityMathLibrary.h"
 #include "ModuleUtility.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
