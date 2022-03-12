@@ -29,5 +29,23 @@ public:
 	 * @param OriginalString FString
 	 * @return FString
 	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static FString GetLastLetter(const FString& OriginalString);
+
+
+	/**
+	 * @brief Removes first letter of given string
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
+	static FString RemoveFirstLetter(const FString& OriginalString);
+
+	/**
+	 * @brief Removes last letter of given string
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
+	static FString RemoveLastLetter(const FString& OriginalString);
 };

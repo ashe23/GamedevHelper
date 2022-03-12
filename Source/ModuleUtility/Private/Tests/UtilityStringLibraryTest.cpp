@@ -17,10 +17,23 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryRemoveFirstLetterTest,
+	"Plugins.GamedevHelper.Utility.String.RemoveFirstLetter",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryRemoveLastLetterTest,
+	"Plugins.GamedevHelper.Utility.String.RemoveLastLetter",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+static const FString EmptyString = TEXT("");
+
 bool FStringLibraryGetFirstLetterTest::RunTest(const FString& Parameters)
 {
 	// if string is empty , must return original string
-	const FString EmptyString = TEXT("");
 	const FString Actual = UGamedevHelperStringLibrary::GetFirstLetter(EmptyString);
 	if (Actual.IsEmpty() == false)
 	{
@@ -48,7 +61,6 @@ bool FStringLibraryGetFirstLetterTest::RunTest(const FString& Parameters)
 
 bool FStringLibraryGetLastLetterTest::RunTest(const FString& Parameters)
 {
-	const FString EmptyString = TEXT("");
 	const FString Actual = UGamedevHelperStringLibrary::GetLastLetter(EmptyString);
 
 	if (Actual.IsEmpty() == false)
@@ -71,6 +83,46 @@ bool FStringLibraryGetLastLetterTest::RunTest(const FString& Parameters)
 		UE_LOG(LogModuleUtility, Error, TEXT("Expected last letter to be 'f', got %s"), *LastLetter);
 		return false;
 	}
-	
+
+	return true;
+}
+
+bool FStringLibraryRemoveFirstLetterTest::RunTest(const FString& Parameters)
+{
+	const FString Actual = UGamedevHelperStringLibrary::RemoveFirstLetter(EmptyString);
+	if (Actual.IsEmpty() == false)
+	{
+		UE_LOG(LogModuleUtility, Error, TEXT("Expected empty string, got %s"), *Actual);
+		return false;
+	}
+
+	const FString Input = TEXT("abcdef");
+	const FString Expected = TEXT("bcdef");
+	if (UGamedevHelperStringLibrary::RemoveFirstLetter(Input).Equals(Expected, ESearchCase::CaseSensitive) == false)
+	{
+		UE_LOG(LogModuleUtility, Error, TEXT("Expected %s, got %s"), *Expected, *UGamedevHelperStringLibrary::RemoveFirstLetter(Input));
+		return false;
+	}
+
+	return true;
+}
+
+bool FStringLibraryRemoveLastLetterTest::RunTest(const FString& Parameters)
+{
+	const FString Actual = UGamedevHelperStringLibrary::RemoveLastLetter(EmptyString);
+	if (Actual.IsEmpty() == false)
+	{
+		UE_LOG(LogModuleUtility, Error, TEXT("Expected empty string, got %s"), *Actual);
+		return false;
+	}
+
+	const FString Input = TEXT("abcdef");
+	const FString Expected = TEXT("abcde");
+	if (UGamedevHelperStringLibrary::RemoveLastLetter(Input).Equals(Expected, ESearchCase::CaseSensitive) == false)
+	{
+		UE_LOG(LogModuleUtility, Error, TEXT("Expected %s, got %s"), *Expected, *UGamedevHelperStringLibrary::RemoveLastLetter(Input));
+		return false;
+	}
+
 	return true;
 }

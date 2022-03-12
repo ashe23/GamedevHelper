@@ -23,3 +23,13 @@ FString UGamedevHelperStringLibrary::GetLastLetter(const FString& OriginalString
 
 	return UKismetStringLibrary::GetSubstring(OriginalString, OriginalString.Len() - 1, 1);
 }
+
+FString UGamedevHelperStringLibrary::RemoveFirstLetter(const FString& OriginalString)
+{
+	return OriginalString.RightChop(1);
+}
+
+FString UGamedevHelperStringLibrary::RemoveLastLetter(const FString& OriginalString)
+{
+	return OriginalString.LeftChop(1);
+}
