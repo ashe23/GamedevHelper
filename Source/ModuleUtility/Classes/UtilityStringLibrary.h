@@ -35,6 +35,9 @@ public:
 
 	/**
 	 * @brief Removes first letter of given string
+	 * - "abc" => "bc"
+	 * - "a" = > ""
+	 * - "" => ""
 	 * @param OriginalString FString
 	 * @return FString
 	 */
@@ -43,6 +46,9 @@ public:
 
 	/**
 	 * @brief Removes last letter of given string
+	 * - "abc" => "ab"
+	 * - "a" => ""
+	 * - "" => ""
 	 * @param OriginalString FString
 	 * @return FString
 	 */
