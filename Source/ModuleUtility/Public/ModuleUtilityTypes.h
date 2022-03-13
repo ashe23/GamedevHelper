@@ -15,3 +15,10 @@ enum class EGDHBlueprintType : uint8
 	MacroLibrary,
 	FunctionLibrary
 };
+
+UENUM(BlueprintType)
+enum class EGDHVertexAnimToolTexture : uint8
+{
+	UV,
+	Normal
+};

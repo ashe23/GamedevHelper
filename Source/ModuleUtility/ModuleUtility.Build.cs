@@ -45,6 +45,8 @@ public class ModuleUtility : ModuleRules
 				"AssetTools",
 				"ContentBrowser",
 				"UnrealEd",
+				"RenderCore",
+				"EditorScriptingUtilities",
 				// ... add private dependencies that you statically link with here ...	
 			}
 		);

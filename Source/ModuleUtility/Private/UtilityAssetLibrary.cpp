@@ -1,12 +1,15 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UtilityAssetLibrary.h"
-// #include "ModuleUtility.h"
 // Engine Headers
 #include "FileHelpers.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Engine/Texture2D.h"
+#include "RenderingThread.h"
+#include "Misc/FeedbackContext.h"
+#include "EditorAssetLibrary.h"
 // #include "ObjectTools.h"
 
 template <typename EnumType>
@@ -121,4 +124,104 @@ EGDHBlueprintType UGamedevHelperAssetLibrary::GetBlueprintType(const FAssetData&
 bool UGamedevHelperAssetLibrary::IsBlueprint(const FAssetData& AssetData)
 {
 	return GetBlueprintType(AssetData) != EGDHBlueprintType::None;
+}
+
+void UGamedevHelperAssetLibrary::VertexAnimToolConfigureTexture(const TArray<FAssetData>& Assets, const EGDHVertexAnimToolTexture TextureType)
+{
+	if (!GWarn) return;
+
+	GWarn->BeginSlowTask(FText::FromString(TEXT("[GDH_VertexAnimTool] Configuring textures")), true);
+
+	for (const auto& Asset : Assets)
+	{
+		const auto Texture = Cast<UTexture2D>(Asset.GetAsset());
+		if (!Texture) continue;
+
+		Texture->SRGB = false;
+		Texture->CompressionSettings = TextureType == EGDHVertexAnimToolTexture::UV ? TC_HDR : TC_VectorDisplacementmap;
+		Texture->Filter = TF_Nearest;
+		Texture->NeverStream = true;
+		Texture->MipGenSettings = TMGS_NoMipmaps;
+		Texture->LODGroup = TEXTUREGROUP_UI;
+		Texture->PostEditChange();
+
+		if (Texture->MarkPackageDirty())
+		{
+			UEditorAssetLibrary::SaveAsset(Asset.ObjectPath.ToString());
+		}
+	}
+
+	GWarn->EndSlowTask();
+}
+
+void UGamedevHelperAssetLibrary::VertexAnimToolConfigureStaticMesh(const TArray<FAssetData>& Assets)
+{
+	if (!GWarn) return;
+
+	DisableCollision(Assets);
+
+	GWarn->BeginSlowTask(FText::FromString(TEXT("[GDH_VertexAnimTool] Configuring static meshes")), true);
+	FlushRenderingCommands();
+
+	for (const auto& Asset : Assets)
+	{
+		const auto StaticMesh = Cast<UStaticMesh>(Asset.GetAsset());
+		if (!StaticMesh) continue;
+
+		StaticMesh->Modify();
+
+		for (int32 LODIndex = 0; LODIndex < StaticMesh->GetNumLODs(); ++LODIndex)
+		{
+			if (!StaticMesh->IsSourceModelValid(LODIndex)) continue;
+
+			FStaticMeshSourceModel& SourceModel = StaticMesh->GetSourceModel(LODIndex);
+			SourceModel.BuildSettings.bRemoveDegenerates = false;
+			SourceModel.BuildSettings.bUseFullPrecisionUVs = true;
+			SourceModel.BuildSettings.bGenerateLightmapUVs = false;
+			SourceModel.BuildSettings.DistanceFieldResolutionScale = 0.0f;
+		}
+
+		StaticMesh->PostEditChange();
+
+		if (StaticMesh->MarkPackageDirty())
+		{
+			UEditorAssetLibrary::SaveAsset(Asset.ObjectPath.ToString());
+		}
+	}
+
+	GWarn->EndSlowTask();
+}
+
+void UGamedevHelperAssetLibrary::DisableCollision(const TArray<FAssetData>& Assets)
+{
+	if (!GWarn) return;
+
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Disabling collision")), true);
+
+	for (const auto& Asset : Assets)
+	{
+		const auto StaticMesh = Cast<UStaticMesh>(Asset.GetAsset());
+		if (!StaticMesh) continue;
+
+		UBodySetup* BodySetup = StaticMesh->GetBodySetup();
+		if (!BodySetup) continue;
+
+		StaticMesh->Modify();
+
+		FBodyInstance BodyInstance = StaticMesh->GetBodySetup()->DefaultInstance;
+		BodyInstance.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		BodyInstance.SetCollisionProfileName(FName{"NoCollision"});
+
+		BodySetup->DefaultInstance = BodyInstance;
+		StaticMesh->SetBodySetup(BodySetup);
+
+		StaticMesh->PostEditChange();
+
+		if (StaticMesh->MarkPackageDirty())
+		{
+			UEditorAssetLibrary::SaveAsset(Asset.ObjectPath.ToString());
+		}
+	}
+
+	GWarn->EndSlowTask();
 }

@@ -41,4 +41,29 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
 	static bool IsBlueprint(const FAssetData& AssetData);
+
+	/**
+	 * @brief Configures selected texture assets for vertex animation
+	 * @param Assets TArray<FAssetData>
+	 * @param TextureType EGDHVertexAnimToolTexture
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|VertexAnimTool")
+	static void VertexAnimToolConfigureTexture(const TArray<FAssetData>& Assets, const EGDHVertexAnimToolTexture TextureType);
+
+	/**
+	 * @brief Configures selected static meshes for vertex animation
+	 * @param Assets TArray<FAssetData>
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|VertexAnimTool")
+	static void VertexAnimToolConfigureStaticMesh(const TArray<FAssetData>& Assets);
+
+	/**
+	 * @brief Disables collision on given static mesh assets
+	 * @param Assets TArray<FAssetData>
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	static void DisableCollision(const TArray<FAssetData>& Assets);
 };
