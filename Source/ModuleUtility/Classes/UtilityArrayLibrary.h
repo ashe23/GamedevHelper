@@ -4,11 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "UObject/Script.h"
-#include "UObject/ObjectMacros.h"
-#include "UObject/Object.h"
-#include "UObject/UnrealType.h"
-#include "UObject/ScriptMacros.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "UtilityArrayLibrary.generated.h"
 
