@@ -26,6 +26,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
 	static void FixupRedirectors(const FString& Path);
 
+	/**
+	 * @brief Return blueprint type
+	 * @param AssetData FAssetData
+	 * @return EGDHBlueprintType
+	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
 	static EGDHBlueprintType GetBlueprintType(const FAssetData& AssetData);
 };
