@@ -65,4 +65,13 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static FString Intersection(const FString& StringA, const FString& StringB);
+
+	/**
+	 * @brief Returns union of characters of given two strings
+	 * @param StringA FString
+	 * @param StringB FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
+	static FString Union(const FString& StringA, const FString& StringB);
 };

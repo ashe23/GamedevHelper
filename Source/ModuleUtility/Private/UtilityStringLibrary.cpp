@@ -58,3 +58,31 @@ FString UGamedevHelperStringLibrary::Intersection(const FString& StringA, const 
 
 	return Chars;
 }
+
+FString UGamedevHelperStringLibrary::Union(const FString& StringA, const FString& StringB)
+{
+	FString Chars;
+	Chars.Reserve(StringA.Len() + StringB.Len());
+
+	for (int32 i = 0; i < StringA.Len(); ++i)
+	{
+		const FString SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
+		if (!Chars.Contains(SingleChar, ESearchCase::CaseSensitive))
+		{
+			Chars.Append(SingleChar);
+		}
+	}
+
+	for (int32 i = 0; i < StringB.Len(); ++i)
+	{
+		const FString SingleChar = UKismetStringLibrary::GetSubstring(StringB, i, 1);
+		if (!Chars.Contains(SingleChar, ESearchCase::CaseSensitive))
+		{
+			Chars.Append(SingleChar);
+		}
+	}
+
+	Chars.Shrink();
+
+	return Chars;
+}

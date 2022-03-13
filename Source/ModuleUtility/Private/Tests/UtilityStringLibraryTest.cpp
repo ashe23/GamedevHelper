@@ -35,6 +35,12 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryUnionTest,
+	"Plugins.GamedevHelper.Utility.String.Union",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
 static const FString EmptyString = TEXT("");
 
 bool FStringLibraryGetFirstLetterTest::RunTest(const FString& Parameters)
@@ -181,6 +187,58 @@ bool FStringLibraryIntersectionTest::RunTest(const FString& Parameters)
 	Runner.AddTest(TEXT(""), TEXT("abcdef"), TEXT(""));
 	Runner.AddTest(TEXT("abc"), TEXT(""), TEXT(""));
 	Runner.AddTest(TEXT("012"), TEXT("982563"), TEXT("2"));
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryUnionTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		FString StringB;
+		FString Expected;
+		FString Actual;
+	};
+	
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const FString& StringB, const FString& Expected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.StringB = StringB;
+			TestCase.Expected = Expected;
+			TestCase.Actual = UGamedevHelperStringLibrary::Union(StringA, StringB);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected.Equals(Test.Actual) == false)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected union of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), TEXT("abcdef"), TEXT("abcdef"));
+	Runner.AddTest(TEXT("ABC"), TEXT("abcdef"), TEXT("ABCabcdef"));
+	Runner.AddTest(TEXT("ABC"), TEXT("ABCdef"), TEXT("ABCdef"));
+	Runner.AddTest(TEXT("aBc"), TEXT("aBcdef"), TEXT("aBcdef"));
+	Runner.AddTest(TEXT(""), TEXT("abcdef"), TEXT("abcdef"));
+	Runner.AddTest(TEXT("abc"), TEXT(""), TEXT("abc"));
+	Runner.AddTest(TEXT("012"), TEXT("982563"), TEXT("01298563"));
 
 	return Runner.GetResult();
 }
