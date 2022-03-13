@@ -56,7 +56,7 @@ public:
 	static FString RemoveLastLetter(const FString& OriginalString);
 
 	/**
-	 * @brief Returns intersection of characters of given two strings
+	 * @brief Returns intersection of character sets of given two strings
 	 * - "abc", "abd" => "ab"
 	 * - "abcdef" , "f" => "f"
 	 * @param StringA FString
@@ -67,11 +67,27 @@ public:
 	static FString Intersection(const FString& StringA, const FString& StringB);
 
 	/**
-	 * @brief Returns union of characters of given two strings
+	 * @brief Returns union of character sets of given two strings
+	 * - "abc", "def" => "abcdef"
+	 * - "abc", "abcdef" => "abcdef"
+	 * - "", "abc" => "abc"
 	 * @param StringA FString
 	 * @param StringB FString
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static FString Union(const FString& StringA, const FString& StringB);
+
+	/**
+	 * @brief Returns difference of character sets of given two string
+	 * - "abc", "def" => "abcdef"
+	 * - "abc", "abcdef" => "def"
+	 * - "", "abc" => "abc"
+	 * - "", "" => ""
+	 * @param StringA 
+	 * @param StringB 
+	 * @return 
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
+	static FString Difference(const FString& StringA, const FString& StringB);
 };

@@ -66,7 +66,7 @@ FString UGamedevHelperStringLibrary::Union(const FString& StringA, const FString
 
 	for (int32 i = 0; i < StringA.Len(); ++i)
 	{
-		const FString SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
+		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
 		if (!Chars.Contains(SingleChar, ESearchCase::CaseSensitive))
 		{
 			Chars.Append(SingleChar);
@@ -75,8 +75,31 @@ FString UGamedevHelperStringLibrary::Union(const FString& StringA, const FString
 
 	for (int32 i = 0; i < StringB.Len(); ++i)
 	{
-		const FString SingleChar = UKismetStringLibrary::GetSubstring(StringB, i, 1);
+		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringB, i, 1);
 		if (!Chars.Contains(SingleChar, ESearchCase::CaseSensitive))
+		{
+			Chars.Append(SingleChar);
+		}
+	}
+
+	Chars.Shrink();
+
+	return Chars;
+}
+
+FString UGamedevHelperStringLibrary::Difference(const FString& StringA, const FString& StringB)
+{
+	// difference = union - intersection
+	const FString UnionSet = Union(StringA, StringB);
+	const FString IntersectionSet = Intersection(StringA, StringB);
+
+	FString Chars;
+	Chars.Reserve(UnionSet.Len());
+
+	for (int32 i = 0; i < UnionSet.Len(); ++i)
+	{
+		const auto SingleChar = UKismetStringLibrary::GetSubstring(UnionSet, i, 1);
+		if (!IntersectionSet.Contains(SingleChar, ESearchCase::CaseSensitive))
 		{
 			Chars.Append(SingleChar);
 		}
