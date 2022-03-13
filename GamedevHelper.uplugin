@@ -24,6 +24,11 @@
       "Name": "ModuleUtility",
       "Type": "Runtime",
       "LoadingPhase": "Default"
+    },
+    {
+      "Name": "ModuleProjectOrganizer",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [

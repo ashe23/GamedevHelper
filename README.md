@@ -7,7 +7,6 @@ todo
 ## Modules:
 - Utility - Contains only Blueprint function libraries for operation on string, assets, arrays etc.
 - Tester - Plugin internal module for automation tools testing.
-- VertexAnimTool - Vertex animation related tools
 - ProjectOrganizer - For managing project files and folders, their naming etc.
 
 ## API
@@ -55,7 +54,7 @@ todo
     - ExpectTrue
     - ExpectFalse
     - GetResult
-    
+
 - UGamedevTesterFuzzer
     - GetRandomString(len, dictionary)
     - GetRandomString(len, format)
