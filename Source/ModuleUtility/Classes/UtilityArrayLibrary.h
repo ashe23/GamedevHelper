@@ -24,7 +24,7 @@ public:
 	DECLARE_FUNCTION(execArray_ShuffleWithSeed)
 	{
 		Stack.MostRecentProperty = nullptr;
-		Stack.StepCompiledIn<FArrayProperty>(NULL);
+		Stack.StepCompiledIn<FArrayProperty>(nullptr);
 		void* ArrayAddress = Stack.MostRecentPropertyAddress;
 		FArrayProperty* ArrayProperty = CastField<FArrayProperty>(Stack.MostRecentProperty);
 		if (!ArrayProperty)
