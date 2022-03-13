@@ -7,7 +7,7 @@
 #include "UtilityStringLibrary.generated.h"
 
 UCLASS()
-class UGamedevHelperStringLibrary : public UBlueprintFunctionLibrary
+class MODULEUTILITY_API UGamedevHelperStringLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
