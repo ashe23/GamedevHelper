@@ -52,7 +52,7 @@ public:
 	static void VertexAnimToolConfigureTexture(const TArray<FAssetData>& Assets, const EGDHVertexAnimToolTexture TextureType);
 
 	/**
-	 * @brief Configures selected static meshes for vertex animation
+	 * @brief Configures selected static meshes for vertex animation, including LODs
 	 * @param Assets TArray<FAssetData>
 	 * @return bool
 	 */
