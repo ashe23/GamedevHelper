@@ -27,23 +27,27 @@ todo
     - ContainsOnlyDigits
     - ContainsLetters
     - ContainsDigits
+
+- UGamedevHelperArrayLibrary
+    - ShuffWithSeed
+
 - AssetRenamingClass
-    - ConvertCase(NamingCase) - must be in separate class
-    - Normalize - must be in separate class
-    - Tokenize - must be in separate class
-    - GetPrefix - must be in separate class
-    - HasPrefix - must be in separate class
-    - RemovePrefix - must be in separate class
+    - ConvertCase(NamingCase) 
+    - Normalize 
+    - Tokenize 
+    - GetPrefix 
+    - HasPrefix 
+    - RemovePrefix 
+    - Numerize(selected_assets)
+
 - UGamedevHelperAssetLibrary
-    - FixupRedirectors
     - SaveAll
+    - FixupRedirectors
     - Save(Selected)
     - Save(Single)
-    - Create(asset_type, asset_factory)
     - IsBlueprint
     - GetBlueprintType
     - DisableCollision(selected_assets)
-    - Numerize(selected_assets)
 
 - UGamedevTesterTestRunner
     - AddTestCase
@@ -51,6 +55,7 @@ todo
     - ExpectTrue
     - ExpectFalse
     - GetResult
+    
 - UGamedevTesterFuzzer
     - GetRandomString(len, dictionary)
     - GetRandomString(len, format)

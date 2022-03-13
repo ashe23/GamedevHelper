@@ -8,7 +8,7 @@
 #include "UtilityArrayLibrary.generated.h"
 
 UCLASS()
-class UGamedevHelperArrayLibrary : public UBlueprintFunctionLibrary
+class MODULEUTILITY_API UGamedevHelperArrayLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

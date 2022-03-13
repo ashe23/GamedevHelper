@@ -41,6 +41,10 @@ public class ModuleUtility : ModuleRules
 				"Slate",
 				"SlateCore",
 				"NetCore",
+				"AssetRegistry",
+				"AssetTools",
+				"ContentBrowser",
+				"UnrealEd",
 				// ... add private dependencies that you statically link with here ...	
 			}
 		);
