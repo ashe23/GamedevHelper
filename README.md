@@ -17,18 +17,23 @@ todo
     - RemoveFirstLetter
     - RemoveLastLetter
     - Intersection
-    - IsLetters
-    - IsDigits (similar to FString::IsNumeric)
+    - Union
+    - SymmetricDifference
+    - Difference
+    - IsSubSet
+    - Contains
+    - ContainsOnly
+    - ContainsOnlyLetters
+    - ContainsOnlyDigits
     - ContainsLetters
     - ContainsDigits
-    - Contains (Dictionary)
-    - ContainsOnly (Dictionary)
-    - ConvertCase(NamingCase)
-    - Normalize
-    - Tokenize
-    - GetPrefix
-    - HasPrefix
-    - RemovePrefix
+- AssetRenamingClass
+    - ConvertCase(NamingCase) - must be in separate class
+    - Normalize - must be in separate class
+    - Tokenize - must be in separate class
+    - GetPrefix - must be in separate class
+    - HasPrefix - must be in separate class
+    - RemovePrefix - must be in separate class
 - UGamedevHelperAssetLibrary
     - FixupRedirectors
     - SaveAll

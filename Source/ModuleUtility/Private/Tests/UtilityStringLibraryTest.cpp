@@ -47,6 +47,54 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibrarySymmetricDifferenceTest,
+	"Plugins.GamedevHelper.Utility.String.SymmetricDifference",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryIsSubSetTest,
+	"Plugins.GamedevHelper.Utility.String.IsSubSet",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryContainsTest,
+	"Plugins.GamedevHelper.Utility.String.Contains",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryContainsOnlyTest,
+	"Plugins.GamedevHelper.Utility.String.ContainsOnly",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryContainsLettersTest,
+	"Plugins.GamedevHelper.Utility.String.ContainsLetters",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryContainsDigitsTest,
+	"Plugins.GamedevHelper.Utility.String.ContainsDigits",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryContainsOnlyLettersTest,
+	"Plugins.GamedevHelper.Utility.String.ContainsOnlyLetters",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryContainsOnlyDigitsTest,
+	"Plugins.GamedevHelper.Utility.String.ContainsOnlyDigits",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
 static const FString EmptyString = TEXT("");
 
 bool FStringLibraryGetFirstLetterTest::RunTest(const FString& Parameters)
@@ -154,7 +202,7 @@ bool FStringLibraryIntersectionTest::RunTest(const FString& Parameters)
 		FString Expected;
 		FString Actual;
 	};
-	
+
 	struct FTestRunner
 	{
 		void AddTest(const FString& StringA, const FString& StringB, const FString& Expected)
@@ -206,7 +254,7 @@ bool FStringLibraryUnionTest::RunTest(const FString& Parameters)
 		FString Expected;
 		FString Actual;
 	};
-	
+
 	struct FTestRunner
 	{
 		void AddTest(const FString& StringA, const FString& StringB, const FString& Expected)
@@ -258,7 +306,7 @@ bool FStringLibraryDifferenceTest::RunTest(const FString& Parameters)
 		FString Expected;
 		FString Actual;
 	};
-	
+
 	struct FTestRunner
 	{
 		void AddTest(const FString& StringA, const FString& StringB, const FString& Expected)
@@ -290,12 +338,420 @@ bool FStringLibraryDifferenceTest::RunTest(const FString& Parameters)
 	};
 
 	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), TEXT("abd"), TEXT("c"));
+	Runner.AddTest(TEXT("ABC"), TEXT("abd"), TEXT("ABC"));
+	Runner.AddTest(TEXT(""), TEXT("abc"), TEXT(""));
+	Runner.AddTest(TEXT("ABC"), TEXT(""), TEXT("ABC"));
+	Runner.AddTest(TEXT(""), TEXT(""), TEXT(""));
+	Runner.AddTest(TEXT("123"), TEXT("0123456789"), TEXT(""));
+	Runner.AddTest(TEXT("123"), TEXT("013456789"), TEXT("2"));
+
+	return Runner.GetResult();
+}
+
+bool FStringLibrarySymmetricDifferenceTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		FString StringB;
+		FString Expected;
+		FString Actual;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const FString& StringB, const FString& Expected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.StringB = StringB;
+			TestCase.Expected = Expected;
+			TestCase.Actual = UGamedevHelperStringLibrary::SymmetricDifference(StringA, StringB);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected.Equals(Test.Actual) == false)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected symmetric difference of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
 	Runner.AddTest(TEXT("abc"), TEXT("abcdef"), TEXT("def"));
 	Runner.AddTest(TEXT("ABC"), TEXT("abcdef"), TEXT("ABCabcdef"));
 	Runner.AddTest(TEXT(""), TEXT("abc"), TEXT("abc"));
 	Runner.AddTest(TEXT("ABC"), TEXT(""), TEXT("ABC"));
 	Runner.AddTest(TEXT(""), TEXT(""), TEXT(""));
 	Runner.AddTest(TEXT("123"), TEXT("0123456789"), TEXT("0456789"));
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryIsSubSetTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		FString StringB;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const FString& StringB, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.StringB = StringB;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::IsSubSet(StringA, StringB);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to be subset of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), TEXT("abcdef"), true);
+	Runner.AddTest(TEXT("abc"), TEXT("defgh"), false);
+	Runner.AddTest(TEXT("abc"), TEXT("ABC"), false);
+	Runner.AddTest(TEXT("012"), TEXT("12356089"), true);
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryContainsTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		FString StringB;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const FString& StringB, const ESearchCase::Type SearchCase, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.StringB = StringB;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::Contains(StringA, StringB, SearchCase);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain character set of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), TEXT("abcdef"), ESearchCase::CaseSensitive, true);
+	Runner.AddTest(TEXT("abc"), TEXT("ABC"), ESearchCase::CaseSensitive, false);
+	Runner.AddTest(TEXT("abc"), TEXT("ABC"), ESearchCase::IgnoreCase, true);
+	Runner.AddTest(TEXT(""), TEXT(""), ESearchCase::CaseSensitive, false);
+	Runner.AddTest(TEXT(""), TEXT(""), ESearchCase::IgnoreCase, false);
+	Runner.AddTest(TEXT("12"), TEXT("5671290"), ESearchCase::IgnoreCase, true);
+	Runner.AddTest(TEXT("__--"), TEXT("_-"), ESearchCase::IgnoreCase, true);
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryContainsOnlyTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		FString StringB;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const FString& StringB, const ESearchCase::Type SearchCase, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.StringB = StringB;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::ContainsOnly(StringA, StringB, SearchCase);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain only character set of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), TEXT("abcdef"), ESearchCase::CaseSensitive, true);
+	Runner.AddTest(TEXT("abc"), TEXT("ABC"), ESearchCase::CaseSensitive, false);
+	Runner.AddTest(TEXT("abc"), TEXT("ABC"), ESearchCase::IgnoreCase, true);
+	Runner.AddTest(TEXT(""), TEXT(""), ESearchCase::CaseSensitive, true);
+	Runner.AddTest(TEXT(""), TEXT(""), ESearchCase::IgnoreCase, true);
+	Runner.AddTest(TEXT("12"), TEXT("5671290"), ESearchCase::IgnoreCase, true);
+	Runner.AddTest(TEXT("__--"), TEXT("_-"), ESearchCase::IgnoreCase, true);
+	Runner.AddTest(TEXT("abc"), TEXT("def"), ESearchCase::IgnoreCase, false);
+	Runner.AddTest(TEXT("abc"), TEXT("DEF"), ESearchCase::CaseSensitive, false);
+	Runner.AddTest(TEXT("abc"), TEXT("afc"), ESearchCase::CaseSensitive, false);
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryContainsLettersTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::ContainsLetters(StringA);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain letters, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), true);
+	Runner.AddTest(TEXT("ABC"), true);
+	Runner.AddTest(TEXT("abc12"), true);
+	Runner.AddTest(TEXT("ABC12"), true);
+	Runner.AddTest(TEXT("_-"), false);
+	Runner.AddTest(TEXT("_-01ab"), true);
+	Runner.AddTest(TEXT("123456789"), false);
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryContainsDigitsTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::ContainsDigits(StringA);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), false);
+	Runner.AddTest(TEXT("ABC"), false);
+	Runner.AddTest(TEXT("abc12"), true);
+	Runner.AddTest(TEXT("ABC12"), true);
+	Runner.AddTest(TEXT("_-"), false);
+	Runner.AddTest(TEXT("_-01ab"), true);
+	Runner.AddTest(TEXT("123456789"), true);
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryContainsOnlyDigitsTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::ContainsOnlyDigits(StringA);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain only digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), false);
+	Runner.AddTest(TEXT("ABC"), false);
+	Runner.AddTest(TEXT("abc12"), false);
+	Runner.AddTest(TEXT("ABC12"), false);
+	Runner.AddTest(TEXT("_-"), false);
+	Runner.AddTest(TEXT("_-01ab"), false);
+	Runner.AddTest(TEXT("123456789"), true);
+
+	return Runner.GetResult();
+}
+
+bool FStringLibraryContainsOnlyLettersTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString StringA;
+		bool Actual;
+		bool Expected;
+	};
+
+	struct FTestRunner
+	{
+		void AddTest(const FString& StringA, const bool bExpected)
+		{
+			FTestCase TestCase;
+			TestCase.StringA = StringA;
+			TestCase.Expected = bExpected;
+			TestCase.Actual = UGamedevHelperStringLibrary::ContainsOnlyLetters(StringA);
+			Tests.Add(TestCase);
+		}
+
+		bool GetResult()
+		{
+			for (const auto& Test : Tests)
+			{
+				if (Test.Expected != Test.Actual)
+				{
+					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain only digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+	private:
+		TArray<FTestCase> Tests;
+	};
+
+	FTestRunner Runner;
+	Runner.AddTest(TEXT("abc"), true);
+	Runner.AddTest(TEXT("ABC"), true);
+	Runner.AddTest(TEXT("abc12"), false);
+	Runner.AddTest(TEXT("ABC12"), false);
+	Runner.AddTest(TEXT("_-"), false);
+	Runner.AddTest(TEXT("_-01ab"), false);
+	Runner.AddTest(TEXT("123456789"), false);
 
 	return Runner.GetResult();
 }
