@@ -54,4 +54,15 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static FString RemoveLastLetter(const FString& OriginalString);
+
+	/**
+	 * @brief Returns intersection of characters of given two strings
+	 * - "abc", "abd" => "ab"
+	 * - "abcdef" , "f" => "f"
+	 * @param StringA FString
+	 * @param StringB FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
+	static FString Intersection(const FString& StringA, const FString& StringB);
 };

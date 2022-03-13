@@ -12,23 +12,23 @@ todo
 
 ## API
 - UGamedevHelperStringLibrary
+    - GetFirstLetter
+    - GetLastLetter
+    - RemoveFirstLetter
+    - RemoveLastLetter
+    - Intersection
+    - IsLetters
+    - IsDigits (similar to FString::IsNumeric)
+    - ContainsLetters
+    - ContainsDigits
+    - Contains (Dictionary)
+    - ContainsOnly (Dictionary)
+    - ConvertCase(NamingCase)
     - Normalize
     - Tokenize
     - GetPrefix
     - HasPrefix
     - RemovePrefix
-    - GetFirstLetter
-    - GetLastLetter
-    - GetFirstLetterRemoved
-    - GetLastLetterRemoved
-    - GetLetterRemoved
-    - IsLetters
-    - IsDigits (similar to FString::IsNumeric)
-    - ContainsLetters
-    - ContainsDigits
-    - Contains(Dictionary)
-    - ContainsOnly(Dictionary)
-    - ConvertCase(NamingCase)
 - UGamedevHelperAssetLibrary
     - FixupRedirectors
     - SaveAll
