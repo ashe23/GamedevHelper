@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "ModuleUtilityTypes.h"
 #include "UtilityAssetLibrary.generated.h"
 
 UCLASS()
@@ -24,4 +25,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
 	static void FixupRedirectors(const FString& Path);
+
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	static EGDHBlueprintType GetBlueprintType(const FAssetData& AssetData);
 };
