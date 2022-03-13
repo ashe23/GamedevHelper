@@ -117,3 +117,8 @@ EGDHBlueprintType UGamedevHelperAssetLibrary::GetBlueprintType(const FAssetData&
 		return EGDHBlueprintType::None;
 	}
 }
+
+bool UGamedevHelperAssetLibrary::IsBlueprint(const FAssetData& AssetData)
+{
+	return GetBlueprintType(AssetData) != EGDHBlueprintType::None;
+}

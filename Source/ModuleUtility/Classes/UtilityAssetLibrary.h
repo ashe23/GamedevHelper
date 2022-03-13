@@ -33,4 +33,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
 	static EGDHBlueprintType GetBlueprintType(const FAssetData& AssetData);
+
+	/**
+	 * @brief Checks if given asset is blueprint or not
+	 * @param AssetData FAssetData
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	static bool IsBlueprint(const FAssetData& AssetData);
 };
