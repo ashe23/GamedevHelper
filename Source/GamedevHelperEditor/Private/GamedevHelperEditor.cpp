@@ -3,6 +3,7 @@
 #include "GamedevHelperEditor.h"
 #include "GamedevHelperEditorStyle.h"
 #include "GamedevHelperEditorCommands.h"
+#include "ProjectOrganizer/ProjectOrganizerWindow.h"
 // Engine Headers
 #include "LevelEditor.h"
 #include "ToolMenus.h"
@@ -44,11 +45,11 @@ void FGamedevHelperEditor::StartupModule()
 	// UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGamedevHelperEditor::RegisterMainMenu));
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		GamedevHelperMainTabName,
-		FOnSpawnTab::CreateRaw(this, &FGamedevHelperEditor::OnMainTabClick)
-	)
-	.SetDisplayName(LOCTEXT("FGamedevHelperTabTitle", "ProjectOrganizer"))
-	.SetMenuType(ETabSpawnerMenuType::Hidden);
+		                        GamedevHelperMainTabName,
+		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelperEditor::OnMainTabClick)
+	                        )
+	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabTitle", "ProjectOrganizer"))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
 void FGamedevHelperEditor::ShutdownModule()
@@ -120,8 +121,7 @@ TSharedRef<SDockTab> FGamedevHelperEditor::OnMainTabClick(const FSpawnTabArgs& S
 	return SNew(SDockTab)
 		.TabRole(MajorTab)
 		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("ProjectOrganizer")))
+			SNew(SProjectOrganizerWindow)
 		];
 }
 
