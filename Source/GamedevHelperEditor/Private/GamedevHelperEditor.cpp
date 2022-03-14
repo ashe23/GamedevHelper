@@ -10,6 +10,8 @@
 
 #define LOCTEXT_NAMESPACE "FGamedevHelperEditor"
 
+static const FName GamedevHelperMainTabName{TEXT("GamedevHelperTab")};
+
 class FGamedevHelperEditor : public IGamedevHelperEditor
 {
 public:
@@ -21,6 +23,7 @@ private:
 	void InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder);
 	void InitMainMenuEntries(FMenuBuilder& MenuBarBuilder) const;
 	static void OnProjectOrganizerWindowClick();
+	TSharedRef<SDockTab> OnMainTabClick(const FSpawnTabArgs& SpawnTabArgs) const;
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
@@ -40,6 +43,12 @@ void FGamedevHelperEditor::StartupModule()
 	RegisterMainMenu();
 	// UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGamedevHelperEditor::RegisterMainMenu));
 
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		GamedevHelperMainTabName,
+		FOnSpawnTab::CreateRaw(this, &FGamedevHelperEditor::OnMainTabClick)
+	)
+	.SetDisplayName(LOCTEXT("FGamedevHelperTabTitle", "ProjectOrganizer"))
+	.SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
 void FGamedevHelperEditor::ShutdownModule()
@@ -49,9 +58,10 @@ void FGamedevHelperEditor::ShutdownModule()
 
 	// unregistering commands
 	FGamedevHelperEditorCommands::Unregister();
-	
+
 	// UToolMenus::UnRegisterStartupCallback(this);
 	// UToolMenus::UnregisterOwner(this);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperMainTabName);
 }
 
 void FGamedevHelperEditor::RegisterCommands()
@@ -102,7 +112,17 @@ void FGamedevHelperEditor::InitMainMenuEntries(FMenuBuilder& MenuBarBuilder) con
 
 void FGamedevHelperEditor::OnProjectOrganizerWindowClick()
 {
-	UE_LOG(LogGamedevHelperEditor, Warning, TEXT("Openning some UI"));
+	FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperMainTabName);
+}
+
+TSharedRef<SDockTab> FGamedevHelperEditor::OnMainTabClick(const FSpawnTabArgs& SpawnTabArgs) const
+{
+	return SNew(SDockTab)
+		.TabRole(MajorTab)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("ProjectOrganizer")))
+		];
 }
 
 #undef LOCTEXT_NAMESPACE
