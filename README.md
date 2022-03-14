@@ -5,9 +5,8 @@ Collection of reusable functions and tools used in game development for unreal e
 todo
 
 ## Modules:
-- Utility - Contains only Blueprint function libraries for operation on string, assets, arrays etc.
-- Tester - Plugin internal module for automation tools testing.
-- ProjectOrganizer - For managing project files and folders, their naming etc.
+- GamedevHelperCore
+- GamedevHelperEditor
 
 ## API
 - UGamedevHelperStringLibrary
@@ -42,11 +41,11 @@ todo
 - UGamedevHelperAssetLibrary
     - SaveAll
     - FixupRedirectors
-    - Save(Selected)
-    - Save(Single)
     - IsBlueprint
     - GetBlueprintType
     - DisableCollision(selected_assets)
+    - VATConfigureStaticMesh(selected_meshes)
+    - VATConfigureTexture(texture_type, texture_assets) - texture_type can be UV or Normal 
 
 - UGamedevTesterTestRunner
     - AddTestCase
@@ -60,11 +59,6 @@ todo
     - GetRandomString(len, format)
     - GetRandomString(format)
     - GetStringFormatFromToken() - private
-
-- UGamedevVertexAnimTool
-    - ConfigureStaticMesh(selected_meshes)
-    - CongigureStaticMesh(single_mesh)
-    - ConfigureTexture(texture_type, texture_assets) - texture_type can be UV or Normal 
 
 - UGamedevProjectOrganizer
     - FixAssetNames(convention_settings, selected_assets)
