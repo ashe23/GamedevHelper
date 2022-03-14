@@ -75,3 +75,12 @@ enum class EGDHFuzzerStringFormat : uint8
 	// camelCase
 	CamelCase
 };
+
+UENUM(BlueprintType)
+enum class EGDHModalStatus : uint8
+{
+	None,
+	Pending,
+	Success,
+	Fail,
+};
