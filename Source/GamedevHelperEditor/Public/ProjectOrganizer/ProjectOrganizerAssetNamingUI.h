@@ -22,6 +22,7 @@ private:
 		TWeakObjectPtr<UProjectOrganizerAssetNamingListRowData> InItem,
 		const TSharedRef<STableViewBase>& OwnerTable
 	) const;
+	void OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
 	
 	TSharedPtr<SListView<TWeakObjectPtr<UProjectOrganizerAssetNamingListRowData>>> ListView;
 	TArray<TWeakObjectPtr<UProjectOrganizerAssetNamingListRowData>> AssetList;
