@@ -53,6 +53,11 @@ FName FGamedevHelperEditorStyle::GetStyleSetName()
 	return StyleSetName;
 }
 
+const FSlateBrush* FGamedevHelperEditorStyle::GetIcon(const FString& Specifier)
+{
+	return Get().GetBrush(*Specifier);
+}
+
 TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 {
 	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("GamedevHelperStyle"));
@@ -74,6 +79,9 @@ TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 
 	// icons
 	Style->Set("GamedevHelper.Icon16", new IMAGE_BRUSH(TEXT("Icon16"), Icon16x16));
+	Style->Set("GamedevHelper.Icon.ArrowRight.16", new IMAGE_BRUSH(TEXT("IconArrowRight512"), Icon16x16));
+	Style->Set("GamedevHelper.Icon.BG.16", new IMAGE_BRUSH(TEXT("IconBG16"), Icon16x16));
+
 
 	return Style;
 }

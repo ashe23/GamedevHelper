@@ -43,6 +43,8 @@ public class GamedevHelperEditor : ModuleRules
 				"Projects",
 				"UnrealEd",
 				"ToolMenus",
+				"EditorStyle",
+				"InputCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 		);

@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "ProjectOrganizer/ProjectOrganizerWindow.h"
+#include "ProjectOrganizer/ProjectOrganizerAssetNamingUI.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelperEditor"
 
@@ -74,8 +75,7 @@ TSharedRef<SDockTab> SProjectOrganizerWindow::OnTabAssetNamingSpawn(const FSpawn
 		+ SOverlay::Slot()
 		.Padding(20.0f)
 		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("todo: Asset Naming UI here")))
+			SNew(SProjectOrganizerAssetNamingUI)
 		]
 	];
 }

@@ -13,6 +13,7 @@ public:
 	static void ReloadTextures();
 	static const ISlateStyle& Get();
 	static FName GetStyleSetName();
+	static const FSlateBrush* GetIcon(const FString& Specifier);
 private:
 	static TSharedRef<FSlateStyleSet> Create();
 	static TSharedPtr<FSlateStyleSet> StyleInstance;
