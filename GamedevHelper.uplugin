@@ -16,17 +16,7 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "ModuleTester",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
-    },
-    {
-      "Name": "ModuleUtility",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
-    },
-    {
-      "Name": "ModuleProjectOrganizer",
+      "Name": "GamedevHelperCore",
       "Type": "Runtime",
       "LoadingPhase": "Default"
     }
