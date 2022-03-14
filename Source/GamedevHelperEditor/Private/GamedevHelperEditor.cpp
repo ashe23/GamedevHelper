@@ -130,15 +130,15 @@ void FGamedevHelperEditor::InitContextMenu(FMenuBuilder& MenuBuilder) const
 		// FUIAction(FExecuteAction::CreateStatic(&UVirtualGamesVertexAnimToolLibrary::ConfigureStaticMesh))
 	);
 	MenuBuilder.AddMenuEntry(
-		LOCTEXT("VertexAnimTools_TextureNormal", "Texture Normal"),
-		LOCTEXT("VertexAnimTools_TextureNormalToolTip", "Configure normal texture for vertex animation"),
+		LOCTEXT("VAT_TextureNormal", "Texture Normal"),
+		LOCTEXT("VAT_TextureNormalToolTip", "Configure normal texture for vertex animation"),
 		FSlateIcon(),
 		FUIAction()
 		// FUIAction(FExecuteAction::CreateStatic(&UVirtualGamesVertexAnimToolLibrary::ConfigureTexture, TextureNormal))
 	);
 	MenuBuilder.AddMenuEntry(
-		LOCTEXT("VertexAnimTools_TextureUV", "Texture UV"),
-		LOCTEXT("VertexAnimTools_TextureUVToolTip", "Configure UV texture for vertex animation"),
+		LOCTEXT("VAT_TextureUV", "Texture UV"),
+		LOCTEXT("VAT_TextureUVToolTip", "Configure UV texture for vertex animation"),
 		FSlateIcon(),
 		FUIAction()
 		// FUIAction(FExecuteAction::CreateStatic(&UVirtualGamesVertexAnimToolLibrary::ConfigureTexture, TextureUV))
