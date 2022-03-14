@@ -41,6 +41,8 @@ public class GamedevHelperEditor : ModuleRules
 				"Slate",
 				"SlateCore",
 				"Projects",
+				"UnrealEd",
+				"ToolMenus",
 				// ... add private dependencies that you statically link with here ...	
 			}
 		);
