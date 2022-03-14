@@ -2,8 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
-#include "UtilityStringLibrary.h"
-#include "ModuleUtility.h"
+#include "GamedevHelperCoreStringLibrary.h"
+#include "GamedevHelperCore.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStringLibraryGetFirstLetterTest,
@@ -103,7 +103,7 @@ bool FStringLibraryGetFirstLetterTest::RunTest(const FString& Parameters)
 	const FString Actual = UGamedevHelperStringLibrary::GetFirstLetter(EmptyString);
 	if (Actual.IsEmpty() == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected empty string, got %s"), *Actual);
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected empty string, got %s"), *Actual);
 		return false;
 	}
 
@@ -111,13 +111,13 @@ bool FStringLibraryGetFirstLetterTest::RunTest(const FString& Parameters)
 	const FString FirstLetter = UGamedevHelperStringLibrary::GetFirstLetter(TEXT("abcdef"));
 	if (FirstLetter.Len() != 1)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected string length to be 1, got %d"), FirstLetter.Len());
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected string length to be 1, got %d"), FirstLetter.Len());
 		return false;
 	}
 
 	if (!FirstLetter.Equals(TEXT("a"), ESearchCase::CaseSensitive))
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected first letter to be 'a', got %s"), *FirstLetter);
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected first letter to be 'a', got %s"), *FirstLetter);
 		return false;
 	}
 
@@ -131,7 +131,7 @@ bool FStringLibraryGetLastLetterTest::RunTest(const FString& Parameters)
 
 	if (Actual.IsEmpty() == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected empty string, got %s"), *Actual);
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected empty string, got %s"), *Actual);
 		return false;
 	}
 
@@ -140,13 +140,13 @@ bool FStringLibraryGetLastLetterTest::RunTest(const FString& Parameters)
 
 	if (LastLetter.Len() != 1)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected string length to be 1, got %d"), LastLetter.Len());
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected string length to be 1, got %d"), LastLetter.Len());
 		return false;
 	}
 
 	if (LastLetter.Equals(TEXT("f")) == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected last letter to be 'f', got %s"), *LastLetter);
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected last letter to be 'f', got %s"), *LastLetter);
 		return false;
 	}
 
@@ -158,7 +158,7 @@ bool FStringLibraryRemoveFirstLetterTest::RunTest(const FString& Parameters)
 	const FString Actual = UGamedevHelperStringLibrary::RemoveFirstLetter(EmptyString);
 	if (Actual.IsEmpty() == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected empty string, got %s"), *Actual);
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected empty string, got %s"), *Actual);
 		return false;
 	}
 
@@ -166,7 +166,7 @@ bool FStringLibraryRemoveFirstLetterTest::RunTest(const FString& Parameters)
 	const FString Expected = TEXT("bcdef");
 	if (UGamedevHelperStringLibrary::RemoveFirstLetter(Input).Equals(Expected, ESearchCase::CaseSensitive) == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected %s, got %s"), *Expected, *UGamedevHelperStringLibrary::RemoveFirstLetter(Input));
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s, got %s"), *Expected, *UGamedevHelperStringLibrary::RemoveFirstLetter(Input));
 		return false;
 	}
 
@@ -178,7 +178,7 @@ bool FStringLibraryRemoveLastLetterTest::RunTest(const FString& Parameters)
 	const FString Actual = UGamedevHelperStringLibrary::RemoveLastLetter(EmptyString);
 	if (Actual.IsEmpty() == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected empty string, got %s"), *Actual);
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected empty string, got %s"), *Actual);
 		return false;
 	}
 
@@ -186,7 +186,7 @@ bool FStringLibraryRemoveLastLetterTest::RunTest(const FString& Parameters)
 	const FString Expected = TEXT("abcde");
 	if (UGamedevHelperStringLibrary::RemoveLastLetter(Input).Equals(Expected, ESearchCase::CaseSensitive) == false)
 	{
-		UE_LOG(LogModuleUtility, Error, TEXT("Expected %s, got %s"), *Expected, *UGamedevHelperStringLibrary::RemoveLastLetter(Input));
+		UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s, got %s"), *Expected, *UGamedevHelperStringLibrary::RemoveLastLetter(Input));
 		return false;
 	}
 
@@ -221,7 +221,7 @@ bool FStringLibraryIntersectionTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected.Equals(Test.Actual) == false)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected intersection of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected intersection of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
 					return false;
 				}
 			}
@@ -273,7 +273,7 @@ bool FStringLibraryUnionTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected.Equals(Test.Actual) == false)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected union of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected union of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
 					return false;
 				}
 			}
@@ -325,7 +325,7 @@ bool FStringLibraryDifferenceTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected.Equals(Test.Actual) == false)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected difference of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected difference of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
 					return false;
 				}
 			}
@@ -377,7 +377,7 @@ bool FStringLibrarySymmetricDifferenceTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected.Equals(Test.Actual) == false)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected symmetric difference of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected symmetric difference of %s and %s is %s, got %s"), *Test.StringA, *Test.StringB, *Test.Expected, *Test.Actual);
 					return false;
 				}
 			}
@@ -428,7 +428,7 @@ bool FStringLibraryIsSubSetTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to be subset of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to be subset of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
@@ -477,7 +477,7 @@ bool FStringLibraryContainsTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain character set of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to contain character set of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
@@ -529,7 +529,7 @@ bool FStringLibraryContainsOnlyTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain only character set of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to contain only character set of %s, got %s"), *Test.StringA, *Test.StringB, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
@@ -582,7 +582,7 @@ bool FStringLibraryContainsLettersTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain letters, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to contain letters, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
@@ -632,7 +632,7 @@ bool FStringLibraryContainsDigitsTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to contain digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
@@ -682,7 +682,7 @@ bool FStringLibraryContainsOnlyDigitsTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain only digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to contain only digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
@@ -732,7 +732,7 @@ bool FStringLibraryContainsOnlyLettersTest::RunTest(const FString& Parameters)
 			{
 				if (Test.Expected != Test.Actual)
 				{
-					UE_LOG(LogModuleUtility, Error, TEXT("Expected %s to contain only digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
+					UE_LOG(LogGamedevHelperCore, Error, TEXT("Expected %s to contain only digits, got %s"), *Test.StringA, Test.Actual ? TEXT("True") : TEXT("False"));
 					return false;
 				}
 			}
