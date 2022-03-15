@@ -43,13 +43,25 @@ public:
 	static bool IsBlueprint(const FAssetData& AssetData);
 
 	/**
-	 * @brief Configures selected texture assets for vertex animation
-	 * @param Assets TArray<FAssetData>
-	 * @param TextureType EGDHVertexAnimToolTexture
+	 * @brief Configures texture of specified type for vertex animation
+	 * @see https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/Tools/VertexAnimationTool/
+	 * @param Texture 
+	 * @param TextureType EGamedevHelperVertexAnimTexture
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset|VertexAnimTool")
-	static void VertexAnimToolConfigureTexture(const TArray<FAssetData>& Assets, const EGamedevHelperVertexAnimTexture TextureType);
+	static bool VertexAnimConfigureTexture(UTexture2D* Texture, const EGamedevHelperVertexAnimTexture TextureType);
+
+	/**
+	 * @brief Configures textures of specified type for vertex animation
+	 * @see https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/Tools/VertexAnimationTool/
+	 * @param Textures 
+	 * @param TextureType EGamedevHelperVertexAnimTexture
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset|VertexAnimTool")
+	static void VertexAnimConfigureTextures(TArray<UTexture2D*> Textures, const EGamedevHelperVertexAnimTexture TextureType);
+
+	// static void VertexAnimConfigureStaticMesh();
 
 	/**
 	 * @brief Configures selected static meshes for vertex animation, including LODs

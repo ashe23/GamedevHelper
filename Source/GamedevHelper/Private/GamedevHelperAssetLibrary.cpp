@@ -121,32 +121,44 @@ bool UGamedevHelperAssetLibrary::IsBlueprint(const FAssetData& AssetData)
 	return GetBlueprintType(AssetData) != EGamedevHelperBlueprintType::None;
 }
 
-void UGamedevHelperAssetLibrary::VertexAnimToolConfigureTexture(const TArray<FAssetData>& Assets, const EGamedevHelperVertexAnimTexture TextureType)
+bool UGamedevHelperAssetLibrary::VertexAnimConfigureTexture(UTexture2D* Texture, const EGamedevHelperVertexAnimTexture TextureType)
+{
+	if (!Texture) return false;
+
+	Texture->SRGB = false;
+	Texture->CompressionSettings = TextureType == EGamedevHelperVertexAnimTexture::UV ? TC_HDR : TC_VectorDisplacementmap;
+	Texture->Filter = TF_Nearest;
+	Texture->NeverStream = true;
+	Texture->MipGenSettings = TMGS_NoMipmaps;
+	Texture->LODGroup = TEXTUREGROUP_UI;
+	Texture->PostEditChange();
+
+	if (Texture->MarkPackageDirty())
+	{
+		return UEditorAssetLibrary::SaveLoadedAsset(Texture, true);
+	}
+
+	return false;
+}
+
+void UGamedevHelperAssetLibrary::VertexAnimConfigureTextures(TArray<UTexture2D*> Textures, const EGamedevHelperVertexAnimTexture TextureType)
 {
 	if (!GWarn) return;
 
-	GWarn->BeginSlowTask(FText::FromString(TEXT("[GDH_VertexAnimTool] Configuring textures")), true);
-
-	for (const auto& Asset : Assets)
+	bool bResult = true;
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Configuring textures for vertex animation")), true);
+	
+	for (const auto& Texture : Textures)
 	{
-		const auto Texture = Cast<UTexture2D>(Asset.GetAsset());
-		if (!Texture) continue;
-
-		Texture->SRGB = false;
-		Texture->CompressionSettings = TextureType == EGamedevHelperVertexAnimTexture::UV ? TC_HDR : TC_VectorDisplacementmap;
-		Texture->Filter = TF_Nearest;
-		Texture->NeverStream = true;
-		Texture->MipGenSettings = TMGS_NoMipmaps;
-		Texture->LODGroup = TEXTUREGROUP_UI;
-		Texture->PostEditChange();
-
-		if (Texture->MarkPackageDirty())
+		if (!VertexAnimConfigureTexture(Texture, TextureType))
 		{
-			UEditorAssetLibrary::SaveAsset(Asset.ObjectPath.ToString());
+			bResult = false;
 		}
 	}
 
 	GWarn->EndSlowTask();
+
+	// todo:ashe23 show notification based on result
 }
 
 void UGamedevHelperAssetLibrary::VertexAnimToolConfigureStaticMesh(const TArray<FAssetData>& Assets)
