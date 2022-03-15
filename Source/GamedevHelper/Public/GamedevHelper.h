@@ -9,6 +9,10 @@
 namespace GamedevHelperConstants
 {
 	static const FName ModuleName{TEXT("GamedevHelper")};
+	static const FString AlphaLower = TEXT("abcdefghijklmnopqrstuvwxyz");
+	static const FString AlphaUpper = AlphaLower.ToUpper();
+	static const FString AlphaMixed = AlphaLower + AlphaLower.ToUpper();
+	static const FString Digits = TEXT("0123456789");
 }
 
 class IGamedevHelper : public IModuleInterface
