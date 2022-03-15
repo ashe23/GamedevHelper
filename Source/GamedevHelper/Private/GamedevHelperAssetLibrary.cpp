@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GamedevHelperAssetLibrary.h"
+#include "GamedevHelperNotificationLibrary.h"
 // Engine Headers
 #include "FileHelpers.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -144,6 +145,11 @@ bool UGamedevHelperAssetLibrary::VertexAnimConfigureTexture(UTexture2D* Texture,
 void UGamedevHelperAssetLibrary::VertexAnimConfigureTextures(TArray<UTexture2D*> Textures, const EGamedevHelperVertexAnimTexture TextureType)
 {
 	if (!GWarn) return;
+	if (Textures.Num() == 0)
+	{
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Select textures"), EGamedevHelperModalStatus::Fail, 3.0f);
+		return;
+	}
 
 	bool bResult = true;
 	GWarn->BeginSlowTask(FText::FromString(TEXT("Configuring textures for vertex animation")), true);
@@ -158,7 +164,14 @@ void UGamedevHelperAssetLibrary::VertexAnimConfigureTextures(TArray<UTexture2D*>
 
 	GWarn->EndSlowTask();
 
-	// todo:ashe23 show notification based on result
+	if (bResult)
+	{
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Textures configured successfully"), EGamedevHelperModalStatus::Success, 3.0f);
+	}
+	else
+	{
+		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(TEXT("Failed to configure some textures"));
+	}
 }
 
 bool UGamedevHelperAssetLibrary::VertexAnimConfigureStaticMesh(UStaticMesh* StaticMesh)
@@ -192,6 +205,11 @@ bool UGamedevHelperAssetLibrary::VertexAnimConfigureStaticMesh(UStaticMesh* Stat
 void UGamedevHelperAssetLibrary::VertexAnimConfigureStaticMeshes(TArray<UStaticMesh*> StaticMeshes)
 {
 	if (!GWarn) return;
+	if (StaticMeshes.Num() == 0)
+	{
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Select static meshes"), EGamedevHelperModalStatus::Fail, 3.0f);
+		return;
+	}
 
 	bool bResult = true;
 
@@ -207,7 +225,14 @@ void UGamedevHelperAssetLibrary::VertexAnimConfigureStaticMeshes(TArray<UStaticM
 
 	GWarn->EndSlowTask();
 
-	// todo:ashe23 show notification
+	if (bResult)
+	{
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("StaticMeshes configured successfully"), EGamedevHelperModalStatus::Success, 3.0f);
+	}
+	else
+	{
+		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(TEXT("Failed to configure some StaticMeshes"));
+	}
 }
 
 bool UGamedevHelperAssetLibrary::DisableCollision(UStaticMesh* StaticMesh)
@@ -239,6 +264,11 @@ bool UGamedevHelperAssetLibrary::DisableCollision(UStaticMesh* StaticMesh)
 void UGamedevHelperAssetLibrary::DisableCollisions(TArray<UStaticMesh*> StaticMeshes)
 {
 	if (!GWarn) return;
+	if (StaticMeshes.Num() == 0)
+	{
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Select static meshes"), EGamedevHelperModalStatus::Fail, 3.0f);
+		return;
+	}
 
 	bool bResult = true;
 
@@ -254,5 +284,12 @@ void UGamedevHelperAssetLibrary::DisableCollisions(TArray<UStaticMesh*> StaticMe
 
 	GWarn->EndSlowTask();
 
-	// todo:ashe23 show notification
+	if (bResult)
+	{
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Collisions disabled successfully"), EGamedevHelperModalStatus::Success, 3.0f);
+	}
+	else
+	{
+		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(TEXT("Failed to disable collisions"));
+	}
 }

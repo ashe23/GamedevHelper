@@ -79,7 +79,7 @@ public:
 	static void VertexAnimConfigureStaticMeshes(TArray<UStaticMesh*> StaticMeshes);
 
 	/**
-	 * @brief Disable collision on given static mesh.LODS included
+	 * @brief Disable collision on given static mesh
 	 * @param StaticMesh UStaticMesh
 	 * @return bool
 	 */
@@ -87,7 +87,7 @@ public:
 	static bool DisableCollision(UStaticMesh* StaticMesh);
 
 	/**
-	 * @brief Disable collision on given static meshes.LODS included
+	 * @brief Disable collision on given static meshes
 	 * @param StaticMeshes TArray<UStaticMesh*>
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")

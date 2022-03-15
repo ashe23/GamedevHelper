@@ -53,6 +53,15 @@ enum class EGamedevHelperBlueprintType : uint8
 	FunctionLibrary
 };
 
+UENUM(BlueprintType)
+enum class EGamedevHelperModalStatus : uint8
+{
+	None,
+	Pending,
+	Success,
+	Fail,
+};
+
 
 // UENUM(BlueprintType)
 // enum class EGamedevHelperStringCase : uint8
