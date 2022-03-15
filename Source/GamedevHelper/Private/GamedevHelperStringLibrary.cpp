@@ -44,7 +44,7 @@ FString UGamedevHelperStringLibrary::GetLastLetter(const FString& OriginalString
 		return OriginalString;
 	}
 
-	return UKismetStringLibrary::GetSubstring(OriginalString, OriginalString.Len() - 1, 1) + TEXT("A");
+	return UKismetStringLibrary::GetSubstring(OriginalString, OriginalString.Len() - 1, 1);
 }
 
 FString UGamedevHelperStringLibrary::RemoveFirstLetter(const FString& OriginalString)
