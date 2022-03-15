@@ -16,12 +16,7 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "GamedevHelperCore",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
-    },
-    {
-      "Name": "GamedevHelperEditor",
+      "Name": "GamedevHelper",
       "Type": "Runtime",
       "LoadingPhase": "Default"
     }
