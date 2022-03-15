@@ -147,7 +147,7 @@ void UGamedevHelperAssetLibrary::VertexAnimConfigureTextures(TArray<UTexture2D*>
 
 	bool bResult = true;
 	GWarn->BeginSlowTask(FText::FromString(TEXT("Configuring textures for vertex animation")), true);
-	
+
 	for (const auto& Texture : Textures)
 	{
 		if (!VertexAnimConfigureTexture(Texture, TextureType))
@@ -161,74 +161,98 @@ void UGamedevHelperAssetLibrary::VertexAnimConfigureTextures(TArray<UTexture2D*>
 	// todo:ashe23 show notification based on result
 }
 
-void UGamedevHelperAssetLibrary::VertexAnimToolConfigureStaticMesh(const TArray<FAssetData>& Assets)
+bool UGamedevHelperAssetLibrary::VertexAnimConfigureStaticMesh(UStaticMesh* StaticMesh)
 {
-	if (!GWarn) return;
+	if (!StaticMesh) return false;
+	if (!StaticMesh->IsValidLowLevel()) return false;
 
-	DisableCollision(Assets);
+	DisableCollision(StaticMesh);
 
-	GWarn->BeginSlowTask(FText::FromString(TEXT("[GDH_VertexAnimTool] Configuring static meshes")), true);
-	FlushRenderingCommands();
+	StaticMesh->Modify();
 
-	for (const auto& Asset : Assets)
+	for (int32 LODIndex = 0; LODIndex < StaticMesh->GetNumLODs(); ++LODIndex)
 	{
-		const auto StaticMesh = Cast<UStaticMesh>(Asset.GetAsset());
-		if (!StaticMesh) continue;
-
-		StaticMesh->Modify();
-
-		for (int32 LODIndex = 0; LODIndex < StaticMesh->GetNumLODs(); ++LODIndex)
-		{
-			if (!StaticMesh->IsSourceModelValid(LODIndex)) continue;
-
-			FStaticMeshSourceModel& SourceModel = StaticMesh->GetSourceModel(LODIndex);
-			SourceModel.BuildSettings.bRemoveDegenerates = false;
-			SourceModel.BuildSettings.bUseFullPrecisionUVs = true;
-			SourceModel.BuildSettings.bGenerateLightmapUVs = false;
-			SourceModel.BuildSettings.DistanceFieldResolutionScale = 0.0f;
-		}
-
-		StaticMesh->PostEditChange();
-
-		if (StaticMesh->MarkPackageDirty())
-		{
-			UEditorAssetLibrary::SaveAsset(Asset.ObjectPath.ToString());
-		}
+		FStaticMeshSourceModel& SourceModel = StaticMesh->GetSourceModel(LODIndex);
+		SourceModel.BuildSettings.bRemoveDegenerates = false;
+		SourceModel.BuildSettings.bUseFullPrecisionUVs = true;
+		SourceModel.BuildSettings.bGenerateLightmapUVs = false;
+		SourceModel.BuildSettings.DistanceFieldResolutionScale = 0.0f;
 	}
 
-	GWarn->EndSlowTask();
+	StaticMesh->PostEditChange();
+
+	if (StaticMesh->MarkPackageDirty())
+	{
+		return UEditorAssetLibrary::SaveLoadedAsset(StaticMesh, true);
+	}
+
+	return false;
 }
 
-void UGamedevHelperAssetLibrary::DisableCollision(const TArray<FAssetData>& Assets)
+void UGamedevHelperAssetLibrary::VertexAnimConfigureStaticMeshes(TArray<UStaticMesh*> StaticMeshes)
 {
 	if (!GWarn) return;
 
-	GWarn->BeginSlowTask(FText::FromString(TEXT("Disabling collision")), true);
+	bool bResult = true;
 
-	for (const auto& Asset : Assets)
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Configuring static meshes for vertex animation")), true);
+
+	for (const auto& StaticMesh : StaticMeshes)
 	{
-		const auto StaticMesh = Cast<UStaticMesh>(Asset.GetAsset());
-		if (!StaticMesh) continue;
-
-		UBodySetup* BodySetup = StaticMesh->GetBodySetup();
-		if (!BodySetup) continue;
-
-		StaticMesh->Modify();
-
-		FBodyInstance BodyInstance = StaticMesh->GetBodySetup()->DefaultInstance;
-		BodyInstance.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		BodyInstance.SetCollisionProfileName(FName{"NoCollision"});
-
-		BodySetup->DefaultInstance = BodyInstance;
-		StaticMesh->SetBodySetup(BodySetup);
-
-		StaticMesh->PostEditChange();
-
-		if (StaticMesh->MarkPackageDirty())
+		if (!VertexAnimConfigureStaticMesh(StaticMesh))
 		{
-			UEditorAssetLibrary::SaveAsset(Asset.ObjectPath.ToString());
+			bResult = false;
 		}
 	}
 
 	GWarn->EndSlowTask();
+
+	// todo:ashe23 show notification
+}
+
+bool UGamedevHelperAssetLibrary::DisableCollision(UStaticMesh* StaticMesh)
+{
+	if (!StaticMesh) return false;
+	if (!StaticMesh->IsValidLowLevel()) return false;
+
+	UBodySetup* BodySetup = StaticMesh->GetBodySetup();
+	if (!BodySetup) return false;
+
+	StaticMesh->Modify();
+
+	FBodyInstance BodyInstance = StaticMesh->GetBodySetup()->DefaultInstance;
+	BodyInstance.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BodyInstance.SetCollisionProfileName(FName{"NoCollision"});
+
+	BodySetup->DefaultInstance = BodyInstance;
+	StaticMesh->SetBodySetup(BodySetup);
+	StaticMesh->PostEditChange();
+
+	if (StaticMesh->MarkPackageDirty())
+	{
+		return UEditorAssetLibrary::SaveLoadedAsset(StaticMesh, true);
+	}
+
+	return false;
+}
+
+void UGamedevHelperAssetLibrary::DisableCollisions(TArray<UStaticMesh*> StaticMeshes)
+{
+	if (!GWarn) return;
+
+	bool bResult = true;
+
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Disabling collisions")), true);
+
+	for (const auto& StaticMesh : StaticMeshes)
+	{
+		if (!DisableCollision(StaticMesh))
+		{
+			bResult = false;
+		}
+	}
+
+	GWarn->EndSlowTask();
+
+	// todo:ashe23 show notification
 }

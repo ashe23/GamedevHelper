@@ -61,21 +61,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset|VertexAnimTool")
 	static void VertexAnimConfigureTextures(TArray<UTexture2D*> Textures, const EGamedevHelperVertexAnimTexture TextureType);
 
-	// static void VertexAnimConfigureStaticMesh();
-
 	/**
-	 * @brief Configures selected static meshes for vertex animation, including LODs
-	 * @param Assets TArray<FAssetData>
-	 * @return bool
+	 * @brief Configures static mesh for vertex animation.LODS included
+	 * @see https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/Tools/VertexAnimationTool/
+	 * @param StaticMesh UStaticMesh
+	 * @return 
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset|VertexAnimTool")
-	static void VertexAnimToolConfigureStaticMesh(const TArray<FAssetData>& Assets);
+	static bool VertexAnimConfigureStaticMesh(UStaticMesh* StaticMesh);
+	
+	/**
+	 * @brief Configures static meshes for vertex animation.LODS included
+	 * @see https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/Tools/VertexAnimationTool/
+	 * @param StaticMeshes TArray<UStaticMesh*>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset|VertexAnimTool")
+	static void VertexAnimConfigureStaticMeshes(TArray<UStaticMesh*> StaticMeshes);
 
 	/**
-	 * @brief Disables collision on given static mesh assets
-	 * @param Assets TArray<FAssetData>
+	 * @brief Disable collision on given static mesh.LODS included
+	 * @param StaticMesh UStaticMesh
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
-	static void DisableCollision(const TArray<FAssetData>& Assets);
+	static bool DisableCollision(UStaticMesh* StaticMesh);
+
+	/**
+	 * @brief Disable collision on given static meshes.LODS included
+	 * @param StaticMeshes TArray<UStaticMesh*>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	static void DisableCollisions(TArray<UStaticMesh*> StaticMeshes);
 };
