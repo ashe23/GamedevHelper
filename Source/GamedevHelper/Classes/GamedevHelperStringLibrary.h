@@ -101,9 +101,9 @@ public:
 	static FString SymmetricDifference(const FString& StringA, const FString& StringB);
 
 	/**
-	 * @brief Returns difference of character sets of given two string
-	 * - "abc", "abd" => "c"
-	 * - "abc", "def" => ""
+	 * @brief Returns difference of character sets of given two string , set of all elements that are members of StringA, but not members of StringB
+	 * - "abc", "abd" => "a"
+	 * - "abc", "def" => "abc"
 	 * @param StringA 
 	 * @param StringB 
 	 * @return 
