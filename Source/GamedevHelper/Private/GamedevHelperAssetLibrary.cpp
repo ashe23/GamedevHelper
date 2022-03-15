@@ -11,6 +11,8 @@
 #include "RenderingThread.h"
 #include "Misc/FeedbackContext.h"
 #include "EditorAssetLibrary.h"
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
 
 void UGamedevHelperAssetLibrary::SaveAll(const bool bUserPrompt)
 {
@@ -292,4 +294,11 @@ void UGamedevHelperAssetLibrary::DisableCollisions(TArray<UStaticMesh*> StaticMe
 	{
 		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(TEXT("Failed to disable collisions"));
 	}
+}
+
+void UGamedevHelperAssetLibrary::GetSelectedAssets(TArray<FAssetData>& Assets)
+{
+	const FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+
+	ContentBrowserModule.Get().GetSelectedAssets(Assets);
 }

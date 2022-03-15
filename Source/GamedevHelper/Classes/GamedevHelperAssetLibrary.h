@@ -92,4 +92,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
 	static void DisableCollisions(TArray<UStaticMesh*> StaticMeshes);
+	
+	static void GetSelectedAssets(TArray<FAssetData>& Assets);
 };
