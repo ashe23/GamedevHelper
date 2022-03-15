@@ -5,6 +5,17 @@
 #include "CoreMinimal.h"
 #include "GamedevHelperTypes.generated.h"
 
+template <typename EnumType>
+static FORCEINLINE EnumType GetEnumValueFromString(const FString& EnumName, const FString& String)
+{
+	UEnum* Enum = FindObject<UEnum>(ANY_PACKAGE, *EnumName, true);
+	if (!Enum)
+	{
+		return EnumType(0);
+	}
+	return static_cast<EnumType>(Enum->GetIndexByName(FName(*String)));
+}
+
 UENUM(BlueprintType)
 enum class EGamedevHelperNamingCase : uint8
 {
@@ -24,6 +35,24 @@ enum class EGamedevHelperLetterCase : uint8
 	UpperCase UMETA(DiplayName = "UPPERCASE"),
 	MixedCase UMETA(DiplayName = "MiXeDCaSe"),
 };
+
+UENUM(BlueprintType)
+enum class EGamedevHelperVertexAnimTexture : uint8
+{
+	UV,
+	Normal,
+};
+
+UENUM(BlueprintType)
+enum class EGamedevHelperBlueprintType : uint8
+{
+	None,
+	Normal,
+	Interface,
+	MacroLibrary,
+	FunctionLibrary
+};
+
 
 // UENUM(BlueprintType)
 // enum class EGamedevHelperStringCase : uint8
@@ -45,7 +74,7 @@ struct FGamedevHelperAssetName
 
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetName")
 	FString Prefix;
-	
+
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetName")
 	FString Suffix;
 };
