@@ -204,3 +204,5 @@ bool FStringLibraryGetLastLetterTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+// todo:ashe23 add 100% test coverage
