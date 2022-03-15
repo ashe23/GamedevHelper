@@ -30,6 +30,10 @@ public class GamedevHelper : ModuleRules
 				"UnrealEd",
 				"RenderCore",
 				"EditorScriptingUtilities",
+				"Projects",
+				"ToolMenus",
+				"EditorStyle",
+				"InputCore",
 			}
 		);
 	}
