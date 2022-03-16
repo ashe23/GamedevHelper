@@ -14,3 +14,4 @@ Collection of reusable functions and tools used in game development for unreal e
 - World outliner Manager (todo)
 - FFmpeg Renderer (todo)
 - CLI tools (todo)
+- Project Folder Structure Manager (research)
