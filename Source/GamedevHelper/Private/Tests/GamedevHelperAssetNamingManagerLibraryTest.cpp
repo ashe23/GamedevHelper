@@ -74,6 +74,5 @@ bool FAssetNamingManagerLibraryNormalizeTest::RunTest(const FString& Parameters)
 
 	FGamedevHelperTester::ExpectTestScenarioPass(Scenario);
 
-
 	return true;
 }

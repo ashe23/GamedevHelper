@@ -175,5 +175,5 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static bool ContainsOnlyDigits(const FString& OriginalString);
 	
-	static FString RegexReplace(const FString& OriginalString, const FString& Pattern, const FString& Substitution);
+	// static FString RegexReplace(const FString& OriginalString, const FString& Pattern, const FString& Substitution);
 };

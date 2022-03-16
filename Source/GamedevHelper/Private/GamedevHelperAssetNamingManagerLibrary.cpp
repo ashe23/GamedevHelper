@@ -19,10 +19,26 @@ FString UGamedevHelperAssetNamingManagerLibrary::Normalize(const FString& Origin
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
-	const FString TrimmedStartAndEnd = UGamedevHelperStringLibrary::RegexReplace(OriginalString, TEXT("^[^0-9a-zA-Z]+|[^0-9a-zA-Z]+$"), TEXT(""));
-	const FString Normalized = UGamedevHelperStringLibrary::RegexReplace(TrimmedStartAndEnd, TEXT("[^0-9a-zA-Z]+"), TEXT("_"));
+	FString CleanedString;
+	CleanedString.Reserve(OriginalString.Len());
 
-	return Normalized;
+	const auto Chars = OriginalString.GetCharArray();
+	for (const auto Char : Chars)
+	{
+		if (FChar::IsAlnum(Char) || FChar::IsDigit(Char))
+		{
+			CleanedString.AppendChar(Char);
+		}
+		else
+		{
+			CleanedString.AppendChar('_');
+		}
+	}
+
+	TArray<FString> Parts;
+	CleanedString.ParseIntoArray(Parts, TEXT("_"), true);
+	
+	return UKismetStringLibrary::JoinStringArray(Parts, TEXT("_"));
 }
 
 FString UGamedevHelperAssetNamingManagerLibrary::Tokenize(const FString& OriginalString)
