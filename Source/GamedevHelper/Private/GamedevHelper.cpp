@@ -33,7 +33,7 @@ private:
 	TSharedRef<SDockTab> OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 
 	// actions
-	static void OnContextMenuVATStaticMeshesClicked();
+	static void OnContextMenuVatStaticMeshesClicked();
 	static void OnContextMenuVatTexturesClicked(EGamedevHelperVertexAnimTexture TextureType);
 	static void OnContextMenuDisableCollisionsClicked();
 
@@ -101,7 +101,7 @@ void FGamedevHelper::InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) co
 		LOCTEXT("VAT_StaticMesh", "StaticMesh"),
 		LOCTEXT("VAT_StaticMesh_ToolTip", "Configure static meshes for vertex animation"),
 		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVATStaticMeshesClicked))
+		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked))
 	);
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("VAT_TextureNormal", "Texture Normal"),
@@ -185,7 +185,7 @@ TSharedRef<SDockTab> FGamedevHelper::OpenWorldOutlinerManagerWindow(const FSpawn
 		];
 }
 
-void FGamedevHelper::OnContextMenuVATStaticMeshesClicked()
+void FGamedevHelper::OnContextMenuVatStaticMeshesClicked()
 {
 	TArray<FAssetData> SelectedAssets;
 	UGamedevHelperAssetLibrary::GetSelectedAssets(SelectedAssets);
