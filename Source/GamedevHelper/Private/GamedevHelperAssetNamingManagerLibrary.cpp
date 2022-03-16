@@ -2,12 +2,12 @@
 
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 
-void UGamedevHelperAssetNamingManagerLibrary::FixName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings& Settings)
+void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings& Settings)
 {
 	// todo:ashe23
 }
 
-void UGamedevHelperAssetNamingManagerLibrary::FixNames(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings& Settings)
+void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings& Settings)
 {
 	// todo:ashe23
 }
@@ -24,7 +24,7 @@ FString UGamedevHelperAssetNamingManagerLibrary::Tokenize(const FString& Origina
 	return FString{};
 }
 
-FString UGamedevHelperAssetNamingManagerLibrary::ConvertNamingCase(const EGamedevHelperNamingCase NamingCase)
+FString UGamedevHelperAssetNamingManagerLibrary::ConvertNamingCase(const FString& OriginalString, const EGamedevHelperNamingCase NamingCase)
 {
 	// todo:ashe23
 	return FString{};
