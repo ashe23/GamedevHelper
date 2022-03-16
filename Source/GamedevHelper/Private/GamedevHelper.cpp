@@ -13,6 +13,7 @@
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
 static const FName TabAssetNamingManager{TEXT("TabAssetNamingManager")};
+static const FName TabWorldOutlinerManager{TEXT("TabWorldOutlinerManager")};
 
 class FGamedevHelper : public IGamedevHelper
 {
@@ -27,7 +28,9 @@ private:
 	void InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder);
 	void InitMainMenuEntries(FMenuBuilder& MenuBuilder) const;
 	static void OnTabAssetNamingManagerClicked();
+	static void OnTabWorldOutlinerManagerClicked();
 	TSharedRef<SDockTab> OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
+	TSharedRef<SDockTab> OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 
 	// actions
 	static void OnContextMenuVATStaticMeshesClicked();
@@ -46,6 +49,11 @@ void FGamedevHelper::RegisterCommands()
 	PluginCommands->MapAction(
 		FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow,
 		FExecuteAction::CreateStatic(&FGamedevHelper::OnTabAssetNamingManagerClicked),
+		FCanExecuteAction()
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow,
+		FExecuteAction::CreateStatic(&FGamedevHelper::OnTabWorldOutlinerManagerClicked),
 		FCanExecuteAction()
 	);
 }
@@ -144,6 +152,7 @@ void FGamedevHelper::InitMainMenuEntries(FMenuBuilder& MenuBuilder) const
 {
 	MenuBuilder.BeginSection("GDHManagementSection", FText::FromString("Management"));
 	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow);
+	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow);
 	MenuBuilder.EndSection();
 }
 
@@ -152,12 +161,27 @@ void FGamedevHelper::OnTabAssetNamingManagerClicked()
 	FGlobalTabmanager::Get()->TryInvokeTab(TabAssetNamingManager);
 }
 
+void FGamedevHelper::OnTabWorldOutlinerManagerClicked()
+{
+	FGlobalTabmanager::Get()->TryInvokeTab(TabWorldOutlinerManager);
+}
+
 TSharedRef<SDockTab> FGamedevHelper::OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const
 {
 	return SNew(SDockTab)
 		.TabRole(MajorTab)
 		[
 			SNew(SAssetNamingManagerWindow)
+		];
+}
+
+TSharedRef<SDockTab> FGamedevHelper::OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const
+{
+	return SNew(SDockTab)
+		.TabRole(MajorTab)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("todo:World Outlinear manager")))
 		];
 }
 
@@ -233,6 +257,12 @@ void FGamedevHelper::StartupModule()
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabAssetNamingManager", "Asset Naming Manager"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        TabWorldOutlinerManager,
+		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenWorldOutlinerManagerWindow)
+	                        )
+	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabWorlOutlinerManager", "World Outliner Manager"))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
 void FGamedevHelper::ShutdownModule()
@@ -242,6 +272,7 @@ void FGamedevHelper::ShutdownModule()
 	UToolMenus::UnRegisterStartupCallback(this);
 	UToolMenus::UnregisterOwner(this);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabAssetNamingManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabWorldOutlinerManager);
 }
 
 #undef LOCTEXT_NAMESPACE

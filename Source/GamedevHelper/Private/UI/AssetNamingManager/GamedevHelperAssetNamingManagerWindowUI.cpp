@@ -71,7 +71,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-							.Text(FText::FromString(TEXT("Fix Names")))
+							.Text(FText::FromString(TEXT("Rename Assets")))
 						]
 					]
 					+ SHorizontalBox::Slot()

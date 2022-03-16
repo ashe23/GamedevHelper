@@ -19,7 +19,7 @@ public:
 	 * @param Settings UGamedevHelperAssetNamingManagerSettings
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
-	static void RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings& Settings);
+	static void RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings);
 
 	/**
 	 * @brief Renames assets by given settings
@@ -27,7 +27,7 @@ public:
 	 * @param Settings UGamedevHelperAssetNamingManagerSettings
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
-	static void RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings& Settings);
+	static void RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings* Settings);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 

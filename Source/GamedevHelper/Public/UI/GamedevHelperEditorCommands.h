@@ -20,6 +20,7 @@ public:
 
 	// main menu
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_WorldOutlinerManagerWindow;
 	
 	// context menu
 	// TSharedPtr<FUICommandInfo> CMD_VertexAnimToolStaticMesh;
