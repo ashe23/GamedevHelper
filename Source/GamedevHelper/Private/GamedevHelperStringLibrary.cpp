@@ -4,6 +4,7 @@
 // Engine Headers
 #include "GamedevHelper.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Internationalization/Regex.h"
 
 FString UGamedevHelperStringLibrary::GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed)
 {
@@ -200,4 +201,22 @@ bool UGamedevHelperStringLibrary::ContainsOnlyLetters(const FString& OriginalStr
 bool UGamedevHelperStringLibrary::ContainsOnlyDigits(const FString& OriginalString)
 {
 	return ContainsOnly(OriginalString, GamedevHelperConstants::Digits, ESearchCase::IgnoreCase);
+}
+
+FString UGamedevHelperStringLibrary::RegexReplace(const FString& OriginalString, const FString& Pattern, const FString& Substitution)
+{
+	if (OriginalString.IsEmpty() || Pattern.IsEmpty()) return FString{};
+
+	const FRegexPattern RegexPattern{Pattern};
+	FRegexMatcher RegexMatcher{RegexPattern, OriginalString};
+
+	FString FinalString = OriginalString;
+	
+	while(RegexMatcher.FindNext())
+	{
+		const FString Token = RegexMatcher.GetCaptureGroup(0);
+		FinalString = FinalString.Replace(*Token, *Substitution);
+	}
+	
+	return FinalString;
 }

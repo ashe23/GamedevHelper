@@ -11,7 +11,6 @@ class UGamedevHelperStringLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	
 	/**
 	 * @brief Returns randomly generated string
 	 * @param Len int32 
@@ -25,7 +24,7 @@ public:
 	// todo:ashe23 implement later
 	// static FString GetRandomStringFromFormat();
 	// static FString GetRandomStringFromStringCase();
-	
+
 	/**
 	 * @brief Returns first letter of given string
 	 * - "abc" => "a"
@@ -175,4 +174,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static bool ContainsOnlyDigits(const FString& OriginalString);
+	
+	static FString RegexReplace(const FString& OriginalString, const FString& Pattern, const FString& Substitution);
 };
