@@ -19,11 +19,10 @@ FString UGamedevHelperAssetNamingManagerLibrary::Normalize(const FString& Origin
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
-	// replace all non alphabet and digit characters with underscore
-	FString CleanedString = UGamedevHelperStringLibrary::RegexReplace(OriginalString, TEXT("[^0-9a-zA-Z]+"), TEXT("_"));
-	CleanedString.RemoveFromStart(TEXT("_"));
-	CleanedString.RemoveFromEnd(TEXT("_"));
-	return CleanedString;
+	const FString TrimmedStartAndEnd = UGamedevHelperStringLibrary::RegexReplace(OriginalString, TEXT("^[^0-9a-zA-Z]+|[^0-9a-zA-Z]+$"), TEXT(""));
+	const FString Normalized = UGamedevHelperStringLibrary::RegexReplace(TrimmedStartAndEnd, TEXT("[^0-9a-zA-Z]+"), TEXT("_"));
+
+	return Normalized;
 }
 
 FString UGamedevHelperAssetNamingManagerLibrary::Tokenize(const FString& OriginalString)

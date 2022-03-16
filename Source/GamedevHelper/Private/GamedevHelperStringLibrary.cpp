@@ -205,18 +205,36 @@ bool UGamedevHelperStringLibrary::ContainsOnlyDigits(const FString& OriginalStri
 
 FString UGamedevHelperStringLibrary::RegexReplace(const FString& OriginalString, const FString& Pattern, const FString& Substitution)
 {
+	// todo:ashe23 how to handle empty substitution?
 	if (OriginalString.IsEmpty() || Pattern.IsEmpty()) return FString{};
 
 	const FRegexPattern RegexPattern{Pattern};
 	FRegexMatcher RegexMatcher{RegexPattern, OriginalString};
 
 	FString FinalString = OriginalString;
-	
+
+	// index => len
+	TMap<int32, int32> Matches;
+
 	while(RegexMatcher.FindNext())
 	{
-		const FString Token = RegexMatcher.GetCaptureGroup(0);
-		FinalString = FinalString.Replace(*Token, *Substitution);
+		const int32 MatchStart = RegexMatcher.GetMatchBeginning();
+		const int32 MatchEnd = RegexMatcher.GetMatchEnding();
+		const int32 MatchLen = MatchEnd - MatchStart;
+
+		Matches.Add(MatchStart, MatchLen);		
 	}
-	
+
+	int32 Index = 0;
+	for (const auto& Match : Matches)
+	{
+		const int32 StartIndex = Match.Key + Index;
+		const int32 Len = Match.Value;
+
+		FinalString.Append(UKismetStringLibrary::GetSubstring(OriginalString, StartIndex, Len));
+
+		Index = StartIndex + Substitution.Len();
+	}
+
 	return FinalString;
 }

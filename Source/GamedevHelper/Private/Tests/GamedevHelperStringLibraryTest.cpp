@@ -43,6 +43,12 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStringLibraryRegexReplaceTest,
+	"Plugins.GamedevHelper.Libraries.String.RegexReplace",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
 bool FStringLibraryGetRandomStringFromCharsetTest::RunTest(const FString& Parameters)
 {
 	// contracts
@@ -270,6 +276,7 @@ bool FStringLibraryIsSubSetTest::RunTest(const FString& Parameters)
 		Tests.Add(FTestCase{TEXT("abc"), TEXT(""), true});
 		Tests.Add(FTestCase{TEXT(""), TEXT("abc"), true});
 		Tests.Add(FTestCase{TEXT("abc"), TEXT("abc"), true});
+		Tests.Add(FTestCase{TEXT("r0_wwWhC_P"), GamedevHelperConstants::AlphaMixed + GamedevHelperConstants::Digits + TEXT("_"), true});
 
 		for (const auto& Test : Tests)
 		{
@@ -289,6 +296,30 @@ bool FStringLibraryIsSubSetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+bool FStringLibraryRegexReplaceTest::RunTest(const FString& Parameters)
+{
+	struct FTestCase
+	{
+		FString Input;
+		FString Expected;
+	};
+	TArray<FTestCase> Tests;
+	Tests.Add(FTestCase{TEXT("_aaa_"), TEXT("_aaa_")});
+	Tests.Add(FTestCase{TEXT("r0};wwWhC%P,%aaa,%"), TEXT("r0_wwWhC_P_aaa_")});
+
+	for (const auto& Test : Tests)
+	{
+		const FString Actual = UGamedevHelperStringLibrary::RegexReplace(Test.Input, TEXT("[^0-9a-zA-Z]+"), TEXT("_"));
+		if (Actual != Test.Expected)
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Expected '%s', got '%s', for input '%s'"), *Test.Expected, *Actual, *Test.Input);
+			return false;
+		}
+	}
+	
+	
+	return true;
+}
 
 
 
