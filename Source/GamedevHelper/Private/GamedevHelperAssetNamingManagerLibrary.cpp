@@ -43,8 +43,46 @@ FString UGamedevHelperAssetNamingManagerLibrary::Normalize(const FString& Origin
 
 FString UGamedevHelperAssetNamingManagerLibrary::Tokenize(const FString& OriginalString)
 {
-	// todo:ashe23
-	return FString{};
+	if (OriginalString.IsEmpty()) return OriginalString;
+
+	const FString Normalized = Normalize(OriginalString);
+	
+
+	FString Token;
+	Token.AppendChar(Normalized[0]);
+	const auto Chars = Normalized.GetCharArray();
+	
+	TArray<FString> Tokens;
+	
+	for(int32 i = 1; i < Chars.Num() - 1; ++i)
+	{
+		const auto CurrentChar = Chars[i];
+		const auto PreviousChar = Chars[i - 1];
+
+		if (FChar::IsUnderscore(CurrentChar))
+		{
+			continue;
+		}
+
+		if (
+			!FChar::IsUnderscore(CurrentChar) && FChar::IsUnderscore(PreviousChar) ||
+			FChar::IsLower(CurrentChar) && FChar::IsDigit(PreviousChar) ||
+			FChar::IsUpper(CurrentChar) && FChar::IsLower(PreviousChar) ||
+			FChar::IsUpper(CurrentChar) && FChar::IsDigit(PreviousChar) ||
+			FChar::IsDigit(CurrentChar) && FChar::IsLower(PreviousChar) ||
+			FChar::IsDigit(CurrentChar) && FChar::IsUpper(PreviousChar)
+		)
+		{
+			Tokens.Add(Token.ToLower());
+			Token.Empty();
+		}
+		
+		Token.AppendChar(CurrentChar);
+	}
+
+	Tokens.Add(Token.ToLower());
+	
+	return UKismetStringLibrary::JoinStringArray(Tokens, TEXT("_"));
 }
 
 FString UGamedevHelperAssetNamingManagerLibrary::ConvertNamingCase(const FString& OriginalString, const EGamedevHelperNamingCase NamingCase)

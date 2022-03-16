@@ -13,6 +13,12 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FAssetNamingManagerLibraryTokenizeTest,
+	"Plugins.GamedevHelper.Libraries.AssetNamingManager.Tokenize",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
 bool FAssetNamingManagerLibraryNormalizeTest::RunTest(const FString& Parameters)
 {
 	// contracts
@@ -76,3 +82,40 @@ bool FAssetNamingManagerLibraryNormalizeTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+bool FAssetNamingManagerLibraryTokenizeTest::RunTest(const FString& Parameters)
+{
+	// contracts
+
+	const auto Scenario = []()
+	{
+		TMap<FString, FString> Tests;
+		Tests.Add(TEXT("myMaterial"), TEXT("my_material"));
+		Tests.Add(TEXT("abc_01"), TEXT("abc_01"));
+		Tests.Add(TEXT("Abc02"), TEXT("abc_02"));
+		Tests.Add(TEXT("01MyTexture02"), TEXT("01_my_texture_02"));
+		Tests.Add(TEXT("-_weirdName-_023"), TEXT("weird_name_023"));
+		Tests.Add(TEXT(""), TEXT(""));
+		Tests.Add(TEXT("BFL-my-char"), TEXT("bfl_my_char"));
+		Tests.Add(TEXT("a"), TEXT("a"));
+		
+		for (const auto& Test : Tests)
+		{
+			const FString Input = Test.Key;
+			const FString Expected = Test.Value;
+			const FString Actual = UGamedevHelperAssetNamingManagerLibrary::Tokenize(Input);
+
+			if (Actual != Expected)
+			{
+				UE_LOG(LogGamedevHelper, Error, TEXT("Expected tokenized value for '%s', to be '%s', got '%s'"), *Input, *Expected, *Actual);
+				return false;
+			}
+		}
+		
+		return true;	
+	};
+
+	FGamedevHelperTester::ExpectTestScenarioPass(Scenario);
+	return true;
+}
+
