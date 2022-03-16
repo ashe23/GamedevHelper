@@ -61,4 +61,44 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static FString ConvertNamingCase(const FString& OriginalString, const EGamedevHelperNamingCase NamingCase);
+
+	/**
+	 * @brief Converts string to PascalCase
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
+	static FString ConvertToPascalCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to Pascal_Snake_Case
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
+	static FString ConvertToPascalSnakeCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to snake_case
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
+	static FString ConvertToSnakeCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to kebab-case
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
+	static FString ConvertToKebabCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to camelCase
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
+	static FString ConvertToCamelCase(const FString& OriginalString);
 };

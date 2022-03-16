@@ -19,6 +19,36 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
 )
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FAssetNamingManagerLibraryConvertToPascalCaseTest,
+	"Plugins.GamedevHelper.Libraries.AssetNamingManager.ConvertToPascalCase",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FAssetNamingManagerLibraryConvertToPascalSnakeCaseTest,
+	"Plugins.GamedevHelper.Libraries.AssetNamingManager.ConvertToPascalSnakeCase",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FAssetNamingManagerLibraryConvertToSnakeCaseTest,
+	"Plugins.GamedevHelper.Libraries.AssetNamingManager.ConvertToSnakeCase",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FAssetNamingManagerLibraryConvertToKebabCaseTest,
+	"Plugins.GamedevHelper.Libraries.AssetNamingManager.ConvertToKebabCase",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FAssetNamingManagerLibraryConvertToCamelCaseTest,
+	"Plugins.GamedevHelper.Libraries.AssetNamingManager.ConvertToCamelCase",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+)
+
 bool FAssetNamingManagerLibraryNormalizeTest::RunTest(const FString& Parameters)
 {
 	// contracts
@@ -116,6 +146,131 @@ bool FAssetNamingManagerLibraryTokenizeTest::RunTest(const FString& Parameters)
 	};
 
 	FGamedevHelperTester::ExpectTestScenarioPass(Scenario);
+	return true;
+}
+
+bool FAssetNamingManagerLibraryConvertToPascalCaseTest::RunTest(const FString& Parameters)
+{
+	// input => expected
+	TMap<FString, FString> Tests;
+	Tests.Add(TEXT("my_material_01"), TEXT("MyMaterial01"));
+	Tests.Add(TEXT("aaa"), TEXT("Aaa"));
+	Tests.Add(TEXT("TEXTURE01"), TEXT("Texture01"));
+	Tests.Add(TEXT("01My_Str"), TEXT("01MyStr"));
+	Tests.Add(TEXT(""), TEXT(""));
+
+	for (const auto& Test : Tests)
+	{
+		const FString Input = Test.Key;
+		const FString Expected = Test.Value;
+		const FString Actual = UGamedevHelperAssetNamingManagerLibrary::ConvertToPascalCase(Input);
+
+		if (Expected != Actual)
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Expected PascalCase for '%s', to be '%s' got '%s' "), *Input, *Expected, *Actual);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FAssetNamingManagerLibraryConvertToPascalSnakeCaseTest::RunTest(const FString& Parameters)
+{
+	// input => expected
+	TMap<FString, FString> Tests;
+	Tests.Add(TEXT("my_material_01"), TEXT("My_Material_01"));
+	Tests.Add(TEXT("aaa"), TEXT("Aaa"));
+	Tests.Add(TEXT("TEXTURE01"), TEXT("Texture_01"));
+	Tests.Add(TEXT("01My_Str"), TEXT("01_My_Str"));
+	Tests.Add(TEXT(""), TEXT(""));
+
+	for (const auto& Test : Tests)
+	{
+		const FString Input = Test.Key;
+		const FString Expected = Test.Value;
+		const FString Actual = UGamedevHelperAssetNamingManagerLibrary::ConvertToPascalSnakeCase(Input);
+
+		if (Expected != Actual)
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Expected PascalSnakeCase for '%s', to be '%s' got '%s' "), *Input, *Expected, *Actual);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FAssetNamingManagerLibraryConvertToSnakeCaseTest::RunTest(const FString& Parameters)
+{
+	// input => expected
+	TMap<FString, FString> Tests;
+	Tests.Add(TEXT("my_material_01"), TEXT("my_material_01"));
+	Tests.Add(TEXT("aaa"), TEXT("aaa"));
+	Tests.Add(TEXT("TEXTURE01"), TEXT("texture_01"));
+	Tests.Add(TEXT("01My_Str"), TEXT("01_my_str"));
+	Tests.Add(TEXT(""), TEXT(""));
+
+	for (const auto& Test : Tests)
+	{
+		const FString Input = Test.Key;
+		const FString Expected = Test.Value;
+		const FString Actual = UGamedevHelperAssetNamingManagerLibrary::ConvertToSnakeCase(Input);
+
+		if (Expected != Actual)
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Expected snake_case for '%s', to be '%s' got '%s' "), *Input, *Expected, *Actual);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FAssetNamingManagerLibraryConvertToKebabCaseTest::RunTest(const FString& Parameters)
+{
+	// input => expected
+	TMap<FString, FString> Tests;
+	Tests.Add(TEXT("my_material_01"), TEXT("my-material-01"));
+	Tests.Add(TEXT("aaa"), TEXT("aaa"));
+	Tests.Add(TEXT("TEXTURE01"), TEXT("texture-01"));
+	Tests.Add(TEXT("01My_Str"), TEXT("01-my-str"));
+	Tests.Add(TEXT(""), TEXT(""));
+
+	for (const auto& Test : Tests)
+	{
+		const FString Input = Test.Key;
+		const FString Expected = Test.Value;
+		const FString Actual = UGamedevHelperAssetNamingManagerLibrary::ConvertToKebabCase(Input);
+
+		if (Expected != Actual)
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Expected kebab-case for '%s', to be '%s' got '%s' "), *Input, *Expected, *Actual);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FAssetNamingManagerLibraryConvertToCamelCaseTest::RunTest(const FString& Parameters)
+{
+	// input => expected
+	TMap<FString, FString> Tests;
+	Tests.Add(TEXT("my_material_01"), TEXT("myMaterial01"));
+	Tests.Add(TEXT("aaa"), TEXT("aaa"));
+	Tests.Add(TEXT("TEXTURE01"), TEXT("texture01"));
+	Tests.Add(TEXT("01My_Str"), TEXT("01MyStr"));
+	Tests.Add(TEXT(""), TEXT(""));
+
+	for (const auto& Test : Tests)
+	{
+		const FString Input = Test.Key;
+		const FString Expected = Test.Value;
+		const FString Actual = UGamedevHelperAssetNamingManagerLibrary::ConvertToCamelCase(Input);
+
+		if (Expected != Actual)
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Expected camelCase for '%s', to be '%s' got '%s' "), *Input, *Expected, *Actual);
+			return false;
+		}
+	}
 	return true;
 }
 
