@@ -5,14 +5,14 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
-class SProjectOrganizerWindow : public SCompoundWidget
+class SAssetNamingManagerWindow : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SProjectOrganizerWindow){}
+	SLATE_BEGIN_ARGS(SAssetNamingManagerWindow){}
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
-	virtual ~SProjectOrganizerWindow() override;
+	virtual ~SAssetNamingManagerWindow() override;
 private:
 	void InitTabs();
 	TSharedRef<SDockTab> OnTabAssetNamingSpawn(const FSpawnTabArgs& SpawnTabArgs) const;

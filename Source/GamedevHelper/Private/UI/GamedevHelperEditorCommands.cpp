@@ -6,7 +6,7 @@
 
 void FGamedevHelperEditorCommands::RegisterCommands()
 {
-	UI_COMMAND(Cmd_ProjectOrganizerWindow, "Project Organizer", "Open Project Organizer Window", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(Cmd_AssetNamingManagerWindow, "Asset Naming Manager", "Open Asset Naming Manager Window", EUserInterfaceActionType::Button, FInputChord());
 }
 
 #undef LOCTEXT_NAMESPACE

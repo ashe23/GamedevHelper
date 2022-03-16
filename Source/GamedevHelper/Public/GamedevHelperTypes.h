@@ -81,6 +81,16 @@ struct FGamedevHelperAssetName
 {
 	GENERATED_BODY()
 
+	FGamedevHelperAssetName() = default;
+	
+	FGamedevHelperAssetName(const FString& Pre, const FString& Suf) : Prefix(Pre), Suffix(Suf)
+	{
+	}
+
+	FGamedevHelperAssetName(const FString& Pre) : Prefix(Pre)
+	{
+	}
+
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetName")
 	FString Prefix;
 

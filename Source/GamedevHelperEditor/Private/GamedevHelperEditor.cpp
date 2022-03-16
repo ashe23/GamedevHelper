@@ -11,7 +11,7 @@
 
 #define LOCTEXT_NAMESPACE "FGamedevHelperEditor"
 
-static const FName GamedevHelperMainTabName{TEXT("GamedevHelperTab")};
+static const FName GamedevHelperAssetNamingManagerTabName{TEXT("GamedevHelperTab")};
 
 class FGamedevHelperEditor : public IGamedevHelperEditor
 {
@@ -51,7 +51,7 @@ void FGamedevHelperEditor::StartupModule()
 	
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        GamedevHelperMainTabName,
+		                        GamedevHelperAssetNamingManagerTabName,
 		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelperEditor::OnMainTabClick)
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabTitle", "ProjectOrganizer"))
@@ -69,7 +69,7 @@ void FGamedevHelperEditor::ShutdownModule()
 	// unregistering context menu
 	UToolMenus::UnRegisterStartupCallback(this);
 	UToolMenus::UnregisterOwner(this);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperMainTabName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperAssetNamingManagerTabName);
 }
 
 void FGamedevHelperEditor::RegisterCommands()
@@ -186,7 +186,7 @@ void FGamedevHelperEditor::InitMainMenuEntries(FMenuBuilder& MenuBarBuilder) con
 
 void FGamedevHelperEditor::OnProjectOrganizerWindowClick()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperMainTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperAssetNamingManagerTabName);
 }
 
 TSharedRef<SDockTab> FGamedevHelperEditor::OnMainTabClick(const FSpawnTabArgs& SpawnTabArgs) const

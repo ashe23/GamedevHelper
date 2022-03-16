@@ -19,7 +19,7 @@ public:
 	virtual void RegisterCommands() override;
 
 	// main menu
-	TSharedPtr<FUICommandInfo> Cmd_ProjectOrganizerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerWindow;
 	
 	// context menu
 	// TSharedPtr<FUICommandInfo> CMD_VertexAnimToolStaticMesh;

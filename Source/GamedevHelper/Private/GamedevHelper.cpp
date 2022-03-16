@@ -5,13 +5,14 @@
 #include "GamedevHelperAssetLibrary.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "UI/GamedevHelperEditorCommands.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindowUI.h"
 // Engine Headers
 #include "LevelEditor.h"
 #include "ToolMenus.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
-static const FName GamedevHelperMainTabName{TEXT("GamedevHelperTab")};
+static const FName TabAssetNamingManager{TEXT("TabAssetNamingManager")};
 
 class FGamedevHelper : public IGamedevHelper
 {
@@ -25,8 +26,8 @@ private:
 	void InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) const;
 	void InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder);
 	void InitMainMenuEntries(FMenuBuilder& MenuBuilder) const;
-	static void OnProjectOrganizerWindowClick();
-	TSharedRef<SDockTab> OnMainTabClick(const FSpawnTabArgs& SpawnTabArgs) const;
+	static void OnTabAssetNamingManagerClicked();
+	TSharedRef<SDockTab> OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 
 	// actions
 	static void OnContextMenuVATStaticMeshesClicked();
@@ -43,8 +44,8 @@ void FGamedevHelper::RegisterCommands()
 	FGamedevHelperEditorCommands::Register();
 	PluginCommands = MakeShareable(new FUICommandList);
 	PluginCommands->MapAction(
-		FGamedevHelperEditorCommands::Get().Cmd_ProjectOrganizerWindow,
-		FExecuteAction::CreateStatic(&FGamedevHelper::OnProjectOrganizerWindowClick),
+		FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow,
+		FExecuteAction::CreateStatic(&FGamedevHelper::OnTabAssetNamingManagerClicked),
 		FCanExecuteAction()
 	);
 }
@@ -107,7 +108,7 @@ void FGamedevHelper::InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) co
 		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV))
 	);
 	MenuBuilder.EndSection();
-	
+
 	MenuBuilder.BeginSection("Section_Utility", FText::FromString("Utility"));
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("Utility_DisableCollision", "Disable Collision"),
@@ -116,7 +117,7 @@ void FGamedevHelper::InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) co
 		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked))
 	);
 	MenuBuilder.EndSection();
-	
+
 	MenuBuilder.BeginSection("Section_Naming", FText::FromString("Naming"));
 	MenuBuilder.AddMenuEntry(
 		LOCTEXT("Naming_FixName", "Fix Asset Name"),
@@ -141,23 +142,22 @@ void FGamedevHelper::InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder)
 
 void FGamedevHelper::InitMainMenuEntries(FMenuBuilder& MenuBuilder) const
 {
-	MenuBuilder.BeginSection("GDHCoreSection", FText::FromString("Project"));
-	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_ProjectOrganizerWindow);
+	MenuBuilder.BeginSection("GDHManagementSection", FText::FromString("Management"));
+	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow);
 	MenuBuilder.EndSection();
 }
 
-void FGamedevHelper::OnProjectOrganizerWindowClick()
+void FGamedevHelper::OnTabAssetNamingManagerClicked()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperMainTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(TabAssetNamingManager);
 }
 
-TSharedRef<SDockTab> FGamedevHelper::OnMainTabClick(const FSpawnTabArgs& SpawnTabArgs) const
+TSharedRef<SDockTab> FGamedevHelper::OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const
 {
 	return SNew(SDockTab)
 		.TabRole(MajorTab)
 		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("AAAAA")))
+			SNew(SAssetNamingManagerWindow)
 		];
 }
 
@@ -169,7 +169,7 @@ void FGamedevHelper::OnContextMenuVATStaticMeshesClicked()
 	TArray<UStaticMesh*> StaticMeshes;
 	StaticMeshes.Reserve(SelectedAssets.Num());
 
-	for (const auto& Asset: SelectedAssets)
+	for (const auto& Asset : SelectedAssets)
 	{
 		UStaticMesh* StaticMesh = Cast<UStaticMesh>(Asset.GetAsset());
 		if (!StaticMesh) continue;
@@ -207,7 +207,7 @@ void FGamedevHelper::OnContextMenuDisableCollisionsClicked()
 	TArray<UStaticMesh*> StaticMeshes;
 	StaticMeshes.Reserve(SelectedAssets.Num());
 
-	for (const auto& Asset: SelectedAssets)
+	for (const auto& Asset : SelectedAssets)
 	{
 		UStaticMesh* StaticMesh = Cast<UStaticMesh>(Asset.GetAsset());
 		if (!StaticMesh) continue;
@@ -228,10 +228,10 @@ void FGamedevHelper::StartupModule()
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGamedevHelper::RegisterContentBrowserContextMenu));
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        GamedevHelperMainTabName,
-		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OnMainTabClick)
+		                        TabAssetNamingManager,
+		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenAssetNamingManagerWindow)
 	                        )
-	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabTitle", "ProjectOrganizer"))
+	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabAssetNamingManager", "Asset Naming Manager"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
@@ -241,7 +241,7 @@ void FGamedevHelper::ShutdownModule()
 	FGamedevHelperEditorCommands::Unregister();
 	UToolMenus::UnRegisterStartupCallback(this);
 	UToolMenus::UnregisterOwner(this);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperMainTabName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabAssetNamingManager);
 }
 
 #undef LOCTEXT_NAMESPACE
