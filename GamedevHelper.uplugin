@@ -25,6 +25,22 @@
     {
       "Name": "EditorScriptingUtilities",
       "Enabled": true
+    },
+    {
+      "Name": "Niagara",
+      "Enabled": true
+    },
+    {
+      "Name": "NiagaraExtras",
+      "Enabled": true
+    },
+    {
+      "Name": "EditorScriptingUtilities",
+      "Enabled": true
+    },
+    {
+      "Name": "Paper2D",
+      "Enabled": true
     }
   ]
 }

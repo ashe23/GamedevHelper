@@ -7,6 +7,7 @@
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindowUI.h"
 // Engine Headers
+#include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "LevelEditor.h"
 #include "ToolMenus.h"
 
@@ -36,6 +37,7 @@ private:
 	static void OnContextMenuVatStaticMeshesClicked();
 	static void OnContextMenuVatTexturesClicked(EGamedevHelperVertexAnimTexture TextureType);
 	static void OnContextMenuDisableCollisionsClicked();
+	static void OnContextMenuFixAssetNamesClicked();
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
@@ -131,8 +133,7 @@ void FGamedevHelper::InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) co
 		LOCTEXT("Naming_FixName", "Fix Asset Name"),
 		LOCTEXT("Naming_FixName_ToolTip", "Fixes selected asset name by convention"),
 		FSlateIcon(),
-		FUIAction()
-		// FUIAction(FExecuteAction::CreateStatic(&UVirtualGamesLibrary::ProjectConventionFixSelectedAssetNames, SelectedAssets))
+		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuFixAssetNamesClicked))
 	);
 	MenuBuilder.EndSection();
 }
@@ -240,6 +241,19 @@ void FGamedevHelper::OnContextMenuDisableCollisionsClicked()
 	}
 
 	UGamedevHelperAssetLibrary::DisableCollisions(StaticMeshes);
+}
+
+void FGamedevHelper::OnContextMenuFixAssetNamesClicked()
+{
+	TArray<FAssetData> SelectedAssets;
+	UGamedevHelperAssetLibrary::GetSelectedAssets(SelectedAssets);
+
+	const auto Settings = NewObject<UGamedevHelperAssetNamingManagerSettings>();
+	
+	for (const auto& SelectedAsset : SelectedAssets)
+	{
+		UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(SelectedAsset, Settings);
+	}
 }
 
 void FGamedevHelper::StartupModule()

@@ -13,6 +13,16 @@ class UGamedevHelperAssetNamingManagerLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
+	
+	/**
+	 * @brief Returns asset renamed name by given settings
+	 * @param Asset FAssetData
+	 * @param Settings UGamedevHelperAssetNamingManagerSettings
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
+	static FString GetRenamedName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings);
+	
 	/**
 	 * @brief Renames asset by given settings
 	 * @param Asset FAssetData
@@ -28,6 +38,8 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static void RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings* Settings);
+
+	static const FGamedevHelperAssetNameSettings* GetAssetNamingSettings(const FAssetData& Asset,const UGamedevHelperAssetNamingManagerSettings* Settings);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 

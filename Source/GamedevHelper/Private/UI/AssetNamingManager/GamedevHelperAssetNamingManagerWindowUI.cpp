@@ -7,6 +7,7 @@
 // Engine Headers
 #include "Widgets/Layout/SScrollBox.h"
 #include "AssetRegistryModule.h"
+#include "GamedevHelperAssetNamingManagerLibrary.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -140,7 +141,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
 							  .HeaderContentPadding(FMargin(10.0f))
-							  .FixedWidth(150.0f)
+							  .FixedWidth(200.0f)
 							[
 								SNew(STextBlock)
 								.Text(LOCTEXT("AssetClass", "Class"))
@@ -200,8 +201,11 @@ void SAssetNamingManagerWindow::ListUpdate()
 	for (const auto& Asset : Assets)
 	{
 		UGamedevHelperAssetNamingListItem* Data = NewObject<UGamedevHelperAssetNamingListItem>();
+		const FString AssetNewName = UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(Asset, Settings);
+		if (AssetNewName.IsEmpty()) continue; // todo:ashe23 show in UI that this asset is missing settings
+		
 		Data->OldName = Asset.AssetName.ToString();
-		Data->NewName = TEXT("New_") + Asset.AssetName.ToString(); // todo:ashe23
+		Data->NewName = AssetNewName;
 
 		if (Data->OldName.Equals(Data->NewName)) continue;
 

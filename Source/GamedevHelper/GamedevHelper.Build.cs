@@ -34,6 +34,18 @@ public class GamedevHelper : ModuleRules
 				"ToolMenus",
 				"EditorStyle",
 				"InputCore",
+				"MediaAssets",
+				"LevelSequence",
+				"Foliage",
+				"UMG",
+				"UMGEditor",
+				"AIModule",
+				"PhysicsCore",
+				"Landscape",
+				"Niagara",
+				"EditorScriptingUtilities",
+				"Blutility",
+				"Paper2D",
 			}
 		);
 	}

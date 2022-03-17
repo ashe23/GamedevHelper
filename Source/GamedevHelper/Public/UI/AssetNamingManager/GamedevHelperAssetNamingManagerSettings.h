@@ -26,10 +26,10 @@ public:
 	bool bIgnoreNamingCaseOnSuffixes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
-	TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetName> BlueprintTypesNaming;
+	TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetNameSettings> BlueprintTypesNaming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
-	TMap<UClass*, FGamedevHelperAssetName> AssetsNaming;
+	TMap<UClass*, FGamedevHelperAssetNameSettings> AssetsNaming;
 
 private:
 	void SetDefaultSettings();

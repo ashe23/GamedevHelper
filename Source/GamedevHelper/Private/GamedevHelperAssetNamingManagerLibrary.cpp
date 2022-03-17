@@ -1,9 +1,62 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GamedevHelperAssetNamingManagerLibrary.h"
+#include "GamedevHelper.h"
 #include "GamedevHelperStringLibrary.h"
+#include "GamedevHelperAssetLibrary.h"
 // Engine Headers
 #include "Kismet/KismetStringLibrary.h"
+
+FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
+{
+	if (!Asset.IsValid())
+	{
+		UE_LOG(LogGamedevHelper, Error, TEXT("Invalid asset"));
+		return FString{};
+	}
+	if (!Settings)
+	{
+		UE_LOG(LogGamedevHelper, Warning, TEXT("Invalid Asset naming settings"));
+		return FString{};
+	}
+
+	const FString AssetOldName = Asset.AssetName.ToString();
+
+	const FGamedevHelperAssetNameSettings* AssetNameSettings = GetAssetNamingSettings(Asset, Settings);
+	if (!AssetNameSettings)
+	{
+		UE_LOG(LogGamedevHelper, Warning, TEXT("Cant find asset name settings for %s"), *AssetOldName);
+		return FString{};
+	}
+
+	FString AssetNewName = ConvertNamingCase(AssetOldName, Settings->NamingCase);
+
+	if (!AssetOldName.StartsWith(AssetNameSettings->Prefix))
+	{
+		const FString NameCaseFixedPrefix = Settings->bIgnoreNamingCaseOnPrefixes
+			                                    ? AssetNameSettings->Prefix
+			                                    : ConvertNamingCase(AssetNameSettings->Prefix, Settings->NamingCase);
+
+		if (!NameCaseFixedPrefix.IsEmpty())
+		{
+			AssetNewName.InsertAt(0, NameCaseFixedPrefix + TEXT("_"));
+		}
+	}
+
+	if (!AssetOldName.EndsWith(AssetNameSettings->Suffix))
+	{
+		const FString NameCaseFixedSuffix = Settings->bIgnoreNamingCaseOnSuffixes
+			                                    ? AssetNameSettings->Suffix
+			                                    : ConvertNamingCase(AssetNameSettings->Suffix, Settings->NamingCase);
+
+		if (!NameCaseFixedSuffix.IsEmpty())
+		{
+			AssetNewName.Append(TEXT("_") + NameCaseFixedSuffix);
+		}
+	}
+
+	return AssetNewName;
+}
 
 void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
 {
@@ -13,6 +66,27 @@ void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asse
 void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings* Settings)
 {
 	// todo:ashe23
+}
+
+const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerLibrary::GetAssetNamingSettings(
+	const FAssetData& Asset,
+	const UGamedevHelperAssetNamingManagerSettings* Settings)
+{
+	if (!Asset.IsValid()) return nullptr;
+	if (!Settings) return nullptr;
+
+	const auto AssetNaming = Settings->AssetsNaming.Find(Asset.GetClass());
+	if (AssetNaming)
+	{
+		return AssetNaming;
+	}
+
+	if (UGamedevHelperAssetLibrary::IsBlueprint(Asset))
+	{
+		return Settings->BlueprintTypesNaming.Find(UGamedevHelperAssetLibrary::GetBlueprintType(Asset));
+	}
+
+	return nullptr;
 }
 
 FString UGamedevHelperAssetNamingManagerLibrary::Normalize(const FString& OriginalString)
@@ -54,6 +128,7 @@ FString UGamedevHelperAssetNamingManagerLibrary::Tokenize(const FString& Origina
 
 	TArray<FString> Tokens;
 
+	// todo:ash23 keep trailing Upper case letters as separate token
 	for (int32 i = 1; i < Chars.Num() - 1; ++i)
 	{
 		const auto CurrentChar = Chars[i];

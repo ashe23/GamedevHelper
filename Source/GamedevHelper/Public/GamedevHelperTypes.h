@@ -77,17 +77,17 @@ enum class EGamedevHelperModalStatus : uint8
 // };
 
 USTRUCT(BlueprintType)
-struct FGamedevHelperAssetName
+struct FGamedevHelperAssetNameSettings
 {
 	GENERATED_BODY()
 
-	FGamedevHelperAssetName() = default;
+	FGamedevHelperAssetNameSettings() = default;
 	
-	FGamedevHelperAssetName(const FString& Pre, const FString& Suf) : Prefix(Pre), Suffix(Suf)
+	FGamedevHelperAssetNameSettings(const FString& Pre, const FString& Suf) : Prefix(Pre), Suffix(Suf)
 	{
 	}
 
-	FGamedevHelperAssetName(const FString& Pre) : Prefix(Pre)
+	FGamedevHelperAssetNameSettings(const FString& Pre) : Prefix(Pre)
 	{
 	}
 
