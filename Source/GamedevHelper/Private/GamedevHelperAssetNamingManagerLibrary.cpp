@@ -9,6 +9,7 @@
 
 FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
 {
+	// todo:ashe23 improve
 	if (!Asset.IsValid())
 	{
 		UE_LOG(LogGamedevHelper, Error, TEXT("Invalid asset"));
@@ -29,38 +30,30 @@ FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData
 		return FString{};
 	}
 
-	FString AssetNewName = ConvertNamingCase(AssetOldName, Settings->NamingCase);
+	FString AssetBaseName = Tokenize(AssetOldName);
+	AssetBaseName.RemoveFromStart(AssetNameSettings->Prefix + TEXT("_"));
+	AssetBaseName.RemoveFromEnd(TEXT("_") + AssetNameSettings->Suffix);
 
-	if (!AssetOldName.StartsWith(AssetNameSettings->Prefix))
+	const FString NameCaseFixedPrefix = Settings->bIgnoreNamingCaseOnPrefixes ? AssetNameSettings->Prefix : ConvertNamingCase(AssetNameSettings->Prefix, Settings->NamingCase); 
+	const FString NameCaseFixedSuffix = Settings->bIgnoreNamingCaseOnSuffixes ? AssetNameSettings->Suffix : ConvertNamingCase(AssetNameSettings->Suffix, Settings->NamingCase);
+
+	FString FinalName = ConvertNamingCase(AssetBaseName, Settings->NamingCase);
+	if (!NameCaseFixedPrefix.IsEmpty())
 	{
-		const FString NameCaseFixedPrefix = Settings->bIgnoreNamingCaseOnPrefixes
-			                                    ? AssetNameSettings->Prefix
-			                                    : ConvertNamingCase(AssetNameSettings->Prefix, Settings->NamingCase);
-
-		if (!NameCaseFixedPrefix.IsEmpty())
-		{
-			AssetNewName.InsertAt(0, NameCaseFixedPrefix + TEXT("_"));
-		}
+		FinalName.InsertAt(0, NameCaseFixedPrefix + TEXT("_"));
 	}
 
-	if (!AssetOldName.EndsWith(AssetNameSettings->Suffix))
+	if (!NameCaseFixedSuffix.IsEmpty())
 	{
-		const FString NameCaseFixedSuffix = Settings->bIgnoreNamingCaseOnSuffixes
-			                                    ? AssetNameSettings->Suffix
-			                                    : ConvertNamingCase(AssetNameSettings->Suffix, Settings->NamingCase);
-
-		if (!NameCaseFixedSuffix.IsEmpty())
-		{
-			AssetNewName.Append(TEXT("_") + NameCaseFixedSuffix);
-		}
+		FinalName.Append(TEXT("_") + NameCaseFixedSuffix);
 	}
 
-	return AssetNewName;
+	return FinalName;
 }
 
 void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
 {
-	// todo:ashe23
+	
 }
 
 void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings* Settings)

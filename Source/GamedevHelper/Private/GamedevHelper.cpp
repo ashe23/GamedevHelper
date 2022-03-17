@@ -252,7 +252,7 @@ void FGamedevHelper::OnContextMenuFixAssetNamesClicked()
 	
 	for (const auto& SelectedAsset : SelectedAssets)
 	{
-		UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(SelectedAsset, Settings);
+		UGamedevHelperAssetNamingManagerLibrary::RenameAsset(SelectedAsset, Settings);
 	}
 }
 
