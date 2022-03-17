@@ -26,18 +26,16 @@ public:
 	/**
 	 * @brief Renames asset by given settings
 	 * @param Asset FAssetData
-	 * @param Settings UGamedevHelperAssetNamingManagerSettings
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
-	static void RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings);
+	static void RenameAsset(const FAssetData& Asset);
 
 	/**
 	 * @brief Renames assets by given settings
 	 * @param Assets TArray<FAssetData>
-	 * @param Settings UGamedevHelperAssetNamingManagerSettings
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
-	static void RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings* Settings);
+	static void RenameAssets(const TArray<FAssetData>& Assets);
 
 	static const FGamedevHelperAssetNameSettings* GetAssetNamingSettings(const FAssetData& Asset,const UGamedevHelperAssetNamingManagerSettings* Settings);
 

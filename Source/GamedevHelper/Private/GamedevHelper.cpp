@@ -247,13 +247,7 @@ void FGamedevHelper::OnContextMenuFixAssetNamesClicked()
 {
 	TArray<FAssetData> SelectedAssets;
 	UGamedevHelperAssetLibrary::GetSelectedAssets(SelectedAssets);
-
-	const auto Settings = NewObject<UGamedevHelperAssetNamingManagerSettings>();
-	
-	for (const auto& SelectedAsset : SelectedAssets)
-	{
-		UGamedevHelperAssetNamingManagerLibrary::RenameAsset(SelectedAsset, Settings);
-	}
+	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(SelectedAssets);
 }
 
 void FGamedevHelper::StartupModule()

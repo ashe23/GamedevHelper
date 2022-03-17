@@ -6,6 +6,9 @@
 #include "GamedevHelperAssetLibrary.h"
 // Engine Headers
 #include "Kismet/KismetStringLibrary.h"
+#include "AssetRegistryModule.h"
+#include "AssetToolsModule.h"
+#include "EditorAssetLibrary.h"
 
 FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
 {
@@ -34,8 +37,12 @@ FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData
 	AssetBaseName.RemoveFromStart(AssetNameSettings->Prefix + TEXT("_"));
 	AssetBaseName.RemoveFromEnd(TEXT("_") + AssetNameSettings->Suffix);
 
-	const FString NameCaseFixedPrefix = Settings->bIgnoreNamingCaseOnPrefixes ? AssetNameSettings->Prefix : ConvertNamingCase(AssetNameSettings->Prefix, Settings->NamingCase); 
-	const FString NameCaseFixedSuffix = Settings->bIgnoreNamingCaseOnSuffixes ? AssetNameSettings->Suffix : ConvertNamingCase(AssetNameSettings->Suffix, Settings->NamingCase);
+	const FString NameCaseFixedPrefix = Settings->bIgnoreNamingCaseOnPrefixes
+		                                    ? AssetNameSettings->Prefix
+		                                    : ConvertNamingCase(AssetNameSettings->Prefix, Settings->NamingCase);
+	const FString NameCaseFixedSuffix = Settings->bIgnoreNamingCaseOnSuffixes
+		                                    ? AssetNameSettings->Suffix
+		                                    : ConvertNamingCase(AssetNameSettings->Suffix, Settings->NamingCase);
 
 	FString FinalName = ConvertNamingCase(AssetBaseName, Settings->NamingCase);
 	if (!NameCaseFixedPrefix.IsEmpty())
@@ -51,14 +58,38 @@ FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData
 	return FinalName;
 }
 
-void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
+void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asset)
 {
-	
+	if (!Asset.IsValid()) return;
+
+	const auto Settings = GetDefault<UGamedevHelperAssetNamingManagerSettings>();
+	if (!Settings) return;
+
+	const FString AssetOldName = Asset.AssetName.ToString();
+	const FString AssetNewName = GetRenamedName(Asset, Settings);
+
+	// ignore if new asset name is same as old one
+	if (AssetOldName.Equals(AssetNewName, ESearchCase::CaseSensitive)) return;
+
+	// ignore if another asset with new name exists
+	const FAssetRegistryModule& AssetRegistry = FModuleManager::GetModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
+	const FString NewAssetObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *AssetNewName, *AssetNewName);
+	// todo:ashe23 this method not working correctly for specific assets
+	const FAssetData OtherAsset = AssetRegistry.Get().GetAssetByObjectPath(FName{NewAssetObjectPath});
+	if (OtherAsset.IsValid()) return;
+
+	if (UEditorAssetLibrary::RenameAsset(Asset.ObjectPath.ToString(), NewAssetObjectPath))
+	{
+		UGamedevHelperAssetLibrary::FixupRedirectors(TEXT("/Game"));
+	}
 }
 
-void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets, const UGamedevHelperAssetNamingManagerSettings* Settings)
+void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets)
 {
-	// todo:ashe23
+	for (const auto& Asset : Assets)
+	{
+		RenameAsset(Asset);
+	}
 }
 
 const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerLibrary::GetAssetNamingSettings(
@@ -121,7 +152,7 @@ FString UGamedevHelperAssetNamingManagerLibrary::Tokenize(const FString& Origina
 
 	TArray<FString> Tokens;
 
-	// todo:ash23 keep trailing Upper case letters as separate token
+	// todo:ash23 keep trailing Upper case letters as separate token?
 	for (int32 i = 1; i < Chars.Num() - 1; ++i)
 	{
 		const auto CurrentChar = Chars[i];
