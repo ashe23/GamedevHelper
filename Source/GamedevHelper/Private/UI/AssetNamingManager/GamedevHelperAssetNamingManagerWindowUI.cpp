@@ -68,7 +68,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						.VAlign(VAlign_Center)
 						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#9E9E9E"))})
 						.ContentPadding(FMargin{0})
-						// .OnClicked_Raw(this, &SProjectOrganizerWindowUI::OnRefreshBtnClick)
+						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRenameBtnClick)
 						[
 							SNew(STextBlock)
 							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
@@ -264,6 +264,28 @@ TSharedRef<ITableRow> SAssetNamingManagerWindow::OnGenerateRow(TWeakObjectPtr<UG
                                                                const TSharedRef<STableViewBase>& OwnerTable) const
 {
 	return SNew(SGamedevHelperAssetNamingListItem, OwnerTable).RowItem(InItem);
+}
+
+FReply SAssetNamingManagerWindow::OnRenameBtnClick()
+{
+	TArray<FAssetData> RenameAssetsList;
+	RenameAssetsList.Reserve(AssetList.Num());
+	
+	for (const auto& Asset : AssetList)
+	{
+		RenameAssetsList.Add(Asset->AssetData);
+	}
+
+	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(RenameAssetsList);
+
+	ListUpdate();
+
+	if (ListView.IsValid())
+	{
+		ListView->RebuildList();
+	}
+	
+	return FReply::Handled();
 }
 
 FReply SAssetNamingManagerWindow::OnRefreshBtnClick()

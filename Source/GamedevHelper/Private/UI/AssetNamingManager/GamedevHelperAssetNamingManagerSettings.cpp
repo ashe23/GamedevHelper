@@ -48,9 +48,10 @@
 // #include "NiagaraCommon.h"
 #include "NiagaraEffectType.h"
 #include "NiagaraScript.h"
+#include "NiagaraSystem.h"
 #include "NiagaraEmitter.h"
 #include "NiagaraParameterCollection.h"
-#include "NiagaraSystem.h"
+#include "NiagaraParameterDefinitions.h"
 // AI
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardData.h"
@@ -97,6 +98,7 @@
 #include "PaperTileMap.h"
 #include "PaperTileSet.h"
 
+
 UGamedevHelperAssetNamingManagerSettings::UGamedevHelperAssetNamingManagerSettings()
 {
 	SetDefaultSettings();
@@ -129,6 +131,10 @@ const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerSettings:
 	if (FoliageTypeAssets.Contains(AssetClass))
 	{
 		return FoliageTypeAssets.Find(AssetClass);
+	}
+	if (SlateTypeAssets.Contains(AssetClass))
+	{
+		return SlateTypeAssets.Find(AssetClass);
 	}
 	if (SoundTypeAssets.Contains(AssetClass))
 	{
@@ -213,6 +219,7 @@ void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 	TextureTypeAssets.Add(UVolumeTexture::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("VT")});
 
 	// Animations
+	// todo:ashe23 suffixes not detected correctly
 	AnimationTypeAssets.Add(UAnimSequence::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("AN")});
 	AnimationTypeAssets.Add(UAnimMontage::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("AM")});
 	AnimationTypeAssets.Add(UAnimComposite::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("AC")});
@@ -237,6 +244,7 @@ void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 	FXTypeAssets.Add(UNiagaraParameterCollection::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("NPC")});
 	FXTypeAssets.Add(UNiagaraParameterCollectionInstance::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("NPCI")});
 	FXTypeAssets.Add(UNiagaraParameterDefinitionsBase::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("NPD")});
+	FXTypeAssets.Add(UNiagaraParameterDefinitions::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("NPD")});
 	FXTypeAssets.Add(UNiagaraSystem::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("NS")});
 
 	// AI
@@ -269,6 +277,7 @@ void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 	SlateTypeAssets.Add(UFont::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("Font")});
 
 	// Paper2D
+	// todo:ashe23 prefixes not detected correctly
 	Paper2DTypeAssets.Add(UPaperFlipbook::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("PaperFB")});
 	Paper2DTypeAssets.Add(UPaperSprite::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("PaperS")});
 	Paper2DTypeAssets.Add(UPaperTileMap::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("PaperTM")});
@@ -279,6 +288,7 @@ void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 	EditorScriptingUtilitiesTypeAssets.Add(UEditorUtilityWidgetBlueprint::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("EUW")});
 
 	// Misc
+	// todo:ashe23 data asset must be more specific
 	MiscTypeAssets.Add(UDataAsset::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("DA")});
 	MiscTypeAssets.Add(UDataTable::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("DT")});
 	MiscTypeAssets.Add(UCurveFloat::StaticClass(), FGamedevHelperAssetNameSettings{TEXT("C"), TEXT("Float")});

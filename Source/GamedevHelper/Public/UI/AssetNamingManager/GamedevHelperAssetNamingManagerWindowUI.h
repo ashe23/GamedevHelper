@@ -22,6 +22,7 @@ private:
 		TWeakObjectPtr<UGamedevHelperAssetNamingListItem> InItem,
 		const TSharedRef<STableViewBase>& OwnerTable
 	) const;
+	FReply OnRenameBtnClick();
 	FReply OnRefreshBtnClick();
 	void OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
 	

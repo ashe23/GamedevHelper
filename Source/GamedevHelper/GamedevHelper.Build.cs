@@ -43,6 +43,7 @@ public class GamedevHelper : ModuleRules
 				"PhysicsCore",
 				"Landscape",
 				"Niagara",
+				"NiagaraEditor",
 				"EditorScriptingUtilities",
 				"Blutility",
 				"Paper2D",
