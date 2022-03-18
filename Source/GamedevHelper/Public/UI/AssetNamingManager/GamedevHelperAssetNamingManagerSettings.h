@@ -13,6 +13,8 @@ class UGamedevHelperAssetNamingManagerSettings : public UObject
 public:
 	UGamedevHelperAssetNamingManagerSettings();
 
+	const FGamedevHelperAssetNameSettings* FindNamingByClass(const UClass* AssetClass) const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ContentDir))
 	FDirectoryPath ScanPath;
 	
@@ -27,9 +29,46 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetNameSettings> BlueprintTypesNaming;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
-	TMap<UClass*, FGamedevHelperAssetNameSettings> AssetsNaming;
+	TMap<UClass*, FGamedevHelperAssetNameSettings> MaterialTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> TextureTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> AnimationTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", DisplayName = "FX Type Assets")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> FXTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", DisplayName = "AI Type Assets")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> AITypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> FoliageTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> SoundTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> SlateTypeAssets;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", DisplayName = "Paper2D Type Assets")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> Paper2DTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> BlueprintTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> EditorScriptingUtilitiesTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> MiscTypeAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TMap<UClass*, FGamedevHelperAssetNameSettings> CustomTypeAssets;
+	
 
 private:
 	void SetDefaultSettings();

@@ -2,12 +2,12 @@
 
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "GamedevHelper.h"
-#include "GamedevHelperStringLibrary.h"
+// #include "GamedevHelperStringLibrary.h"
 #include "GamedevHelperAssetLibrary.h"
 // Engine Headers
 #include "Kismet/KismetStringLibrary.h"
 #include "AssetRegistryModule.h"
-#include "AssetToolsModule.h"
+// #include "AssetToolsModule.h"
 #include "EditorAssetLibrary.h"
 
 FString UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings)
@@ -99,7 +99,7 @@ const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerLibrary::
 	if (!Asset.IsValid()) return nullptr;
 	if (!Settings) return nullptr;
 
-	const auto AssetNaming = Settings->AssetsNaming.Find(Asset.GetClass());
+	const auto AssetNaming = Settings->FindNamingByClass(Asset.GetClass());
 	if (AssetNaming)
 	{
 		return AssetNaming;
