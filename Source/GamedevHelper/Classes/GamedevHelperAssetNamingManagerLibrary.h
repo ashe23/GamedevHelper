@@ -13,16 +13,6 @@ class UGamedevHelperAssetNamingManagerLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	
-	/**
-	 * @brief Returns asset renamed name by given settings
-	 * @param Asset FAssetData
-	 * @param Settings UGamedevHelperAssetNamingManagerSettings
-	 * @return FString
-	 */
-	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
-	static FString GetRenamedName(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings);
-	
 	/**
 	 * @brief Renames asset by given settings
 	 * @param Asset FAssetData
@@ -36,8 +26,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static void RenameAssets(const TArray<FAssetData>& Assets);
-
-	static const FGamedevHelperAssetNameSettings* GetAssetNamingSettings(const FAssetData& Asset,const UGamedevHelperAssetNamingManagerSettings* Settings);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 
@@ -54,11 +42,11 @@ public:
 
 	/**
 	 * @brief Returns new string with contextual parts splitted by underscore. String can be in any naming case, even mixed.
-	 * - PascalCase01 => Pascal_Case_01
+	 * - PascalCase01 => pascal_case_01
 	 * - 01_my-string => 01_my_string
-	 * - TextureUV01 => Texture_UV_01
+	 * - TextureUV01 => texture_uv_01
 	 * @param OriginalString FString
-	 * @return FString
+	 * @return FString Result is always in snake_case
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static FString Tokenize(const FString& OriginalString);
@@ -111,4 +99,21 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static FString ConvertToCamelCase(const FString& OriginalString);
+
+	/**
+	 * @brief Returns rename preview for given asset and settings. Does not do actual renaming.
+	 * @param Asset FAssetData
+	 * @param Settings UGamedevHelperAssetNamingManagerSettings
+	 * @return FGamedevHelperRenamePreview
+	 */
+	static FGamedevHelperRenamePreview GetRenamePreview(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings);
+	
+	/**
+	 * @brief Returns naming settings for given asset
+	 * @param Asset FAssetData
+	 * @param Settings UGamedevHelperAssetNamingManagerSettings
+	 * @return UGamedevHelperAssetNamingManagerSettings
+	 */
+	static const FGamedevHelperAssetNameSettings* GetAssetNamingSettings(const FAssetData& Asset,
+	                                                                     const UGamedevHelperAssetNamingManagerSettings* Settings);
 };

@@ -62,19 +62,26 @@ enum class EGamedevHelperModalStatus : uint8
 	Fail,
 };
 
+USTRUCT()
+struct FGamedevHelperRenamePreview
+{
+	GENERATED_BODY()
 
-// UENUM(BlueprintType)
-// enum class EGamedevHelperStringCase : uint8
-// {
-// 	None,
-// 	Lower UMETA(DiplayName = "lowercase"),
-// 	Upper UMETA(DiplayName = "UPPERCASE"),
-// 	Mixed UMETA(DiplayName = "MiXeDCaSe"),
-// 	StartUpper UMETA(DisplayName = "Startupper"),
-// 	EndUpper UMETA(DisplayName = "enduppeR"),
-// 	StartLower UMETA(DisplayName = "sTARTLOWER"),
-// 	EndLower UMETA(DisplayName = "ENDLOWEr"),
-// };
+	UPROPERTY()
+	bool bValid;
+	
+	UPROPERTY()
+	FAssetData AssetData;
+	
+	UPROPERTY()
+	FString NewName;
+
+	UPROPERTY()
+	FString NewObjectPath;
+	
+	UPROPERTY()
+	FString ErrMsg;
+};
 
 USTRUCT(BlueprintType)
 struct FGamedevHelperAssetNameSettings
@@ -89,6 +96,11 @@ struct FGamedevHelperAssetNameSettings
 
 	FGamedevHelperAssetNameSettings(const FString& Pre) : Prefix(Pre)
 	{
+	}
+
+	bool IsEmpty() const
+	{
+		return Prefix.IsEmpty() && Suffix.IsEmpty();
 	}
 
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetName")
