@@ -110,8 +110,6 @@ void UGamedevHelperAssetNamingManagerSettings::PostEditChangeProperty(FPropertyC
 	{
 		OnSettingsChangeDelegate.Execute();
 	}
-	
-	UE_LOG(LogGamedevHelper, Warning, TEXT("Settings changed!"));
 }
 #endif
 
