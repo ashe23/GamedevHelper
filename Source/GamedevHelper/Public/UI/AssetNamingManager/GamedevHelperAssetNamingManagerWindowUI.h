@@ -8,8 +8,6 @@
 class UGamedevHelperAssetNamingManagerSettings;
 class UGamedevHelperAssetNamingListItem;
 
-
-
 class SAssetNamingManagerWindow : public SCompoundWidget
 {
 public:
