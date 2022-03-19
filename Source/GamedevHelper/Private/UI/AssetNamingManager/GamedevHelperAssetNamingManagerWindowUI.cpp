@@ -185,7 +185,8 @@ void SAssetNamingManagerWindow::ListUpdate()
 
 	FARFilter Filter;
 	Filter.PackagePaths.Add(FName{*Settings->ScanPath.Path});
-	Filter.bRecursivePaths = true;
+	Filter.bRecursivePaths = Settings->bScanRecursive;
+
 	// for (const auto Prefix : Settings->AssetPrefixes)
 	// {
 	// 	if (!Prefix.Key) continue;

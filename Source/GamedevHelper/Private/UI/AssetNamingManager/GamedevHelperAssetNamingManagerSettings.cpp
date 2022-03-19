@@ -190,7 +190,8 @@ const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerSettings:
 void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 {
 	ScanPath.Path = TEXT("/Game");
-	NamingCase = EGamedevHelperNamingCase::PascalSnakeCase;
+	bScanRecursive = true;
+	// NamingCase = EGamedevHelperNamingCase::PascalSnakeCase;
 	// bIgnoreNamingCaseOnPrefixes = true;
 	// bIgnoreNamingCaseOnSuffixes = true;
 

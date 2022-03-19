@@ -8,6 +8,7 @@
 
 DECLARE_DELEGATE(FAssetNamingManagerSettingsChangeDelegate);
 
+// todo:ashe23 transient must be changed to config, because we will be able to import/export settings
 UCLASS(Transient)
 class UGamedevHelperAssetNamingManagerSettings : public UObject
 {
@@ -23,9 +24,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ContentDir))
 	FDirectoryPath ScanPath;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
-	EGamedevHelperNamingCase NamingCase;
+	bool bScanRecursive;
+	
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	// EGamedevHelperNamingCase NamingCase;
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	// bool bIgnoreNamingCaseOnPrefixes;
