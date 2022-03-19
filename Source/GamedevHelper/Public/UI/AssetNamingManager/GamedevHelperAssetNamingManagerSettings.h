@@ -27,6 +27,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	bool bScanRecursive;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	bool bShowMissingTypes;
 	
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	// EGamedevHelperNamingCase NamingCase;

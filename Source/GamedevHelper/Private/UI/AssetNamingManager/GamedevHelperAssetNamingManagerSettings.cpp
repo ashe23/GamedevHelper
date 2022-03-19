@@ -191,6 +191,7 @@ void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 {
 	ScanPath.Path = TEXT("/Game");
 	bScanRecursive = true;
+	bShowMissingTypes = false;
 	// NamingCase = EGamedevHelperNamingCase::PascalSnakeCase;
 	// bIgnoreNamingCaseOnPrefixes = true;
 	// bIgnoreNamingCaseOnSuffixes = true;
