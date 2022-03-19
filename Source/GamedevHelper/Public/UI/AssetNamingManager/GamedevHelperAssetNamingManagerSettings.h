@@ -6,12 +6,18 @@
 #include "GamedevHelperTypes.h"
 #include "GamedevHelperAssetNamingManagerSettings.generated.h"
 
+DECLARE_DELEGATE(FAssetNamingManagerSettingsChangeDelegate);
+
 UCLASS(Transient)
 class UGamedevHelperAssetNamingManagerSettings : public UObject
 {
 	GENERATED_BODY()
 public:
 	UGamedevHelperAssetNamingManagerSettings();
+	
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
 	const FGamedevHelperAssetNameSettings* FindNamingByClass(const UClass* AssetClass) const;
 
@@ -21,11 +27,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	EGamedevHelperNamingCase NamingCase;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
-	bool bIgnoreNamingCaseOnPrefixes;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
-	bool bIgnoreNamingCaseOnSuffixes;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	// bool bIgnoreNamingCaseOnPrefixes;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	// bool bIgnoreNamingCaseOnSuffixes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetNameSettings> BlueprintTypesNaming;
@@ -69,6 +75,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
 	TMap<UClass*, FGamedevHelperAssetNameSettings> CustomTypeAssets;
 	
+	// Called when settings changed
+	FAssetNamingManagerSettingsChangeDelegate OnSettingsChangeDelegate;
 
 private:
 	void SetDefaultSettings();

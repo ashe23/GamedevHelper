@@ -19,7 +19,7 @@ static FORCEINLINE EnumType GetEnumValueFromString(const FString& EnumName, cons
 UENUM(BlueprintType)
 enum class EGamedevHelperNamingCase : uint8
 {
-	None,
+	// None,
 	PascalCase UMETA(DisplayName = "PascalCase"),
 	PascalSnakeCase UMETA(DisplayName = "Pascal_Snake_Case"),
 	SnakeCase UMETA(DisplayName = "snake_case"),
@@ -27,14 +27,14 @@ enum class EGamedevHelperNamingCase : uint8
 	CamelCase UMETA(DisplayName = "camelCase"),
 };
 
-UENUM(BlueprintType)
-enum class EGamedevHelperLetterCase : uint8
-{
-	None,
-	LowerCase UMETA(DiplayName = "lowercase"),
-	UpperCase UMETA(DiplayName = "UPPERCASE"),
-	MixedCase UMETA(DiplayName = "MiXeDCaSe"),
-};
+// UENUM(BlueprintType)
+// enum class EGamedevHelperLetterCase : uint8
+// {
+// 	None,
+// 	LowerCase UMETA(DiplayName = "lowercase"),
+// 	UpperCase UMETA(DiplayName = "UPPERCASE"),
+// 	MixedCase UMETA(DiplayName = "MiXeDCaSe"),
+// };
 
 UENUM(BlueprintType)
 enum class EGamedevHelperVertexAnimTexture : uint8

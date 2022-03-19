@@ -1,14 +1,11 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
-
-#include "Materials/MaterialInstance.h"
-#include "Materials/MaterialInstanceConstant.h"
-
+#include "GamedevHelper.h"
 // Material classes
 #include "Materials/Material.h"
-// #include "Materials/MaterialInstance.h"
-// #include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstance.h"
+#include "Materials/MaterialInstanceConstant.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialFunction.h"
 #include "Materials/MaterialParameterCollection.h"
@@ -104,6 +101,20 @@ UGamedevHelperAssetNamingManagerSettings::UGamedevHelperAssetNamingManagerSettin
 	SetDefaultSettings();
 }
 
+#if WITH_EDITOR
+void UGamedevHelperAssetNamingManagerSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (OnSettingsChangeDelegate.IsBound())
+	{
+		OnSettingsChangeDelegate.Execute();
+	}
+	
+	UE_LOG(LogGamedevHelper, Warning, TEXT("Settings changed!"));
+}
+#endif
+
 const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerSettings::FindNamingByClass(const UClass* AssetClass) const
 {
 	// TMap<UClass*, FGamedevHelperAssetNameSettings> AllNamings;
@@ -182,8 +193,8 @@ void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
 {
 	ScanPath.Path = TEXT("/Game");
 	NamingCase = EGamedevHelperNamingCase::PascalSnakeCase;
-	bIgnoreNamingCaseOnPrefixes = true;
-	bIgnoreNamingCaseOnSuffixes = true;
+	// bIgnoreNamingCaseOnPrefixes = true;
+	// bIgnoreNamingCaseOnSuffixes = true;
 
 	BlueprintTypesNaming.Add(EGamedevHelperBlueprintType::Normal, FGamedevHelperAssetNameSettings{TEXT("BP")});
 	BlueprintTypesNaming.Add(EGamedevHelperBlueprintType::Interface, FGamedevHelperAssetNameSettings{TEXT("BPI")});

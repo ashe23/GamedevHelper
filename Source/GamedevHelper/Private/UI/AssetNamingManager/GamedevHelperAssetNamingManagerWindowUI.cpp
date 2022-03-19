@@ -15,6 +15,8 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 {
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	Settings = GetMutableDefault<UGamedevHelperAssetNamingManagerSettings>();
+	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
+	
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
 	ViewArgs.bLockable = false;
@@ -24,6 +26,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ViewArgs.bAllowFavoriteSystem = false;
 	ViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	ViewArgs.ViewIdentifier = "AssetNamingManagerSettings";
+	
 
 	const TSharedPtr<IDetailsView> SettingsProperty = PropertyEditor.CreateDetailView(ViewArgs);
 	SettingsProperty->SetObject(Settings);
@@ -260,6 +263,16 @@ void SAssetNamingManagerWindow::ListSort()
 	}
 }
 
+void SAssetNamingManagerWindow::ListRefresh()
+{
+	ListUpdate();
+
+	if (ListView.IsValid())
+	{
+		ListView->RebuildList();
+	}
+}
+
 TSharedRef<ITableRow> SAssetNamingManagerWindow::OnGenerateRow(TWeakObjectPtr<UGamedevHelperAssetNamingListItem> InItem,
                                                                const TSharedRef<STableViewBase>& OwnerTable) const
 {
@@ -278,24 +291,14 @@ FReply SAssetNamingManagerWindow::OnRenameBtnClick()
 
 	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(RenameAssetsList);
 
-	ListUpdate();
-
-	if (ListView.IsValid())
-	{
-		ListView->RebuildList();
-	}
+	ListRefresh();
 	
 	return FReply::Handled();
 }
 
 FReply SAssetNamingManagerWindow::OnRefreshBtnClick()
 {
-	ListUpdate();
-
-	if (ListView.IsValid())
-	{
-		ListView->RebuildList();
-	}
+	ListRefresh();
 
 	return FReply::Handled();
 }
@@ -305,12 +308,7 @@ void SAssetNamingManagerWindow::OnSort(EColumnSortPriority::Type SortPriority, c
 	CurrentSortMode = CurrentSortMode == EColumnSortMode::Ascending ? EColumnSortMode::Descending : EColumnSortMode::Ascending;
 	SortColumn = Name;
 
-	ListUpdate();
-
-	if (ListView.IsValid())
-	{
-		ListView->RebuildList();
-	}
+	ListRefresh();
 }
 
 #undef LOCTEXT_NAMESPACE

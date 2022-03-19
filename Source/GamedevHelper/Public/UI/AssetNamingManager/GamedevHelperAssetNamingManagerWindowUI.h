@@ -8,6 +8,8 @@
 class UGamedevHelperAssetNamingManagerSettings;
 class UGamedevHelperAssetNamingListItem;
 
+
+
 class SAssetNamingManagerWindow : public SCompoundWidget
 {
 public:
@@ -18,6 +20,7 @@ public:
 private:
 	void ListUpdate();
 	void ListSort();
+	void ListRefresh();
 	TSharedRef<ITableRow> OnGenerateRow(
 		TWeakObjectPtr<UGamedevHelperAssetNamingListItem> InItem,
 		const TSharedRef<STableViewBase>& OwnerTable
