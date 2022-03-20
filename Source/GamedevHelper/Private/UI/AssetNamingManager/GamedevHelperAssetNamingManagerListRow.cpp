@@ -34,9 +34,9 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 		return SNew(SBox)
 			.WidthOverride(16)
 			.HeightOverride(16)
-			[
-				AssetThumbnail->MakeThumbnailWidget(ThumbnailConfig)
-			];
+		[
+			AssetThumbnail->MakeThumbnailWidget(ThumbnailConfig)
+		];
 	}
 	if (InColumnName == TEXT("Result"))
 	{
@@ -46,12 +46,12 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 			// .HAlign(HAlign_Fill)
 			// .VAlign(VAlign_Fill)
 			[
-				
+
 				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Fill)
+				+ SHorizontalBox::Slot()
+				  .AutoWidth()
+				  .HAlign(HAlign_Fill)
+				  .VAlign(VAlign_Fill)
 				[
 					SNew(SBorder)
 					.BorderImage(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.BG.16")))
@@ -63,23 +63,22 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 						.Text(FText::FromString(RowItem->OldName))
 					]
 				]
-				+SHorizontalBox::Slot()
-				.Padding(FMargin{5.0f, 0.0f})
-				.AutoWidth()
+				+ SHorizontalBox::Slot()
+				  .Padding(FMargin{5.0f, 0.0f})
+				  .AutoWidth()
 				[
 					SNew(SImage)
 					.ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#616161"))})
 					.Image(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.ArrowRight.16")))
 				]
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Fill)
+				+ SHorizontalBox::Slot()
+				  .AutoWidth()
+				  .HAlign(HAlign_Fill)
+				  .VAlign(VAlign_Fill)
 				[
 					SNew(SBorder)
 					.BorderImage(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.BG.16")))
 					.BorderBackgroundColor(FLinearColor{FColor::FromHex(TEXT("#2E7D32"))})
-					
 					.HAlign(HAlign_Left)
 					[
 						SNew(STextBlock)
@@ -93,6 +92,13 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 	if (InColumnName == TEXT("Path"))
 	{
 		return SNew(STextBlock).Justification(ETextJustify::Left).Text(FText::FromString(RowItem->AssetData.PackagePath.ToString()));
+	}
+
+	if (InColumnName == TEXT("Note"))
+	{
+		return SNew(STextBlock).Justification(ETextJustify::Center)
+		                       .ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#F44336"))})
+		                       .Text(FText::FromString(RowItem->Note));
 	}
 
 	return SNew(STextBlock).Text(FText::FromString(""));

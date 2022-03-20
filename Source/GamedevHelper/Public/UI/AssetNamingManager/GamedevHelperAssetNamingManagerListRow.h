@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GamedevHelperTypes.h"
 #include "GamedevHelperAssetNamingManagerListRow.generated.h"
 
 UCLASS(Transient)
@@ -12,10 +13,15 @@ class UGamedevHelperAssetNamingListItem : public UObject
 public:
 	UPROPERTY()
 	FAssetData AssetData;
-	UPROPERTY(VisibleAnywhere)
+	
+	UPROPERTY()
 	FString OldName;
-	UPROPERTY(VisibleAnywhere)
+	
+	UPROPERTY()
 	FString NewName;
+
+	UPROPERTY()
+	FString Note;
 };
 
 class SGamedevHelperAssetNamingListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>

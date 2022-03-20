@@ -4,10 +4,11 @@
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerListRow.h"
 #include "UI/GamedevHelperEditorStyle.h"
+#include "GamedevHelper.h"
+#include "GamedevHelperAssetNamingManagerLibrary.h"
 // Engine Headers
 #include "Widgets/Layout/SScrollBox.h"
 #include "AssetRegistryModule.h"
-#include "GamedevHelperAssetNamingManagerLibrary.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -16,7 +17,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	Settings = GetMutableDefault<UGamedevHelperAssetNamingManagerSettings>();
 	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
-	
+
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
 	ViewArgs.bLockable = false;
@@ -26,7 +27,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ViewArgs.bAllowFavoriteSystem = false;
 	ViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	ViewArgs.ViewIdentifier = "AssetNamingManagerSettings";
-	
+
 
 	const TSharedPtr<IDetailsView> SettingsProperty = PropertyEditor.CreateDetailView(ViewArgs);
 	SettingsProperty->SetObject(Settings);
@@ -69,9 +70,10 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						SNew(SButton)
 						.HAlign(HAlign_Center)
 						.VAlign(VAlign_Center)
-						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#9E9E9E"))})
+						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#4CAF50"))})
 						.ContentPadding(FMargin{0})
 						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRenameBtnClick)
+						.IsEnabled_Raw(this, &SAssetNamingManagerWindow::IsRenameBtnEnabled)
 						[
 							SNew(STextBlock)
 							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
@@ -136,7 +138,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 							  .FixedWidth(50.0f)
 							[
 								SNew(STextBlock)
-								.Text(LOCTEXT("Preview", "Type"))
+								.Text(LOCTEXT("Preview", "#"))
 							]
 							+ SHeaderRow::Column(FName("AssetClass"))
 							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
@@ -147,7 +149,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 							  .FixedWidth(200.0f)
 							[
 								SNew(STextBlock)
-								.Text(LOCTEXT("AssetClass", "Class"))
+								.Text(LOCTEXT("AssetClass", "Type"))
 							]
 							+ SHeaderRow::Column(FName("Result"))
 							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
@@ -166,10 +168,21 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
 							  .HeaderContentPadding(FMargin(10.0f))
-							  .FillWidth(0.6f)
+							  .FillWidth(0.3f)
 							[
 								SNew(STextBlock)
 								.Text(LOCTEXT("Path", "Path"))
+							]
+							+ SHeaderRow::Column(FName("Note"))
+							  // .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
+							  .HAlignCell(HAlign_Left)
+							  .VAlignCell(VAlign_Center)
+							  .HAlignHeader(HAlign_Center)
+							  .HeaderContentPadding(FMargin(10.0f))
+							  .FillWidth(0.3f)
+							[
+								SNew(STextBlock)
+								.Text(LOCTEXT("Note", "Note"))
 							]
 						)
 					]
@@ -187,33 +200,59 @@ void SAssetNamingManagerWindow::ListUpdate()
 	Filter.PackagePaths.Add(FName{*Settings->ScanPath.Path});
 	Filter.bRecursivePaths = Settings->bScanRecursive;
 
-	// for (const auto Prefix : Settings->AssetPrefixes)
-	// {
-	// 	if (!Prefix.Key) continue;
-	// 	const FString ClassName = Prefix.Key->GetName();
-	// 	if (ClassName.IsEmpty()) continue;
-	// 	
-	// 	Filter.ClassNames.Add(FName{*ClassName});
-	// }
+	// todo:ashe23 filter assets by class if settings enabled
 
 	TArray<FAssetData> Assets;
 	AssetRegistryModule.Get().GetAssets(Filter, Assets);
 
-	AssetList.Reset();
-	AssetList.Reserve(Assets.Num());
-
+	RenamePreviews.Reset();
+	RenamePreviews.Reserve(Assets.Num());
 	for (const auto& Asset : Assets)
 	{
-		UGamedevHelperAssetNamingListItem* Data = NewObject<UGamedevHelperAssetNamingListItem>();
-		const FString AssetNewName = UGamedevHelperAssetNamingManagerLibrary::GetRenamedName(Asset, Settings);
-		if (AssetNewName.IsEmpty()) continue; // todo:ashe23 show in UI that this asset is missing settings
+		// todo:ashe23 refactor this part
+		FGamedevHelperRenamePreview RenamePreview = UGamedevHelperAssetNamingManagerLibrary::GetRenamePreview(Asset, Settings);
+
+		if (!RenamePreview.bValid && Settings->bShowMissingTypes)
+		{
+			RenamePreviews.Add(RenamePreview);
+			continue;
+		}
 		
-		Data->OldName = Asset.AssetName.ToString();
-		Data->NewName = AssetNewName;
+		// check if rename preview has conflicting names
+		const auto OtherPreview = RenamePreviews.FindByPredicate([&](const FGamedevHelperRenamePreview& Prev)
+		{
+			return Prev.NewName.Equals(RenamePreview.NewName, ESearchCase::CaseSensitive);
+		});
 
-		if (Data->OldName.Equals(Data->NewName)) continue;
+		if (OtherPreview)
+		{
+			OtherPreview->bValid = false;
+			OtherPreview->ErrMsg = TEXT("Asset with same name already exists in previews");
 
-		Data->AssetData = Asset;
+			RenamePreview.bValid = false;
+			RenamePreview.ErrMsg = TEXT("Asset with same name already exists in previews");
+
+			RenamePreviews.Add(RenamePreview);
+			continue;
+		}
+		
+		if (RenamePreview.bValid)
+		{
+			RenamePreviews.Add(RenamePreview);
+		}
+	}
+
+	AssetList.Reset();
+	AssetList.Reserve(RenamePreviews.Num());
+
+	for (const auto& RenamePreview : RenamePreviews)
+	{
+		UGamedevHelperAssetNamingListItem* Data = NewObject<UGamedevHelperAssetNamingListItem>();
+
+		Data->OldName = RenamePreview.AssetData.AssetName.ToString();
+		Data->NewName = RenamePreview.NewName;
+		Data->AssetData = RenamePreview.AssetData;
+		Data->Note = RenamePreview.ErrMsg;
 
 		AssetList.Add(Data);
 	}
@@ -282,18 +321,18 @@ TSharedRef<ITableRow> SAssetNamingManagerWindow::OnGenerateRow(TWeakObjectPtr<UG
 
 FReply SAssetNamingManagerWindow::OnRenameBtnClick()
 {
-	TArray<FAssetData> RenameAssetsList;
-	RenameAssetsList.Reserve(AssetList.Num());
-	
+	TArray<FAssetData> AssetsList;
+	AssetsList.Reserve(AssetList.Num());
+
 	for (const auto& Asset : AssetList)
 	{
-		RenameAssetsList.Add(Asset->AssetData);
+		AssetsList.Add(Asset->AssetData);
 	}
 
-	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(RenameAssetsList);
+	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(AssetsList);
 
 	ListRefresh();
-	
+
 	return FReply::Handled();
 }
 
@@ -302,6 +341,19 @@ FReply SAssetNamingManagerWindow::OnRefreshBtnClick()
 	ListRefresh();
 
 	return FReply::Handled();
+}
+
+bool SAssetNamingManagerWindow::IsRenameBtnEnabled() const
+{
+	for (const auto& RenamePreview : RenamePreviews)
+	{
+		if (!RenamePreview.bValid)
+		{
+			return false;
+		}
+	}
+
+	return true;;
 }
 
 void SAssetNamingManagerWindow::OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode)
