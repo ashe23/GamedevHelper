@@ -7,6 +7,7 @@
 #include "Widgets/SCompoundWidget.h"
 
 class UGamedevHelperAssetNamingManagerSettings;
+class UGamedevHelperAssetNamingConvention;
 class UGamedevHelperAssetNamingListItem;
 
 class SAssetNamingManagerWindow : public SCompoundWidget
@@ -30,9 +31,11 @@ private:
 	void OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
 	
 	UGamedevHelperAssetNamingManagerSettings* Settings = nullptr;
+	UGamedevHelperAssetNamingConvention* NamingConvention = nullptr;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>> AssetList;
 	TArray<FGamedevHelperRenamePreview> RenamePreviews;
 	TEnumAsByte<EColumnSortMode::Type> CurrentSortMode = EColumnSortMode::Ascending;
 	FName SortColumn;
+	bool bRenameBtnActive = false;
 };

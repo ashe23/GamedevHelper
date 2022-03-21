@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 #include "GamedevHelperTypes.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "GamedevHelperAssetNamingManagerLibrary.generated.h"
 
 UCLASS()
@@ -14,18 +15,15 @@ class UGamedevHelperAssetNamingManagerLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 public:
 	/**
-	 * @brief Renames asset by given settings
-	 * @param Asset FAssetData
-	 */
-	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
-	static void RenameAsset(const FAssetData& Asset);
-
-	/**
 	 * @brief Renames assets by given settings
 	 * @param Assets TArray<FAssetData>
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static void RenameAssets(const TArray<FAssetData>& Assets);
+
+	static void GetRenamePreviews(const TArray<FAssetData>& Assets,
+							  const UGamedevHelperAssetNamingConvention* NamingConvention,
+							  TArray<FGamedevHelperRenamePreview>& Previews);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 
@@ -99,21 +97,4 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static FString ConvertToCamelCase(const FString& OriginalString);
-
-	/**
-	 * @brief Returns rename preview for given asset and settings. Does not do actual renaming.
-	 * @param Asset FAssetData
-	 * @param Settings UGamedevHelperAssetNamingManagerSettings
-	 * @return FGamedevHelperRenamePreview
-	 */
-	static FGamedevHelperRenamePreview GetRenamePreview(const FAssetData& Asset, const UGamedevHelperAssetNamingManagerSettings* Settings);
-	
-	/**
-	 * @brief Returns naming settings for given asset
-	 * @param Asset FAssetData
-	 * @param Settings UGamedevHelperAssetNamingManagerSettings
-	 * @return UGamedevHelperAssetNamingManagerSettings
-	 */
-	static const FGamedevHelperAssetNameSettings* GetAssetNamingSettings(const FAssetData& Asset,
-	                                                                     const UGamedevHelperAssetNamingManagerSettings* Settings);
 };

@@ -2,6 +2,7 @@
 
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindowUI.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerListRow.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "GamedevHelper.h"
@@ -9,6 +10,7 @@
 // Engine Headers
 #include "Widgets/Layout/SScrollBox.h"
 #include "AssetRegistryModule.h"
+#include "Engine/MapBuildDataRegistry.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -16,7 +18,10 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 {
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	Settings = GetMutableDefault<UGamedevHelperAssetNamingManagerSettings>();
+	NamingConvention = GetMutableDefault<UGamedevHelperAssetNamingConvention>();
+	
 	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
+	NamingConvention->OnConventionPropertyChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
 
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
@@ -28,9 +33,22 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	ViewArgs.ViewIdentifier = "AssetNamingManagerSettings";
 
+	FDetailsViewArgs ViewArgs1;
+	ViewArgs1.bUpdatesFromSelection = false;
+	ViewArgs1.bLockable = false;
+	ViewArgs1.bShowScrollBar = true;
+	ViewArgs1.bAllowSearch = false;
+	ViewArgs1.bShowOptions = false;
+	ViewArgs1.bAllowFavoriteSystem = false;
+	ViewArgs1.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+	ViewArgs1.ViewIdentifier = "AssetNamingConvention";
+
 
 	const TSharedPtr<IDetailsView> SettingsProperty = PropertyEditor.CreateDetailView(ViewArgs);
+	const TSharedPtr<IDetailsView> NamingConventionProperty = PropertyEditor.CreateDetailView(ViewArgs1);
+	
 	SettingsProperty->SetObject(Settings);
+	NamingConventionProperty->SetObject(NamingConvention);
 
 	SortColumn = TEXT("AssetClass");
 
@@ -57,6 +75,12 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 				  .AutoHeight()
 				[
 					SettingsProperty.ToSharedRef()
+				]
+				+ SVerticalBox::Slot()
+				  .Padding(FMargin{10.0f})
+				  .AutoHeight()
+				[
+					NamingConventionProperty.ToSharedRef()
 				]
 				+ SVerticalBox::Slot()
 				  .Padding(FMargin{10.0f})
@@ -194,65 +218,66 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 void SAssetNamingManagerWindow::ListUpdate()
 {
+	bRenameBtnActive = true;
+	AssetList.Reset();
+	
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
 
 	FARFilter Filter;
 	Filter.PackagePaths.Add(FName{*Settings->ScanPath.Path});
 	Filter.bRecursivePaths = Settings->bScanRecursive;
+	Filter.bRecursiveClasses = true;
+	Filter.RecursiveClassesExclusionSet.Add(UWorld::StaticClass()->GetFName());
+	Filter.RecursiveClassesExclusionSet.Add(UMapBuildDataRegistry::StaticClass()->GetFName());
 
-	// todo:ashe23 filter assets by class if settings enabled
+	if (!Settings->bShowMissingTypes)
+	{
+		TArray<UClass*> ConventionAssetClasses;
+		NamingConvention->GetAssetClasses(ConventionAssetClasses);
+		
+		for (const auto& AssetClass : ConventionAssetClasses)
+		{
+			Filter.ClassNames.Add(AssetClass->GetFName());
+		}
+	}
 
 	TArray<FAssetData> Assets;
 	AssetRegistryModule.Get().GetAssets(Filter, Assets);
 
-	RenamePreviews.Reset();
-	RenamePreviews.Reserve(Assets.Num());
-	for (const auto& Asset : Assets)
+	if (Assets.Num() == 0)
 	{
-		// todo:ashe23 refactor this part
-		FGamedevHelperRenamePreview RenamePreview = UGamedevHelperAssetNamingManagerLibrary::GetRenamePreview(Asset, Settings);
-
-		if (!RenamePreview.bValid && Settings->bShowMissingTypes)
-		{
-			RenamePreviews.Add(RenamePreview);
-			continue;
-		}
-		
-		// check if rename preview has conflicting names
-		const auto OtherPreview = RenamePreviews.FindByPredicate([&](const FGamedevHelperRenamePreview& Prev)
-		{
-			return Prev.NewName.Equals(RenamePreview.NewName, ESearchCase::CaseSensitive);
-		});
-
-		if (OtherPreview)
-		{
-			OtherPreview->bValid = false;
-			OtherPreview->ErrMsg = TEXT("Asset with same name already exists in previews");
-
-			RenamePreview.bValid = false;
-			RenamePreview.ErrMsg = TEXT("Asset with same name already exists in previews");
-
-			RenamePreviews.Add(RenamePreview);
-			continue;
-		}
-		
-		if (RenamePreview.bValid)
-		{
-			RenamePreviews.Add(RenamePreview);
-		}
+		bRenameBtnActive = false;
+		return;
 	}
 
-	AssetList.Reset();
+	UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(Assets, NamingConvention, RenamePreviews);
+
+	if (RenamePreviews.Num() == 0)
+	{
+		bRenameBtnActive = false;
+		return;
+	}
+
 	AssetList.Reserve(RenamePreviews.Num());
 
 	for (const auto& RenamePreview : RenamePreviews)
 	{
+		if (!Settings->bShowMissingTypes && RenamePreview.GetStatus() == EGamedevHelperRenameStatus::MissingSettings)
+		{
+			continue;
+		}
+		
 		UGamedevHelperAssetNamingListItem* Data = NewObject<UGamedevHelperAssetNamingListItem>();
 
-		Data->OldName = RenamePreview.AssetData.AssetName.ToString();
-		Data->NewName = RenamePreview.NewName;
-		Data->AssetData = RenamePreview.AssetData;
-		Data->Note = RenamePreview.ErrMsg;
+		Data->OldName = RenamePreview.GetOldName();
+		Data->NewName = RenamePreview.GetNewName();
+		Data->AssetData = RenamePreview.GetAssetData();
+		Data->Note = RenamePreview.GetStatusMsg();
+
+		if (!RenamePreview.IsValid())
+		{
+			bRenameBtnActive = false;
+		}
 
 		AssetList.Add(Data);
 	}
@@ -345,15 +370,7 @@ FReply SAssetNamingManagerWindow::OnRefreshBtnClick()
 
 bool SAssetNamingManagerWindow::IsRenameBtnEnabled() const
 {
-	for (const auto& RenamePreview : RenamePreviews)
-	{
-		if (!RenamePreview.bValid)
-		{
-			return false;
-		}
-	}
-
-	return true;;
+	return bRenameBtnActive;
 }
 
 void SAssetNamingManagerWindow::OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode)

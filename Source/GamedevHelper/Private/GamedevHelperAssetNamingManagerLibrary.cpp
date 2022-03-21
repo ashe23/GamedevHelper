@@ -10,35 +10,20 @@
 #include "EditorAssetLibrary.h"
 #include "Misc/ScopedSlowTask.h"
 
-void UGamedevHelperAssetNamingManagerLibrary::RenameAsset(const FAssetData& Asset)
-{
-	if (!Asset.IsValid()) return;
-
-	const auto Settings = GetDefault<UGamedevHelperAssetNamingManagerSettings>();
-	if (!Settings) return;
-
-	const FGamedevHelperRenamePreview RenamePreview = GetRenamePreview(Asset, Settings);
-	if (!RenamePreview.bValid)
-	{
-		UGamedevHelperNotificationLibrary::ShowModal(RenamePreview.ErrMsg, EGamedevHelperModalStatus::Fail);
-		return;
-	}
-
-	const bool bRenameResult = UEditorAssetLibrary::RenameAsset(RenamePreview.AssetData.ObjectPath.ToString(), RenamePreview.NewObjectPath);
-	if (!bRenameResult)
-	{
-		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Failed to rename asset"), EGamedevHelperModalStatus::Fail);
-		return;
-	}
-
-	UGamedevHelperAssetLibrary::FixupRedirectors(RenamePreview.AssetData.PackagePath.ToString());
-	UGamedevHelperNotificationLibrary::ShowModal(TEXT("Asset Renamed Successfully"), EGamedevHelperModalStatus::Success);
-}
-
 void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets)
 {
-	const auto Settings = GetDefault<UGamedevHelperAssetNamingManagerSettings>();
-	if (!Settings) return;
+	const auto NamingConvention = GetDefault<UGamedevHelperAssetNamingConvention>();
+	if (!NamingConvention) return;
+
+	bool bRenameResult = true;
+
+	TArray<FGamedevHelperRenamePreview> Previews;
+	GetRenamePreviews(Assets, NamingConvention, Previews);
+
+	if (Previews.Num() == 0)
+	{
+		bRenameResult = false;
+	}
 
 	FScopedSlowTask SlowTask(
 		Assets.Num(),
@@ -46,20 +31,14 @@ void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetDa
 	);
 	SlowTask.MakeDialog(true);
 
-	bool bRenameResult = true;
-	for (const auto& Asset : Assets)
+	for (const auto& Preview : Previews)
 	{
 		SlowTask.EnterProgressFrame(
 			1.0f,
-			FText::FromString(Asset.AssetName.ToString())
+			FText::FromString(Preview.GetNewName())
 		);
 
-		FGamedevHelperRenamePreview RenamePreview = GetRenamePreview(Asset, Settings);
-		if (RenamePreview.bValid)
-		{
-			UEditorAssetLibrary::RenameAsset(RenamePreview.AssetData.ObjectPath.ToString(), RenamePreview.NewObjectPath);
-		}
-		else
+		if (!(Preview.IsValid() && UEditorAssetLibrary::RenameAsset(Preview.GetAssetData().ObjectPath.ToString(), Preview.GetNewObjectPath())))
 		{
 			bRenameResult = false;
 		}
@@ -260,94 +239,92 @@ FString UGamedevHelperAssetNamingManagerLibrary::ConvertToCamelCase(const FStrin
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
 }
 
-FGamedevHelperRenamePreview UGamedevHelperAssetNamingManagerLibrary::GetRenamePreview(const FAssetData& Asset,
-                                                                                      const UGamedevHelperAssetNamingManagerSettings* Settings)
+void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAssetData>& Assets,
+                                                                const UGamedevHelperAssetNamingConvention* NamingConvention,
+                                                                TArray<FGamedevHelperRenamePreview>& Previews)
 {
-	FGamedevHelperRenamePreview RenamePreview;
-	RenamePreview.bValid = false;
-	RenamePreview.AssetData = Asset;
-
-	if (!Asset.IsValid())
+	if (!NamingConvention)
 	{
-		RenamePreview.ErrMsg = TEXT("Invalid asset data");
-		return RenamePreview;
+		UE_LOG(LogGamedevHelper, Error, TEXT("Invalid Asset Naming Convention object"));
+		return;
 	}
 
-	if (!Settings)
+	Previews.Reset();
+	Previews.Reserve(Assets.Num());
+
+	for (const auto& Asset : Assets)
 	{
-		RenamePreview.ErrMsg = TEXT("Invalid naming settings");
-		return RenamePreview;
+		FGamedevHelperRenamePreview RenamePreview;
+		RenamePreview.SetAssetData(Asset);
+		if (!RenamePreview.GetAssetData().IsValid()) continue;
+
+		const FGamedevHelperAssetNameFormat NamingFormat = NamingConvention->GetAssetNameFormat(Asset);
+		if (!NamingFormat.IsValid())
+		{
+			RenamePreview.SetStatus(EGamedevHelperRenameStatus::MissingSettings);
+			Previews.Add(RenamePreview);
+			continue;
+		}
+
+		const FString OldName = Asset.AssetName.ToString();
+
+		// {OldPrefix}_{BaseName}_{OldSuffix} => {BaseName}
+		FString BaseName = Normalize(OldName);
+		BaseName.RemoveFromStart(NamingFormat.Prefix + TEXT("_"));
+		BaseName.RemoveFromEnd(TEXT("_") + NamingFormat.Suffix);
+
+		const FString Prefix = NamingFormat.Prefix.IsEmpty() ? TEXT("") : NamingFormat.Prefix + TEXT("_");
+		const FString Suffix = NamingFormat.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingFormat.Suffix;
+		const FString NewName = Prefix + ConvertNamingCase(BaseName, EGamedevHelperNamingCase::PascalCase) + Suffix;
+		const FString NewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *NewName, *NewName);
+		RenamePreview.SetNewName(NewName);
+		RenamePreview.SetNewObjectPath(NewObjectPath);
+		
+		const auto OtherPreviewWithSameName = Previews.FindByPredicate([&](const FGamedevHelperRenamePreview& OtherPrev)
+		{
+			return
+				OtherPrev.GetNewName().Equals(NewName, ESearchCase::CaseSensitive) &&
+				OtherPrev.GetAssetData().ObjectPath.ToString().Equals(NewObjectPath);
+		});
+
+
+		if (OldName.Equals(NewName, ESearchCase::CaseSensitive))
+		{
+			continue;
+		}
+		
+		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath))
+		{
+			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
+		}
+		else if (OtherPreviewWithSameName)
+		{
+			OtherPreviewWithSameName->SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
+			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
+		}
+
+		Previews.Add(RenamePreview);
 	}
-
-	const FString AssetOldName = Asset.AssetName.ToString();
-	const FGamedevHelperAssetNameSettings* AssetNameSettings = GetAssetNamingSettings(Asset, Settings);
-	if (!AssetNameSettings)
-	{
-		RenamePreview.ErrMsg = FString::Printf(TEXT("Missing naming settings for %s"), *Asset.GetClass()->GetName());
-		return RenamePreview;
-	}
-
-	if (AssetNameSettings->IsEmpty())
-	{
-		RenamePreview.ErrMsg = FString::Printf(TEXT("Prefix and Suffix are empty for %s"), *Asset.GetClass()->GetName());
-		return RenamePreview;
-	}
-
-	// M_NewMaterial01 => m_new_material_01
-	FString AssetBaseName = Tokenize(AssetOldName);
-
-	// m_new_material_01 => new_material_01
-	AssetBaseName.RemoveFromStart(AssetNameSettings->Prefix + TEXT("_"));
-	AssetBaseName.RemoveFromEnd(TEXT("_") + AssetNameSettings->Suffix);
-
-	const FString Prefix = AssetNameSettings->Prefix.IsEmpty() ? TEXT("") : AssetNameSettings->Prefix + TEXT("_");
-	const FString Suffix = AssetNameSettings->Suffix.IsEmpty() ? TEXT("") : TEXT("_") + AssetNameSettings->Suffix;
-
-	// new_material_01 => M_New_Material_01
-	const FString FinalName = ConvertNamingCase(
-		FString::Printf(
-			TEXT("%s%s%s"),
-			*Prefix,
-			*AssetBaseName,
-			*Suffix
-		), EGamedevHelperNamingCase::PascalSnakeCase);
-
-	const FAssetRegistryModule& AssetRegistry = FModuleManager::GetModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
-
-	// todo:ashe23 this method not working correctly for specific assets
-	const FString NewAssetObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *FinalName, *FinalName);
-	const FAssetData OtherAsset = AssetRegistry.Get().GetAssetByObjectPath(FName{NewAssetObjectPath});
-	if (OtherAsset.IsValid() && OtherAsset.AssetName.ToString().Equals(FinalName, ESearchCase::CaseSensitive))
-	{
-		RenamePreview.ErrMsg = TEXT("Asset with same name already exists in directory");
-		return RenamePreview;
-	}
-
-	RenamePreview.bValid = true;
-	RenamePreview.NewName = FinalName;
-	RenamePreview.NewObjectPath = NewAssetObjectPath;
-
-	return RenamePreview;
 }
 
-const FGamedevHelperAssetNameSettings* UGamedevHelperAssetNamingManagerLibrary::GetAssetNamingSettings(
-	const FAssetData& Asset,
-	const UGamedevHelperAssetNamingManagerSettings* Settings)
-{
-	if (!Asset.IsValid()) return nullptr;
-	if (!Settings) return nullptr;
-
-	// todo:ashe23 some assets require additional searching methods in order to find suffix correctly (niagara scripts, blueprints etc)
-	const auto AssetNaming = Settings->FindNamingByClass(Asset.GetClass());
-	if (AssetNaming)
-	{
-		return AssetNaming;
-	}
-
-	if (UGamedevHelperAssetLibrary::IsBlueprint(Asset))
-	{
-		return Settings->BlueprintTypesNaming.Find(UGamedevHelperAssetLibrary::GetBlueprintType(Asset));
-	}
-
-	return nullptr;
-}
+// const FGamedevHelperAssetNameFormat* UGamedevHelperAssetNamingManagerLibrary::GetAssetNamingSettings(
+// 	const FAssetData& Asset,
+// 	const UGamedevHelperAssetNamingManagerSettings* Settings)
+// {
+// 	if (!Asset.IsValid()) return nullptr;
+// 	if (!Settings) return nullptr;
+//
+// 	// todo:ashe23 some assets require additional searching methods in order to find suffix correctly (niagara scripts, blueprints etc)
+// 	const auto AssetNaming = Settings->FindNamingByClass(Asset.GetClass());
+// 	if (AssetNaming)
+// 	{
+// 		return AssetNaming;
+// 	}
+//
+// 	if (UGamedevHelperAssetLibrary::IsBlueprint(Asset))
+// 	{
+// 		return Settings->BlueprintTypesNaming.Find(UGamedevHelperAssetLibrary::GetBlueprintType(Asset));
+// 	}
+//
+// 	return nullptr;
+// }
