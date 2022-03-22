@@ -19,22 +19,12 @@ static FORCEINLINE EnumType GetEnumValueFromString(const FString& EnumName, cons
 UENUM(BlueprintType)
 enum class EGamedevHelperNamingCase : uint8
 {
-	// None,
 	PascalCase UMETA(DisplayName = "PascalCase"),
 	PascalSnakeCase UMETA(DisplayName = "Pascal_Snake_Case"),
 	SnakeCase UMETA(DisplayName = "snake_case"),
 	KebabCase UMETA(DisplayName = "kebab-case"),
 	CamelCase UMETA(DisplayName = "camelCase"),
 };
-
-// UENUM(BlueprintType)
-// enum class EGamedevHelperLetterCase : uint8
-// {
-// 	None,
-// 	LowerCase UMETA(DiplayName = "lowercase"),
-// 	UpperCase UMETA(DiplayName = "UPPERCASE"),
-// 	MixedCase UMETA(DiplayName = "MiXeDCaSe"),
-// };
 
 UENUM(BlueprintType)
 enum class EGamedevHelperVertexAnimTexture : uint8
@@ -184,11 +174,6 @@ private:
 
 	UPROPERTY()
 	EGamedevHelperRenameStatus Status = EGamedevHelperRenameStatus::Ok;
-
-	// bool MustBeRenamed() const
-	// {
-	// 	return AssetData.AssetName.ToString().Equals(NewName, ESearchCase::CaseSensitive) == false;
-	// }
 };
 
 USTRUCT(BlueprintType)
