@@ -11,7 +11,9 @@
 // Engine Headers
 #include "Widgets/Layout/SScrollBox.h"
 #include "AssetRegistryModule.h"
+#include "IContentBrowserSingleton.h"
 #include "Engine/MapBuildDataRegistry.h"
+#include "Editor/ContentBrowser/Public/ContentBrowserModule.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -26,9 +28,15 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 	PluginCommands = MakeShareable(new FUICommandList);
 	PluginCommands->MapAction(
-		FGamedevHelperEditorCommands::Get().Cmd_RenameSelected,
+		FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerRenameSelected,
 		FUIAction(
 			FExecuteAction::CreateRaw(this, &SAssetNamingManagerWindow::OnRenameSelected)
+		)
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerOpenAsset,
+		FUIAction(
+			FExecuteAction::CreateRaw(this, &SAssetNamingManagerWindow::OnOpenSelected)
 		)
 	);
 
@@ -147,7 +155,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						.SelectionMode(ESelectionMode::Multi)
 						.OnGenerateRow(this, &SAssetNamingManagerWindow::OnGenerateRow)
 						.OnContextMenuOpening(this, &SAssetNamingManagerWindow::GetListContextMenu)
-						// .OnMouseButtonDoubleClick_Raw(this, &SVirtualGamesRendererWindow::OnRowMouseDblClick)
+						.OnMouseButtonClick_Static(&SAssetNamingManagerWindow::OnListItemDblClick)
 						.HeaderRow
 						(
 							SNew(SHeaderRow)
@@ -349,7 +357,8 @@ TSharedPtr<SWidget> SAssetNamingManagerWindow::GetListContextMenu() const
 	FMenuBuilder MenuBuilder{true, PluginCommands};
 	MenuBuilder.BeginSection(TEXT("Asset"),LOCTEXT("AssetSectionLabel", "Asset"));
 	{
-		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenameSelected);
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerRenameSelected);
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerOpenAsset);
 	}
 	MenuBuilder.EndSection();
 
@@ -373,12 +382,23 @@ FReply SAssetNamingManagerWindow::OnRenameBtnClick()
 	return FReply::Handled();
 }
 
-void SAssetNamingManagerWindow::OnRenameSelected()
+void SAssetNamingManagerWindow::OnListItemDblClick(TWeakObjectPtr<UGamedevHelperAssetNamingListItem> Item)
 {
-	if (!ListView.IsValid())
+	if (!Item.IsValid())
 	{
 		return;
 	}
+
+	TArray<FAssetData> Assets;
+	Assets.Add(Item.Get()->AssetData);
+	
+	const FContentBrowserModule& CBModule = FModuleManager::Get().LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+	CBModule.Get().SyncBrowserToAssets(Assets);
+}
+
+void SAssetNamingManagerWindow::OnRenameSelected()
+{
+	if (!ListView.IsValid()) return;
 	
 	const auto SelectedItems = ListView.Get()->GetSelectedItems();
 
@@ -393,6 +413,21 @@ void SAssetNamingManagerWindow::OnRenameSelected()
 	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(Assets);
 
 	ListRefresh();
+}
+
+void SAssetNamingManagerWindow::OnOpenSelected() const
+{
+	if (!GEditor) return;
+	if (!ListView.IsValid()) return;
+	
+	TArray<FName> AssetNames;
+	const auto SelectedItems = ListView.Get()->GetSelectedItems();
+	for (const auto& Item : SelectedItems)
+	{
+		AssetNames.Add(Item.Get()->AssetData.ObjectPath);
+	}
+
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorsForAssets(AssetNames);
 }
 
 FReply SAssetNamingManagerWindow::OnRefreshBtnClick()

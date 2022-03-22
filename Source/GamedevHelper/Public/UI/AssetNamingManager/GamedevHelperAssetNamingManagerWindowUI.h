@@ -25,7 +25,9 @@ private:
 	TSharedPtr<SWidget> GetListContextMenu() const;
 	void OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
 	FReply OnRenameBtnClick();
+	static void OnListItemDblClick(TWeakObjectPtr<UGamedevHelperAssetNamingListItem> Item);
 	void OnRenameSelected();
+	void OnOpenSelected() const;
 	FReply OnRefreshBtnClick();
 	bool IsRenameBtnEnabled() const;
 

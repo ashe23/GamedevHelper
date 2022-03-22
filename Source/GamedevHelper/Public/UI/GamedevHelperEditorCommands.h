@@ -20,8 +20,7 @@ public:
 
 	// main menu
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
+	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerOpenAsset;
 	TSharedPtr<FUICommandInfo> Cmd_WorldOutlinerManagerWindow;
-
-	// asset naming manager list context menu
-	TSharedPtr<FUICommandInfo> Cmd_RenameSelected;
 };
