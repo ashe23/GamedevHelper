@@ -21,21 +21,21 @@ private:
 	void ListUpdate();
 	void ListSort();
 	void ListRefresh();
-	TSharedRef<ITableRow> OnGenerateRow(
-		TWeakObjectPtr<UGamedevHelperAssetNamingListItem> InItem,
-		const TSharedRef<STableViewBase>& OwnerTable
-	) const;
+	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGamedevHelperAssetNamingListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const;
+	TSharedPtr<SWidget> GetListContextMenu() const;
+	void OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
 	FReply OnRenameBtnClick();
+	void OnRenameSelected();
 	FReply OnRefreshBtnClick();
 	bool IsRenameBtnEnabled() const;
-	void OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
-	
+
+	TSharedPtr<FUICommandList> PluginCommands;
 	UGamedevHelperAssetNamingManagerSettings* Settings = nullptr;
 	UGamedevHelperAssetNamingConvention* NamingConvention = nullptr;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>> AssetList;
 	TArray<FGamedevHelperRenamePreview> RenamePreviews;
 	TEnumAsByte<EColumnSortMode::Type> CurrentSortMode = EColumnSortMode::Ascending;
-	FName SortColumn;
+	FName SortColumn = TEXT("AssetClass");
 	bool bRenameBtnActive = false;
 };

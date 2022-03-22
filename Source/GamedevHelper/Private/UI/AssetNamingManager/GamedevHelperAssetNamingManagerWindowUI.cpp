@@ -4,6 +4,7 @@
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerListRow.h"
+#include "UI/GamedevHelperEditorCommands.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "GamedevHelper.h"
 #include "GamedevHelperAssetNamingManagerLibrary.h"
@@ -23,6 +24,14 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
 	NamingConvention->OnConventionPropertyChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
 
+	PluginCommands = MakeShareable(new FUICommandList);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_RenameSelected,
+		FUIAction(
+			FExecuteAction::CreateRaw(this, &SAssetNamingManagerWindow::OnRenameSelected)
+		)
+	);
+
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
 	ViewArgs.bLockable = false;
@@ -32,25 +41,13 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ViewArgs.bAllowFavoriteSystem = false;
 	ViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	ViewArgs.ViewIdentifier = "AssetNamingManagerSettings";
-
-	FDetailsViewArgs ViewArgs1;
-	ViewArgs1.bUpdatesFromSelection = false;
-	ViewArgs1.bLockable = false;
-	ViewArgs1.bShowScrollBar = true;
-	ViewArgs1.bAllowSearch = false;
-	ViewArgs1.bShowOptions = false;
-	ViewArgs1.bAllowFavoriteSystem = false;
-	ViewArgs1.NameAreaSettings = FDetailsViewArgs::HideNameArea;
-	ViewArgs1.ViewIdentifier = "AssetNamingConvention";
-
-
 	const TSharedPtr<IDetailsView> SettingsProperty = PropertyEditor.CreateDetailView(ViewArgs);
-	const TSharedPtr<IDetailsView> NamingConventionProperty = PropertyEditor.CreateDetailView(ViewArgs1);
+
+	ViewArgs.ViewIdentifier = "AssetNamingConvention";
+	const TSharedPtr<IDetailsView> NamingConventionProperty = PropertyEditor.CreateDetailView(ViewArgs);
 	
 	SettingsProperty->SetObject(Settings);
 	NamingConventionProperty->SetObject(NamingConvention);
-
-	SortColumn = TEXT("AssetClass");
 
 	ListUpdate();
 
@@ -149,7 +146,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						.ListItemsSource(&AssetList)
 						.SelectionMode(ESelectionMode::Multi)
 						.OnGenerateRow(this, &SAssetNamingManagerWindow::OnGenerateRow)
-						// .OnContextMenuOpening(this, &SVirtualGamesRendererWindow::OnContextMenu)
+						.OnContextMenuOpening(this, &SAssetNamingManagerWindow::GetListContextMenu)
 						// .OnMouseButtonDoubleClick_Raw(this, &SVirtualGamesRendererWindow::OnRowMouseDblClick)
 						.HeaderRow
 						(
@@ -165,7 +162,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 								.Text(LOCTEXT("Preview", "#"))
 							]
 							+ SHeaderRow::Column(FName("AssetClass"))
-							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
+							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnListSort)
 							  .HAlignCell(HAlign_Center)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
@@ -176,7 +173,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 								.Text(LOCTEXT("AssetClass", "Type"))
 							]
 							+ SHeaderRow::Column(FName("Result"))
-							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
+							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnListSort)
 							  .HAlignCell(HAlign_Left)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
@@ -187,7 +184,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 								.Text(LOCTEXT("Result", "Naming Preview"))
 							]
 							+ SHeaderRow::Column(FName("Path"))
-							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
+							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnListSort)
 							  .HAlignCell(HAlign_Left)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
@@ -198,7 +195,6 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 								.Text(LOCTEXT("Path", "Path"))
 							]
 							+ SHeaderRow::Column(FName("Note"))
-							  // .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
 							  .HAlignCell(HAlign_Center)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
@@ -267,25 +263,20 @@ void SAssetNamingManagerWindow::ListUpdate()
 			continue;
 		}
 
-		// if (RenamePreview.GetStatus() == EGamedevHelperRenameStatus::OK)
-		// {
-		// 	continue;
-		// }
-		//
-		UGamedevHelperAssetNamingListItem* Data = NewObject<UGamedevHelperAssetNamingListItem>();
+		UGamedevHelperAssetNamingListItem* ListItem = NewObject<UGamedevHelperAssetNamingListItem>();
 
-		Data->OldName = RenamePreview.GetOldName();
-		Data->NewName = RenamePreview.GetNewName();
-		Data->AssetData = RenamePreview.GetAssetData();
-		Data->Note = RenamePreview.GetStatusMsg();
-		Data->Status = RenamePreview.GetStatus();
+		ListItem->OldName = RenamePreview.GetOldName();
+		ListItem->NewName = RenamePreview.GetNewName();
+		ListItem->AssetData = RenamePreview.GetAssetData();
+		ListItem->Note = RenamePreview.GetStatusMsg();
+		ListItem->Status = RenamePreview.GetStatus();
 
 		if (!RenamePreview.IsValid())
 		{
 			bRenameBtnActive = false;
 		}
 
-		AssetList.Add(Data);
+		AssetList.Add(ListItem);
 	}
 
 	if (AssetList.Num() == 0)
@@ -298,8 +289,6 @@ void SAssetNamingManagerWindow::ListUpdate()
 
 void SAssetNamingManagerWindow::ListSort()
 {
-	// todo:ashe23 fix sorting, when just updating naming case, list must not change its order
-
 	if (CurrentSortMode == EColumnSortMode::Ascending)
 	{
 		AssetList.Sort([&](const TWeakObjectPtr<UGamedevHelperAssetNamingListItem>& Data1,
@@ -355,6 +344,18 @@ TSharedRef<ITableRow> SAssetNamingManagerWindow::OnGenerateRow(TWeakObjectPtr<UG
 	return SNew(SGamedevHelperAssetNamingListItem, OwnerTable).RowItem(InItem);
 }
 
+TSharedPtr<SWidget> SAssetNamingManagerWindow::GetListContextMenu() const
+{
+	FMenuBuilder MenuBuilder{true, PluginCommands};
+	MenuBuilder.BeginSection(TEXT("Asset"),LOCTEXT("AssetSectionLabel", "Asset"));
+	{
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenameSelected);
+	}
+	MenuBuilder.EndSection();
+
+	return MenuBuilder.MakeWidget();
+}
+
 FReply SAssetNamingManagerWindow::OnRenameBtnClick()
 {
 	TArray<FAssetData> AssetsList;
@@ -372,6 +373,28 @@ FReply SAssetNamingManagerWindow::OnRenameBtnClick()
 	return FReply::Handled();
 }
 
+void SAssetNamingManagerWindow::OnRenameSelected()
+{
+	if (!ListView.IsValid())
+	{
+		return;
+	}
+	
+	const auto SelectedItems = ListView.Get()->GetSelectedItems();
+
+	TArray<FAssetData> Assets;
+	Assets.Reserve(SelectedItems.Num());
+	
+	for (const auto& Item : SelectedItems)
+	{
+		Assets.Add(Item.Get()->AssetData);
+	}
+
+	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(Assets);
+
+	ListRefresh();
+}
+
 FReply SAssetNamingManagerWindow::OnRefreshBtnClick()
 {
 	ListRefresh();
@@ -384,7 +407,7 @@ bool SAssetNamingManagerWindow::IsRenameBtnEnabled() const
 	return bRenameBtnActive;
 }
 
-void SAssetNamingManagerWindow::OnSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode)
+void SAssetNamingManagerWindow::OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode)
 {
 	CurrentSortMode = CurrentSortMode == EColumnSortMode::Ascending ? EColumnSortMode::Descending : EColumnSortMode::Ascending;
 	SortColumn = Name;

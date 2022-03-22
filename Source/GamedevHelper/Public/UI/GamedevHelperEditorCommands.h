@@ -21,14 +21,7 @@ public:
 	// main menu
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerWindow;
 	TSharedPtr<FUICommandInfo> Cmd_WorldOutlinerManagerWindow;
-	
-	// context menu
-	// TSharedPtr<FUICommandInfo> CMD_VertexAnimToolStaticMesh;
-	// TSharedPtr<FUICommandInfo> CMD_VertexAnimToolTextureUV;
-	// TSharedPtr<FUICommandInfo> CMD_VertexAnimToolTextureNormal;
-	// TSharedPtr<FUICommandInfo> CMD_NamingFix;
-	// TSharedPtr<FUICommandInfo> CMD_NamingNumerize;
-	// TSharedPtr<FUICommandInfo> CMD_UtilityDisableCollision;
-	
-	
+
+	// asset naming manager list context menu
+	TSharedPtr<FUICommandInfo> Cmd_RenameSelected;
 };
