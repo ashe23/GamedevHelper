@@ -271,6 +271,11 @@ void SAssetNamingManagerWindow::ListUpdate()
 			continue;
 		}
 
+		if (RenamePreview.GetStatus() == EGamedevHelperRenameStatus::Ok)
+		{
+			continue;
+		}
+
 		UGamedevHelperAssetNamingListItem* ListItem = NewObject<UGamedevHelperAssetNamingListItem>();
 
 		ListItem->OldName = RenamePreview.GetOldName();

@@ -291,6 +291,10 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
 		}
+		else if (!UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && !OldName.Equals(NewName, ESearchCase::CaseSensitive))
+		{
+			RenamePreview.SetStatus(EGamedevHelperRenameStatus::OkToRename);
+		}
 		else if (OtherPreviewWithSameName)
 		{
 			OtherPreviewWithSameName->SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
@@ -300,25 +304,3 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		Previews.Add(RenamePreview);
 	}
 }
-
-// const FGamedevHelperAssetNameFormat* UGamedevHelperAssetNamingManagerLibrary::GetAssetNamingSettings(
-// 	const FAssetData& Asset,
-// 	const UGamedevHelperAssetNamingManagerSettings* Settings)
-// {
-// 	if (!Asset.IsValid()) return nullptr;
-// 	if (!Settings) return nullptr;
-//
-// 	// todo:ashe23 some assets require additional searching methods in order to find suffix correctly (niagara scripts, blueprints etc)
-// 	const auto AssetNaming = Settings->FindNamingByClass(Asset.GetClass());
-// 	if (AssetNaming)
-// 	{
-// 		return AssetNaming;
-// 	}
-//
-// 	if (UGamedevHelperAssetLibrary::IsBlueprint(Asset))
-// 	{
-// 		return Settings->BlueprintTypesNaming.Find(UGamedevHelperAssetLibrary::GetBlueprintType(Asset));
-// 	}
-//
-// 	return nullptr;
-// }

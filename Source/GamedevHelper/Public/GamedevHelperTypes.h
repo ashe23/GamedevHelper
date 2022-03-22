@@ -84,11 +84,11 @@ enum class EGamedevHelperAssetType : uint8
 UENUM(BlueprintType)
 enum class EGamedevHelperRenameStatus : uint8
 {
-	OK,
+	Ok,
+	OkToRename,
 	MissingSettings,
 	DuplicateNameContentBrowser,
-	// asset with same already exists in content browser
-	DuplicateNamePreview // asset with same name does not exist in content browser, but in previews there is assets with same name
+	DuplicateNamePreview
 };
 
 USTRUCT()
@@ -98,7 +98,7 @@ struct FGamedevHelperRenamePreview
 
 	bool IsValid() const
 	{
-		return Status == EGamedevHelperRenameStatus::OK;
+		return Status == EGamedevHelperRenameStatus::OkToRename;
 	}
 
 	FAssetData GetAssetData() const
@@ -183,7 +183,7 @@ private:
 	FString ErrMsg;
 
 	UPROPERTY()
-	EGamedevHelperRenameStatus Status = EGamedevHelperRenameStatus::OK;
+	EGamedevHelperRenameStatus Status = EGamedevHelperRenameStatus::Ok;
 
 	// bool MustBeRenamed() const
 	// {

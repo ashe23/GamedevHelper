@@ -91,7 +91,7 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 
 	if (InColumnName == TEXT("Note"))
 	{
-		const FSlateColor Color = RowItem->Status == EGamedevHelperRenameStatus::OK
+		const FSlateColor Color = RowItem->Status == EGamedevHelperRenameStatus::OkToRename
 			                          ? FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Green"))
 			                          : FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Red"));
 
