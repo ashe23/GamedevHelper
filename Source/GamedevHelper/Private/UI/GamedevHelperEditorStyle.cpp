@@ -58,6 +58,11 @@ const FSlateBrush* FGamedevHelperEditorStyle::GetIcon(const FString& Specifier)
 	return Get().GetBrush(*Specifier);
 }
 
+FSlateColor FGamedevHelperEditorStyle::GetColor(const FString& Specifier)
+{
+	return Get().GetSlateColor(*Specifier);
+}
+
 TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 {
 	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("GamedevHelperStyle"));
@@ -85,6 +90,11 @@ TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 	Style->Set("GamedevHelper.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 	Style->Set("GamedevHelper.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));
 	Style->Set("GamedevHelper.Cmd_WorldOutlinerManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon20x20));
+
+	// colors
+	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#C62828"))}});
+	Style->Set("GamedevHelper.Color.Green", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#2E7D32"))}});
+	Style->Set("GamedevHelper.Color.Grey", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#616161"))}});
 
 
 	return Style;

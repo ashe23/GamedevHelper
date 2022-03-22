@@ -1,7 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
-
+#include "GamedevHelperAssetLibrary.h"
 // Engine Headers
 // Material classes
 #include "Materials/Material.h"
@@ -99,15 +99,15 @@ UGamedevHelperAssetNamingConvention::UGamedevHelperAssetNamingConvention()
 
 void UGamedevHelperAssetNamingConvention::GetAssetClasses(TArray<UClass*>& Classes)
 {
-	Classes.Reserve(BlueprintTypes.Num());
-
-	for (const auto& BlueprintType : BlueprintTypes)
-	{
-		if (BlueprintType.Value.AssetClass)
-		{
-			Classes.AddUnique(BlueprintType.Value.AssetClass);
-		}
-	}
+	// Classes.Reserve(BlueprintTypes.Num());
+	//
+	// for (const auto& BlueprintType : BlueprintTypes)
+	// {
+	// 	if (BlueprintType.Value.AssetClass)
+	// 	{
+	// 		Classes.AddUnique(BlueprintType.Value.AssetClass);
+	// 	}
+	// }
 
 	for (const auto AssetType : Namings)
 	{
@@ -131,6 +131,8 @@ FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetAssetNameF
 		return FGamedevHelperAssetNameFormat{};
 	}
 
+	FGamedevHelperAssetNameFormat NameFormat;
+	
 	const auto AssetClass = Asset.GetClass();
 
 	for (const auto& AssetType : Namings)
@@ -139,19 +141,34 @@ FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetAssetNameF
 		{
 			return Other.AssetClass && Other.AssetClass->GetName().Equals(AssetClass->GetName());
 		});
-
-		// if asset is blueprint
-		// determine prefix by blueprint type
-		// determine suffix by parent class
 		
-
 		if (NamingFormat)
 		{
-			return *NamingFormat;
+			NameFormat = *NamingFormat;
+			break;
 		}
 	}
 	
-	return FGamedevHelperAssetNameFormat{};
+	if (UGamedevHelperAssetLibrary::IsBlueprint(Asset))
+	{
+		if (Asset.AssetClass.IsEqual(TEXT("Blueprint")))
+		{
+			const UBlueprint* BlueprintAsset = Cast<UBlueprint>(Asset.GetAsset());
+
+			NameFormat.Prefix = TEXT("BP");
+			
+			// FString GeneratedClassPath;
+			// Asset.GetTagValue(TEXT("GeneratedClass"), GeneratedClassPath);
+
+			if (BlueprintAsset && BlueprintAsset->ParentClass)
+			{
+				NameFormat.Suffix = BlueprintAsset->ParentClass->GetName();
+			}
+		}
+		
+	}
+	
+	return NameFormat;
 }
 
 #if WITH_EDITOR
@@ -168,12 +185,12 @@ void UGamedevHelperAssetNamingConvention::PostEditChangeProperty(FPropertyChange
 
 void UGamedevHelperAssetNamingConvention::SetDefaultSettings()
 {
-	// Blueprint Types
-	BlueprintTypes.Add(EGamedevHelperBlueprintType::Normal, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BP")});
-	BlueprintTypes.Add(EGamedevHelperBlueprintType::Component, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPC")});
-	BlueprintTypes.Add(EGamedevHelperBlueprintType::Interface, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPI")});
-	BlueprintTypes.Add(EGamedevHelperBlueprintType::FunctionLibrary, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPFL")});
-	BlueprintTypes.Add(EGamedevHelperBlueprintType::MacroLibrary, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPML")});
+	// // Blueprint Types
+	// BlueprintTypes.Add(EGamedevHelperBlueprintType::Normal, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BP")});
+	// BlueprintTypes.Add(EGamedevHelperBlueprintType::Component, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPC")});
+	// BlueprintTypes.Add(EGamedevHelperBlueprintType::Interface, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPI")});
+	// BlueprintTypes.Add(EGamedevHelperBlueprintType::FunctionLibrary, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPFL")});
+	// BlueprintTypes.Add(EGamedevHelperBlueprintType::MacroLibrary, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPML")});
 
 	Namings.Add(EGamedevHelperAssetType::Material, GetMaterialNamings());
 	Namings.Add(EGamedevHelperAssetType::Texture, GetTextureNamings());
@@ -346,9 +363,10 @@ FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetMiscNamings()
 FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetBlueprintNamings()
 {
 	FGamedevHelperAssetNamings AssetNamings;
+	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BP")});
 	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UEditorUtilityBlueprint::StaticClass(), TEXT("BP"), TEXT("EUB")});
 	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UEditorUtilityWidgetBlueprint::StaticClass(), TEXT("BP"), TEXT("EUW")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UWidgetBlueprint::StaticClass(), TEXT("BPW")});
+	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UWidgetBlueprint::StaticClass(), TEXT("BP"), TEXT("Widget")});
 	
 	return AssetNamings;
 }

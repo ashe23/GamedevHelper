@@ -22,12 +22,15 @@ public:
 
 	UPROPERTY()
 	FString Note;
+
+	UPROPERTY()
+	EGamedevHelperRenameStatus Status;
 };
 
 class SGamedevHelperAssetNamingListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>
 {
 public:
-	SLATE_BEGIN_ARGS(SGamedevHelperAssetNamingListItem){}
+	SLATE_BEGIN_ARGS(SGamedevHelperAssetNamingListItem) {}
 		SLATE_ARGUMENT(TWeakObjectPtr<UGamedevHelperAssetNamingListItem>, RowItem)
 	SLATE_END_ARGS()
 

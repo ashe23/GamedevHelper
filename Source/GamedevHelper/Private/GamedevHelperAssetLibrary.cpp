@@ -89,9 +89,17 @@ EGamedevHelperBlueprintType UGamedevHelperAssetLibrary::GetBlueprintType(const F
 	FString BlueprintTypeStr;
 	AssetData.GetTagValue(TEXT("BlueprintType"), BlueprintTypeStr);
 
+	FString ParentClassStr;
+	AssetData.GetTagValue(TEXT("ParentClass"), ParentClassStr);
+
 	if (BlueprintTypeStr.IsEmpty())
 	{
 		return EGamedevHelperBlueprintType::None;
+	}
+
+	if (ParentClassStr.Contains(TEXT("component")))
+	{
+		return EGamedevHelperBlueprintType::Component;
 	}
 
 	const EBlueprintType BlueprintType = GetEnumValueFromString<EBlueprintType>(TEXT("EBlueprintType"), BlueprintTypeStr);

@@ -199,7 +199,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 							]
 							+ SHeaderRow::Column(FName("Note"))
 							  // .OnSort_Raw(this, &SAssetNamingManagerWindow::OnSort)
-							  .HAlignCell(HAlign_Left)
+							  .HAlignCell(HAlign_Center)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
 							  .HeaderContentPadding(FMargin(10.0f))
@@ -266,13 +266,19 @@ void SAssetNamingManagerWindow::ListUpdate()
 		{
 			continue;
 		}
-		
+
+		// if (RenamePreview.GetStatus() == EGamedevHelperRenameStatus::OK)
+		// {
+		// 	continue;
+		// }
+		//
 		UGamedevHelperAssetNamingListItem* Data = NewObject<UGamedevHelperAssetNamingListItem>();
 
 		Data->OldName = RenamePreview.GetOldName();
 		Data->NewName = RenamePreview.GetNewName();
 		Data->AssetData = RenamePreview.GetAssetData();
 		Data->Note = RenamePreview.GetStatusMsg();
+		Data->Status = RenamePreview.GetStatus();
 
 		if (!RenamePreview.IsValid())
 		{
@@ -280,6 +286,11 @@ void SAssetNamingManagerWindow::ListUpdate()
 		}
 
 		AssetList.Add(Data);
+	}
+
+	if (AssetList.Num() == 0)
+	{
+		bRenameBtnActive = false;
 	}
 
 	ListSort();

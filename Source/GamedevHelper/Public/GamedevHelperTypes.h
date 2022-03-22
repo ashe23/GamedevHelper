@@ -166,7 +166,7 @@ struct FGamedevHelperRenamePreview
 			return TEXT("Asset with same name already exists at this location in content browser");
 		}
 
-		return TEXT("");
+		return TEXT("OK");
 	}
 
 private:

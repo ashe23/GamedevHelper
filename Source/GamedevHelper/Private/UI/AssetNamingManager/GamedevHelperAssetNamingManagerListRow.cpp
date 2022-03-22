@@ -10,7 +10,6 @@ void SGamedevHelperAssetNamingListItem::Construct(const FArguments& InArgs, cons
 
 	SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>::Construct(
 		SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>::FArguments()
-		// .Style(FEditorStyle::Get(), "ContentBrowser.AssetListView.TableRow")
 		.Padding(FMargin{0.0f, 2.0f, 0.0f, 0.0f}),
 		InOwnerTableView
 	);
@@ -18,14 +17,6 @@ void SGamedevHelperAssetNamingListItem::Construct(const FArguments& InArgs, cons
 
 TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(const FName& InColumnName)
 {
-	if (InColumnName == TEXT("Selection"))
-	{
-		return SNew(SCheckBox);
-	}
-	if (InColumnName == TEXT("AssetClass"))
-	{
-		return SNew(STextBlock).Text(FText::FromString(RowItem->AssetData.AssetClass.ToString()));
-	}
 	if (InColumnName == TEXT("Preview"))
 	{
 		const TSharedPtr<FAssetThumbnail> AssetThumbnail = MakeShareable(new FAssetThumbnail(RowItem->AssetData, 16, 16, nullptr));
@@ -38,13 +29,17 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 			AssetThumbnail->MakeThumbnailWidget(ThumbnailConfig)
 		];
 	}
+	
+	if (InColumnName == TEXT("AssetClass"))
+	{
+		return SNew(STextBlock).Text(FText::FromString(RowItem->AssetData.AssetClass.ToString()));
+	}
+	
 	if (InColumnName == TEXT("Result"))
 	{
 		return
 			SNew(SBox)
 			.Padding(FMargin{5.0f, 0.0f})
-			// .HAlign(HAlign_Fill)
-			// .VAlign(VAlign_Fill)
 			[
 
 				SNew(SHorizontalBox)
@@ -55,7 +50,7 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 				[
 					SNew(SBorder)
 					.BorderImage(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.BG.16")))
-					.BorderBackgroundColor(FLinearColor{FColor::FromHex(TEXT("#C62828"))})
+					.BorderBackgroundColor(FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Red")))
 					.HAlign(HAlign_Left)
 					[
 						SNew(STextBlock)
@@ -68,7 +63,7 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 				  .AutoWidth()
 				[
 					SNew(SImage)
-					.ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#616161"))})
+					.ColorAndOpacity(FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Grey")))
 					.Image(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.ArrowRight.16")))
 				]
 				+ SHorizontalBox::Slot()
@@ -78,7 +73,7 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 				[
 					SNew(SBorder)
 					.BorderImage(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.BG.16")))
-					.BorderBackgroundColor(FLinearColor{FColor::FromHex(TEXT("#2E7D32"))})
+					.BorderBackgroundColor(FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Green")))
 					.HAlign(HAlign_Left)
 					[
 						SNew(STextBlock)
@@ -96,10 +91,14 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 
 	if (InColumnName == TEXT("Note"))
 	{
+		const FSlateColor Color = RowItem->Status == EGamedevHelperRenameStatus::OK
+			                          ? FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Green"))
+			                          : FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Red"));
+
 		return SNew(STextBlock).Justification(ETextJustify::Center)
-		                       .ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#F44336"))})
+		                       .ColorAndOpacity(Color)
 		                       .Text(FText::FromString(RowItem->Note));
 	}
 
-	return SNew(STextBlock).Text(FText::FromString(""));
+	return SNew(STextBlock).Text(FText::FromString(TEXT("")));
 }

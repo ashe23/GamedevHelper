@@ -287,13 +287,7 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 				OtherPrev.GetAssetData().ObjectPath.ToString().Equals(NewObjectPath);
 		});
 
-
-		if (OldName.Equals(NewName, ESearchCase::CaseSensitive))
-		{
-			continue;
-		}
-		
-		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath))
+		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && !OldName.Equals(NewName, ESearchCase::CaseSensitive))
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
 		}

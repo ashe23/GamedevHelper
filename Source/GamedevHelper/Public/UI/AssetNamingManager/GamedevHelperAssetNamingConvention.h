@@ -22,8 +22,8 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingConvention")
-	TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetNameFormat> BlueprintTypes;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingConvention")
+	// TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetNameFormat> BlueprintTypes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingConvention")
 	TMap<EGamedevHelperAssetType, FGamedevHelperAssetNamings> Namings;
@@ -32,6 +32,7 @@ public:
 
 private:
 	void SetDefaultSettings();
+	
 	static FGamedevHelperAssetNamings GetMaterialNamings();
 	static FGamedevHelperAssetNamings GetTextureNamings();
 	static FGamedevHelperAssetNamings GetAnimationNamings();
