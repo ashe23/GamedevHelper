@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 #include "GamedevHelperTypes.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "GamedevHelperAssetNamingManagerLibrary.generated.h"
@@ -21,9 +20,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static void RenameAssets(const TArray<FAssetData>& Assets);
 
+	/**
+	 * @brief Returns rename previews for given assets. Does not rename assets.
+	 * @param Assets TArray<FAssetData>
+	 * @param NamingConvention UGamedevHelperAssetNamingConvention
+	 * @param Previews TArray<FGamedevHelperRenamePreview>
+	 */
 	static void GetRenamePreviews(const TArray<FAssetData>& Assets,
-							  const UGamedevHelperAssetNamingConvention* NamingConvention,
-							  TArray<FGamedevHelperRenamePreview>& Previews);
+	                              const UGamedevHelperAssetNamingConvention* NamingConvention,
+	                              TArray<FGamedevHelperRenamePreview>& Previews);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 

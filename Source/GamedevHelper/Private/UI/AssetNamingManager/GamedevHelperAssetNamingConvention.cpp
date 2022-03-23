@@ -3,6 +3,13 @@
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "GamedevHelperAssetLibrary.h"
 // Engine Headers
+// Blueprint classes
+#include "EditorUtilityWidgetBlueprint.h"
+#include "Blutility/Classes/EditorUtilityBlueprint.h"
+#include "WidgetBlueprint.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/GameModeBase.h"
+#include "EditorTutorial.h"
 // Material classes
 #include "Materials/Material.h"
 #include "Materials/MaterialInstance.h"
@@ -43,6 +50,7 @@
 #include "Engine/SkeletalMesh.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "LevelSequence.h"
+#include "Camera/CameraAnim.h"
 // FX
 #include "Particles/ParticleSystem.h"
 #include "NiagaraEffectType.h"
@@ -87,41 +95,12 @@
 #include "Curves/CurveVector.h"
 #include "Engine/UserDefinedEnum.h"
 #include "Engine/UserDefinedStruct.h"
-// Blueprint classes
-#include "Blutility/Classes/EditorUtilityBlueprint.h"
-#include "Blutility/Classes/EditorUtilityWidgetBlueprint.h"
-#include "WidgetBlueprint.h"
+
+// Other
 
 UGamedevHelperAssetNamingConvention::UGamedevHelperAssetNamingConvention()
 {
 	SetDefaultSettings();
-}
-
-void UGamedevHelperAssetNamingConvention::GetAssetClasses(TArray<UClass*>& Classes)
-{
-	// Classes.Reserve(BlueprintTypes.Num());
-	//
-	// for (const auto& BlueprintType : BlueprintTypes)
-	// {
-	// 	if (BlueprintType.Value.AssetClass)
-	// 	{
-	// 		Classes.AddUnique(BlueprintType.Value.AssetClass);
-	// 	}
-	// }
-
-	for (const auto AssetType : Namings)
-	{
-		const auto NamingSettings = AssetType.Value.Settings;
-		Classes.Reserve(Classes.Num() + NamingSettings.Num());
-		
-		for (const auto& NamingSetting : NamingSettings)
-		{
-			if (NamingSetting.AssetClass)
-			{
-				Classes.AddUnique(NamingSetting.AssetClass);
-			}
-		}
-	}
 }
 
 FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetAssetNameFormat(const FAssetData& Asset) const
@@ -131,44 +110,7 @@ FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetAssetNameF
 		return FGamedevHelperAssetNameFormat{};
 	}
 
-	FGamedevHelperAssetNameFormat NameFormat;
-	
-	const auto AssetClass = Asset.GetClass();
-
-	for (const auto& AssetType : Namings)
-	{
-		const auto NamingFormat = AssetType.Value.Settings.FindByPredicate([&](const FGamedevHelperAssetNameFormat& Other)
-		{
-			return Other.AssetClass && Other.AssetClass->GetName().Equals(AssetClass->GetName());
-		});
-		
-		if (NamingFormat)
-		{
-			NameFormat = *NamingFormat;
-			break;
-		}
-	}
-	
-	if (UGamedevHelperAssetLibrary::IsBlueprint(Asset))
-	{
-		if (Asset.AssetClass.IsEqual(TEXT("Blueprint")))
-		{
-			const UBlueprint* BlueprintAsset = Cast<UBlueprint>(Asset.GetAsset());
-
-			NameFormat.Prefix = TEXT("BP");
-			
-			// FString GeneratedClassPath;
-			// Asset.GetTagValue(TEXT("GeneratedClass"), GeneratedClassPath);
-
-			if (BlueprintAsset && BlueprintAsset->ParentClass)
-			{
-				NameFormat.Suffix = BlueprintAsset->ParentClass->GetName();
-			}
-		}
-		
-	}
-	
-	return NameFormat;
+	return GetNaming(Asset);
 }
 
 #if WITH_EDITOR
@@ -183,190 +125,214 @@ void UGamedevHelperAssetNamingConvention::PostEditChangeProperty(FPropertyChange
 }
 #endif
 
+FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetNaming(const FAssetData& Asset) const
+{
+	if (!Asset.IsValid())
+	{
+		return FGamedevHelperAssetNameFormat{};
+	}
+
+	if (!Asset.AssetClass.IsEqual(TEXT("Blueprint")))
+	{
+		return GetNamingByClass(Asset.GetClass());
+	}
+
+	const UClass* ParentClass = UGamedevHelperAssetLibrary::GetBlueprintParentClass(Asset);
+	const UClass* SearchClass = ParentClass ? ParentClass : UBlueprint::StaticClass();
+	FGamedevHelperAssetNameFormat NameFormat = GetNamingByClass(SearchClass);
+
+	if (NameFormat.Prefix.IsEmpty())
+	{
+		const auto BlueprintType = UGamedevHelperAssetLibrary::GetBlueprintType(Asset);
+		const auto BlueprintTypePrefix = BlueprintTypePrefixes.Find(BlueprintType);
+		const FString BlueprintPrefix = BlueprintTypePrefix ? *BlueprintTypePrefix : TEXT("BP");
+		NameFormat.Prefix = BlueprintPrefix;
+	}
+
+	if (NameFormat.bAssetClassAsSuffix)
+	{
+		NameFormat.Suffix = ParentClass ? ParentClass->GetName() : Asset.GetClass()->GetName();
+	}
+
+	return NameFormat;
+}
+
+FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetNamingByClass(const UClass* SearchClass) const
+{
+	if (!SearchClass)
+	{
+		return FGamedevHelperAssetNameFormat{};
+	}
+
+	for (const auto& Naming : Namings)
+	{
+		const UClass* NamingClass = Naming.Key;
+		if (NamingClass == SearchClass)
+		{
+			return Naming.Value;
+		}
+	}
+
+	return FGamedevHelperAssetNameFormat{};
+}
+
 void UGamedevHelperAssetNamingConvention::SetDefaultSettings()
 {
-	// // Blueprint Types
-	// BlueprintTypes.Add(EGamedevHelperBlueprintType::Normal, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BP")});
-	// BlueprintTypes.Add(EGamedevHelperBlueprintType::Component, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPC")});
-	// BlueprintTypes.Add(EGamedevHelperBlueprintType::Interface, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPI")});
-	// BlueprintTypes.Add(EGamedevHelperBlueprintType::FunctionLibrary, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPFL")});
-	// BlueprintTypes.Add(EGamedevHelperBlueprintType::MacroLibrary, FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BPML")});
-
-	Namings.Add(EGamedevHelperAssetType::Material, GetMaterialNamings());
-	Namings.Add(EGamedevHelperAssetType::Texture, GetTextureNamings());
-	Namings.Add(EGamedevHelperAssetType::Animation, GetAnimationNamings());
-	Namings.Add(EGamedevHelperAssetType::FX, GetFXNamings());
-	Namings.Add(EGamedevHelperAssetType::AI, GetAINamings());
-	Namings.Add(EGamedevHelperAssetType::Foliage, GetFoliageNamings());
-	Namings.Add(EGamedevHelperAssetType::Slate, GetSlateNamings());
-	Namings.Add(EGamedevHelperAssetType::Paper2D, GetPaper2DNamings());
-	Namings.Add(EGamedevHelperAssetType::Sound, GetSoundNamings());
-	Namings.Add(EGamedevHelperAssetType::Misc, GetMiscNamings());
-	Namings.Add(EGamedevHelperAssetType::Blueprint, GetBlueprintNamings());
+	SetBlueprintNamings();
+	SetAnimationNamings();
+	SetAINamings();
+	SetMaterialNamings();
+	SetTextureNamings();
+	SetFXNamings();
+	SetFoliageNamings();
+	SetPaper2DNamings();
+	SetSlateNamings();
+	SetSoundNamings();
+	SetMiscNamings();
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetMaterialNamings()
+void UGamedevHelperAssetNamingConvention::SetBlueprintNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterial::StaticClass(), TEXT("M")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialInstance::StaticClass(), TEXT("MI")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialInstanceConstant::StaticClass(), TEXT("MI")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialInstanceDynamic::StaticClass(), TEXT("MI")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialFunction::StaticClass(), TEXT("MF")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialParameterCollection::StaticClass(), TEXT("MF")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USubsurfaceProfile::StaticClass(), TEXT("SSP")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPhysicalMaterial::StaticClass(), TEXT("M"), TEXT("Phys")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialFunctionMaterialLayer::StaticClass(), TEXT("ML")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMaterialFunctionMaterialLayerBlend::StaticClass(), TEXT("MLB")});
+	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::Normal,TEXT("BP"));
+	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::Interface,TEXT("BPI"));
+	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::FunctionLibrary,TEXT("BPFL"));
+	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::MacroLibrary,TEXT("BPML"));
 
-	return AssetNamings;
+	Namings.Add(UBlueprint::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP")});
+	Namings.Add(AActor::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP")});
+	Namings.Add(UActorComponent::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("Comp")});
+	Namings.Add(APawn::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("Pawn")});
+	Namings.Add(ACharacter::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("Char")});
+	Namings.Add(APlayerController::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("Ctrl")});
+	Namings.Add(AGameModeBase::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("GM")});
+	Namings.Add(UWidgetBlueprint::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BPW")});
+	Namings.Add(UEditorTutorial::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("Tut")});
+	Namings.Add(UEditorUtilityBlueprint::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("EUB")});
+	Namings.Add(UEditorUtilityWidgetBlueprint::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP"), TEXT("EUW")});
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetTextureNamings()
+void UGamedevHelperAssetNamingConvention::SetAnimationNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTexture2D::StaticClass(), TEXT("T")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTextureCube::StaticClass(), TEXT("T"), TEXT("HDR")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UMediaTexture::StaticClass(), TEXT("T"), TEXT("Media")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UVolumeTexture::StaticClass(), TEXT("T"), TEXT("Volume")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{URuntimeVirtualTexture::StaticClass(), TEXT("T"), TEXT("RVT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTexture2DArray::StaticClass(), TEXT("T"), TEXT("2DA")});
+	Namings.Add(UAnimSequence::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AN")});
+	Namings.Add(UAnimMontage::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AM")});
+	Namings.Add(UAnimComposite::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AC")});
+	Namings.Add(UBlendSpace::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("ABS")});
+	Namings.Add(UBlendSpace1D::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("ABS")});
+	Namings.Add(UAimOffsetBlendSpace::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AO")});
+	Namings.Add(UAimOffsetBlendSpace1D::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AO")});
+	Namings.Add(USkeletalMesh::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SKM")});
+	Namings.Add(UStaticMesh::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SM")});
+	Namings.Add(USkeleton::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SK")});
+	Namings.Add(UPoseAsset::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("A"), TEXT("Pose")});
+	Namings.Add(UPhysicsAsset::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("PA")});
+	Namings.Add(UAnimBoneCompressionSettings::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("A"), TEXT("BCS")});
+	Namings.Add(UAnimCurveCompressionSettings::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("A"), TEXT("CCS")});
+	Namings.Add(UAnimBlueprint::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("ABP")});
+	Namings.Add(UAnimLayerInterface::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("ALI")});
+	Namings.Add(ULevelSequence::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("LS")});
+	Namings.Add(UCameraAnim::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("LS")});
+}
+
+void UGamedevHelperAssetNamingConvention::SetAINamings()
+{
+	Namings.Add(UBehaviorTree::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BT")});
+	Namings.Add(UBlackboardData::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BB")});
+	Namings.Add(UEnvQuery::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("EQS")});
+	Namings.Add(UBTTask_BlueprintBase::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AI"), TEXT("Task")});
+	Namings.Add(UBTService_BlueprintBase::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AI"), TEXT("Service")});
+	Namings.Add(UBTDecorator_BlueprintBase::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("AI"), TEXT("Decorator")});
+}
+
+void UGamedevHelperAssetNamingConvention::SetMaterialNamings()
+{
+	Namings.Add(UMaterial::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("M")});
+	Namings.Add(UMaterialInstance::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("MI")});
+	Namings.Add(UMaterialInstanceConstant::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("MI")});
+	Namings.Add(UMaterialInstanceDynamic::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("MI")});
+	Namings.Add(UMaterialFunction::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("MF")});
+	Namings.Add(UMaterialParameterCollection::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("MF")});
+	Namings.Add(USubsurfaceProfile::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SSP")});
+	Namings.Add(UPhysicalMaterial::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("PM")});
+	Namings.Add(UMaterialFunctionMaterialLayer::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("ML")});
+	Namings.Add(UMaterialFunctionMaterialLayerBlend::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("MLB")});
+}
+
+
+void UGamedevHelperAssetNamingConvention::SetTextureNamings()
+{
+	Namings.Add(UTexture2D::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("T")});
+	Namings.Add(UTextureCube::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("T"), TEXT("HDR")});
+	Namings.Add(UMediaTexture::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("T"), TEXT("Media")});
+	Namings.Add(UVolumeTexture::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("T"), TEXT("Volume")});
+	Namings.Add(URuntimeVirtualTexture::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("T"), TEXT("RVT")});
+	Namings.Add(UTexture2DArray::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("T"), TEXT("2DA")});
 
 	// Render Targets
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTextureRenderTarget2D::StaticClass(), TEXT("RT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTextureRenderTarget2DArray::StaticClass(), TEXT("RT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UCanvasRenderTarget2D::StaticClass(), TEXT("RT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTextureRenderTargetCube::StaticClass(), TEXT("RT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UTextureRenderTargetVolume::StaticClass(), TEXT("RT")});
-	
-	return AssetNamings;
+	Namings.Add(UTextureRenderTarget2D::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("RT")});
+	Namings.Add(UTextureRenderTarget2DArray::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("RT")});
+	Namings.Add(UCanvasRenderTarget2D::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("RT")});
+	Namings.Add(UTextureRenderTargetCube::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("RT")});
+	Namings.Add(UTextureRenderTargetVolume::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("RT")});
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetAnimationNamings()
+void UGamedevHelperAssetNamingConvention::SetFXNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimSequence::StaticClass(), TEXT("AN")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimMontage::StaticClass(), TEXT("AM")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimComposite::StaticClass(), TEXT("AC")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBlendSpace::StaticClass(), TEXT("BS")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBlendSpace1D::StaticClass(), TEXT("BS"), TEXT("1D")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAimOffsetBlendSpace::StaticClass(), TEXT("AO")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAimOffsetBlendSpace1D::StaticClass(), TEXT("AO"), TEXT("1D")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USkeletalMesh::StaticClass(), TEXT("SKM")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UStaticMesh::StaticClass(), TEXT("SM")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USkeleton::StaticClass(), TEXT("SK")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPoseAsset::StaticClass(), TEXT("A"), TEXT("Pose")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPhysicsAsset::StaticClass(), TEXT("A"), TEXT("Phys")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{ULevelSequence::StaticClass(), TEXT("LS")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimBoneCompressionSettings::StaticClass(), TEXT("A"), TEXT("BCS")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimCurveCompressionSettings::StaticClass(), TEXT("A"), TEXT("CCS")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimBlueprint::StaticClass(), TEXT("ABP")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UAnimLayerInterface::StaticClass(), TEXT("ALI")});
-	
-	return AssetNamings;
+	Namings.Add(UParticleSystem::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Cascade")});
+	Namings.Add(UNiagaraScript::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Script")});
+	Namings.Add(UNiagaraEffectType::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"),TEXT("Type")});
+	Namings.Add(UNiagaraEmitter::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Emitter")});
+	Namings.Add(UNiagaraSystem::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("System")});
+	Namings.Add(UNiagaraParameterCollection::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("PC")});
+	Namings.Add(UNiagaraParameterCollectionInstance::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("PCI")});
+	Namings.Add(UNiagaraParameterDefinitions::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Def")});
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetFXNamings()
+void UGamedevHelperAssetNamingConvention::SetFoliageNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UParticleSystem::StaticClass(), TEXT("FX"), TEXT("Cascade")});
-	// todo:ashe23 must deduce suffix from usage tag , like blueprints
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraScript::StaticClass(), TEXT("FX"), TEXT("Cascade")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraEffectType::StaticClass(), TEXT("FX"), TEXT("Type")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraEmitter::StaticClass(), TEXT("FX"), TEXT("Emitter")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraSystem::StaticClass(), TEXT("FX"), TEXT("System")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraParameterCollection::StaticClass(), TEXT("FX"), TEXT("PC")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraParameterCollectionInstance::StaticClass(), TEXT("FX"), TEXT("PCI")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UNiagaraParameterDefinitions::StaticClass(), TEXT("FX"), TEXT("DEF")});
-	
-	return AssetNamings;
+	Namings.Add(UFoliageType_Actor::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FOL")});
+	Namings.Add(UFoliageType_InstancedStaticMesh::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FOL"), TEXT("ISM")});
+	Namings.Add(ULandscapeGrassType::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FOL"), TEXT("LGT")});
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetAINamings()
+void UGamedevHelperAssetNamingConvention::SetPaper2DNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBehaviorTree::StaticClass(), TEXT("BT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBlackboardData::StaticClass(), TEXT("BB")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UEnvQuery::StaticClass(), TEXT("EQS")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBTTask_BlueprintBase::StaticClass(), TEXT("AI"), TEXT("Task")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBTService_BlueprintBase::StaticClass(), TEXT("AI"), TEXT("Service")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBTDecorator_BlueprintBase::StaticClass(), TEXT("AI"), TEXT("Decorator")});
-	
-	return AssetNamings;
+	Namings.Add(UPaperFlipbook::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("P2"), TEXT("Flipbook")});
+	Namings.Add(UPaperSprite::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("P2"), TEXT("Sprite")});
+	Namings.Add(UPaperTileMap::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("P2"), TEXT("TileMap")});
+	Namings.Add(UPaperTileSet::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("P2"), TEXT("TileSet")});
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetFoliageNamings()
+void UGamedevHelperAssetNamingConvention::SetSlateNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UFoliageType_Actor::StaticClass(), TEXT("FOL")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UFoliageType_InstancedStaticMesh::StaticClass(), TEXT("FOL"), TEXT("ISM")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{ULandscapeGrassType::StaticClass(), TEXT("FOL"), TEXT("LGT")});
-	
-	return AssetNamings;
+	Namings.Add(USlateBrushAsset::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SLT"), TEXT("Brush")});
+	Namings.Add(USlateWidgetStyleAsset::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SLT"), TEXT("WSA")});
+	Namings.Add(UFont::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("Font")});
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetSlateNamings()
+void UGamedevHelperAssetNamingConvention::SetSoundNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USlateBrushAsset::StaticClass(), TEXT("SLT"), TEXT("Brush")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USlateWidgetStyleAsset::StaticClass(), TEXT("SLT"), TEXT("WSA")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UFont::StaticClass(), TEXT("Font")});
-	
-	return AssetNamings;
-}
-
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetPaper2DNamings()
-{
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPaperFlipbook::StaticClass(), TEXT("P2"), TEXT("Flipbook")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPaperSprite::StaticClass(), TEXT("P2"), TEXT("Sprite")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPaperTileMap::StaticClass(), TEXT("P2"), TEXT("TileMap")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UPaperTileSet::StaticClass(), TEXT("P2"), TEXT("TileSet")});
-	
-	return AssetNamings;
-}
-
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetSoundNamings()
-{
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UDialogueVoice::StaticClass(), TEXT("S"), TEXT("DV")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UDialogueWave::StaticClass(), TEXT("S"), TEXT("DW")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USoundClass::StaticClass(), TEXT("S"), TEXT("Class")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USoundConcurrency::StaticClass(), TEXT("S"), TEXT("Concurrency")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USoundCue::StaticClass(), TEXT("S"), TEXT("Cue")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USoundMix::StaticClass(), TEXT("S"), TEXT("Mix")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USoundWave::StaticClass(), TEXT("S"), TEXT("Wave")});
+	Namings.Add(UDialogueVoice::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("DV")});
+	Namings.Add(UDialogueWave::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("DW")});
+	Namings.Add(USoundClass::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("Class")});
+	Namings.Add(USoundConcurrency::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("Concurrency")});
+	Namings.Add(USoundCue::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("Cue")});
+	Namings.Add(USoundMix::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("Mix")});
+	Namings.Add(USoundWave::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("Wave")});
 
 	// Sound Effects
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UReverbEffect::StaticClass(), TEXT("SX"), TEXT("Reverb")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{USoundAttenuation::StaticClass(), TEXT("SX"), TEXT("Attenuation")});
+	Namings.Add(UReverbEffect::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SX")});
+	Namings.Add(USoundAttenuation::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SX")});
 	// todo:ashe23 update list
-	
-	return AssetNamings;
 }
 
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetMiscNamings()
+void UGamedevHelperAssetNamingConvention::SetMiscNamings()
 {
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UDataAsset::StaticClass(), TEXT("DA")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UDataTable::StaticClass(), TEXT("DT")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UCurveFloat::StaticClass(), TEXT("C"), TEXT("F")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UCurveVector::StaticClass(), TEXT("C"), TEXT("V")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UCurveLinearColor::StaticClass(), TEXT("C"), TEXT("LC")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UEnum::StaticClass(), TEXT("E")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UUserDefinedEnum::StaticClass(), TEXT("E")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UUserDefinedStruct::StaticClass(), TEXT("F")});
-	
-	return AssetNamings;
-}
-
-FGamedevHelperAssetNamings UGamedevHelperAssetNamingConvention::GetBlueprintNamings()
-{
-	FGamedevHelperAssetNamings AssetNamings;
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UBlueprint::StaticClass(), TEXT("BP")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UEditorUtilityBlueprint::StaticClass(), TEXT("BP"), TEXT("EUB")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UEditorUtilityWidgetBlueprint::StaticClass(), TEXT("BP"), TEXT("EUW")});
-	AssetNamings.Settings.Add(FGamedevHelperAssetNameFormat{UWidgetBlueprint::StaticClass(), TEXT("BP"), TEXT("Widget")});
-	
-	return AssetNamings;
+	Namings.Add(UDataAsset::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("DA")});
+	Namings.Add(UDataTable::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("DT")});
+	Namings.Add(UCurveFloat::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("C"), TEXT("F")});
+	Namings.Add(UCurveVector::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("C"), TEXT("V")});
+	Namings.Add(UCurveLinearColor::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("C"), TEXT("LC")});
+	Namings.Add(UEnum::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("E")});
+	Namings.Add(UUserDefinedEnum::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("E")});
+	Namings.Add(UUserDefinedStruct::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("F")});
 }

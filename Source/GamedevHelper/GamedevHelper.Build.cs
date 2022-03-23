@@ -47,6 +47,7 @@ public class GamedevHelper : ModuleRules
 				"EditorScriptingUtilities",
 				"Blutility",
 				"Paper2D",
+				"IntroTutorials",
 			}
 		);
 	}

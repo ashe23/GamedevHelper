@@ -38,7 +38,6 @@ enum class EGamedevHelperBlueprintType : uint8
 {
 	None,
 	Normal,
-	Component,
 	Interface,
 	MacroLibrary,
 	FunctionLibrary
@@ -81,6 +80,7 @@ enum class EGamedevHelperRenameStatus : uint8
 	DuplicateNamePreview
 };
 
+// todo:ashe23 move this class to other place
 USTRUCT()
 struct FGamedevHelperRenamePreview
 {
@@ -95,12 +95,12 @@ struct FGamedevHelperRenamePreview
 	{
 		return AssetData;
 	}
-	
+
 	FString GetOldName() const
 	{
 		return AssetData.AssetName.ToString();
 	}
-	
+
 	FString GetNewName() const
 	{
 		return NewName;
@@ -143,6 +143,15 @@ struct FGamedevHelperRenamePreview
 	{
 		if (Status == EGamedevHelperRenameStatus::MissingSettings)
 		{
+			if (AssetData.AssetClass.IsEqual(TEXT("Blueprint")))
+			{
+				const auto BlueprintAssetObj = Cast<UBlueprint>(AssetData.GetAsset());
+				if (BlueprintAssetObj && BlueprintAssetObj->ParentClass)
+				{
+					return FString::Printf(TEXT("Missing namings for %s"), *BlueprintAssetObj->ParentClass->GetName());
+				}
+			}
+
 			return FString::Printf(TEXT("Missing namings for %s"), *AssetData.GetClass()->GetName());
 		}
 
@@ -188,26 +197,12 @@ struct FGamedevHelperAssetNameFormat
 		return Prefix.IsEmpty() && Suffix.IsEmpty();
 	}
 
-	bool IsValid() const
-	{
-		return AssetClass && AssetClass->IsValidLowLevel() && IsEmpty() == false;
-	}
-
-	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat")
-	UClass* AssetClass = nullptr;
-
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat")
 	FString Prefix;
 
-	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat")
+	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat", meta = (EditCondition = "!bAssetClassAsSuffix"))
 	FString Suffix;
-};
 
-USTRUCT(BlueprintType)
-struct FGamedevHelperAssetNamings
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNamingConvention")
-	TArray<FGamedevHelperAssetNameFormat> Settings;
+	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat", meta = (ToolTip = "If enabled will append asset class (if exists) as suffix"))
+	bool bAssetClassAsSuffix = false;
 };

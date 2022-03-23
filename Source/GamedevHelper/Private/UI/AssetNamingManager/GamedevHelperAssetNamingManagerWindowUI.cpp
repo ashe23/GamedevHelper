@@ -237,7 +237,9 @@ void SAssetNamingManagerWindow::ListUpdate()
 	if (!Settings->bShowMissingTypes)
 	{
 		TArray<UClass*> ConventionAssetClasses;
-		NamingConvention->GetAssetClasses(ConventionAssetClasses);
+		ConventionAssetClasses.Reserve(NamingConvention->Namings.Num());
+		Filter.ClassNames.Reserve(NamingConvention->Namings.Num());
+		NamingConvention->Namings.GetKeys(ConventionAssetClasses);
 		
 		for (const auto& AssetClass : ConventionAssetClasses)
 		{

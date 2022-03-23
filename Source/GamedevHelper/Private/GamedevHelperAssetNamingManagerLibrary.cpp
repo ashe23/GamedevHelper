@@ -259,7 +259,7 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		if (!RenamePreview.GetAssetData().IsValid()) continue;
 
 		const FGamedevHelperAssetNameFormat NamingFormat = NamingConvention->GetAssetNameFormat(Asset);
-		if (!NamingFormat.IsValid())
+		if (NamingFormat.IsEmpty())
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::MissingSettings);
 			Previews.Add(RenamePreview);
@@ -279,7 +279,7 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		const FString NewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *NewName, *NewName);
 		RenamePreview.SetNewName(NewName);
 		RenamePreview.SetNewObjectPath(NewObjectPath);
-		
+
 		const auto OtherPreviewWithSameName = Previews.FindByPredicate([&](const FGamedevHelperRenamePreview& OtherPrev)
 		{
 			return

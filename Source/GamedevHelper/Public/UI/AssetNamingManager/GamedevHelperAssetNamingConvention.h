@@ -15,33 +15,35 @@ class UGamedevHelperAssetNamingConvention : public UObject
 public:
 	UGamedevHelperAssetNamingConvention();
 
-	void GetAssetClasses(TArray<UClass*>& Classes);
 	FGamedevHelperAssetNameFormat GetAssetNameFormat(const FAssetData& Asset) const;
 	
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingConvention")
-	// TMap<EGamedevHelperBlueprintType, FGamedevHelperAssetNameFormat> BlueprintTypes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingConvention")
+	TMap<EGamedevHelperBlueprintType, FString> BlueprintTypePrefixes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingConvention")
-	TMap<EGamedevHelperAssetType, FGamedevHelperAssetNamings> Namings;
+	TMap<UClass*, FGamedevHelperAssetNameFormat> Namings;
 
 	FAssetNamingConventionChangeDelegate OnConventionPropertyChangeDelegate;
 
 private:
-	void SetDefaultSettings();
+	FGamedevHelperAssetNameFormat GetNaming(const FAssetData& Asset) const;
+	FGamedevHelperAssetNameFormat GetNamingByClass(const UClass* SearchClass) const;
 	
-	static FGamedevHelperAssetNamings GetMaterialNamings();
-	static FGamedevHelperAssetNamings GetTextureNamings();
-	static FGamedevHelperAssetNamings GetAnimationNamings();
-	static FGamedevHelperAssetNamings GetFXNamings();
-	static FGamedevHelperAssetNamings GetAINamings();
-	static FGamedevHelperAssetNamings GetFoliageNamings();
-	static FGamedevHelperAssetNamings GetSlateNamings();
-	static FGamedevHelperAssetNamings GetPaper2DNamings();
-	static FGamedevHelperAssetNamings GetSoundNamings();
-	static FGamedevHelperAssetNamings GetMiscNamings();
-	static FGamedevHelperAssetNamings GetBlueprintNamings();
+	void SetDefaultSettings();
+	void SetBlueprintNamings();
+	void SetAnimationNamings();
+	void SetAINamings();
+	void SetMaterialNamings();
+	void SetTextureNamings();
+	void SetFXNamings();
+	void SetFoliageNamings();
+	void SetPaper2DNamings();
+	void SetSlateNamings();
+	void SetSoundNamings();
+	void SetMiscNamings();
+	
 };
