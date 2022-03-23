@@ -97,11 +97,6 @@ EGamedevHelperBlueprintType UGamedevHelperAssetLibrary::GetBlueprintType(const F
 		return EGamedevHelperBlueprintType::None;
 	}
 
-	if (ParentClassStr.Contains(TEXT("component")))
-	{
-		return EGamedevHelperBlueprintType::Component;
-	}
-
 	const EBlueprintType BlueprintType = GetEnumValueFromString<EBlueprintType>(TEXT("EBlueprintType"), BlueprintTypeStr);
 
 	if (BlueprintType == BPTYPE_Normal || BlueprintType == BPTYPE_Const)
@@ -130,6 +125,16 @@ EGamedevHelperBlueprintType UGamedevHelperAssetLibrary::GetBlueprintType(const F
 bool UGamedevHelperAssetLibrary::IsBlueprint(const FAssetData& AssetData)
 {
 	return GetBlueprintType(AssetData) != EGamedevHelperBlueprintType::None;
+}
+
+UClass* UGamedevHelperAssetLibrary::GetBlueprintParentClass(const FAssetData& AssetData)
+{
+	if (!AssetData.IsValid()) return nullptr;
+
+	const auto BlueprintAsset = Cast<UBlueprint>(AssetData.GetAsset());
+	if (!BlueprintAsset) return nullptr;
+
+	return BlueprintAsset->ParentClass;
 }
 
 bool UGamedevHelperAssetLibrary::VertexAnimConfigureTexture(UTexture2D* Texture, const EGamedevHelperVertexAnimTexture TextureType)

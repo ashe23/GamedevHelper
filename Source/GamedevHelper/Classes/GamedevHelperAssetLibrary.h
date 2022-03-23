@@ -43,6 +43,14 @@ public:
 	static bool IsBlueprint(const FAssetData& AssetData);
 
 	/**
+	 * @brief Returns blueprint asset parent class
+	 * @param AssetData FAssetData
+	 * @return UClass*
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	static UClass* GetBlueprintParentClass(const FAssetData& AssetData);
+
+	/**
 	 * @brief Configures texture of specified type for vertex animation
 	 * @see https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/Tools/VertexAnimationTool/
 	 * @param Texture 
