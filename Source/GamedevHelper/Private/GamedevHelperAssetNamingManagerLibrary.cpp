@@ -7,7 +7,9 @@
 // Engine Headers
 #include "Kismet/KismetStringLibrary.h"
 #include "AssetRegistryModule.h"
+#include "AssetToolsModule.h"
 #include "EditorAssetLibrary.h"
+#include "IAssetTools.h"
 #include "Misc/ScopedSlowTask.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 
@@ -23,38 +25,64 @@ void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetDa
 
 	if (Previews.Num() == 0)
 	{
-		bRenameResult = false;
+		UGamedevHelperNotificationLibrary::ShowModal(TEXT("No assets to rename"), EGamedevHelperModalStatus::None, 3.0f);
+		return;
 	}
 
 	FScopedSlowTask SlowTask(
 		Assets.Num(),
-		FText::FromString("Renaming assets")
+		FText::FromString("Preparing assets")
 	);
 	SlowTask.MakeDialog(true);
 
+	TArray<FAssetRenameData> RenameDatas;
+	RenameDatas.Reserve(Previews.Num());
+
 	for (const auto& Preview : Previews)
 	{
-		const FString RenameText = FString::Printf(TEXT("Renaming %s to %s"), *Preview.GetOldName(), *Preview.GetNewName());
+		const FString RenameText = FString::Printf(TEXT("Preparing %s"), *Preview.GetOldName());
+
 		SlowTask.EnterProgressFrame(
 			1.0f,
 			FText::FromString(RenameText)
 		);
 
-		if (!(Preview.IsValid() && UEditorAssetLibrary::RenameAsset(Preview.GetAssetData().ObjectPath.ToString(), Preview.GetNewObjectPath())))
+		if (!Preview.IsValid())
 		{
 			bRenameResult = false;
 		}
+		else
+		{
+			RenameDatas.Add(
+				FAssetRenameData{
+					Preview.GetAssetData().GetAsset(),
+					Preview.GetAssetData().PackagePath.ToString(),
+					Preview.GetNewName()
+				}
+			);
+		}
 	}
 
-	UGamedevHelperAssetLibrary::FixupRedirectors(TEXT("/Game"));
-
-	if (bRenameResult)
+	const FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
+	if (AssetToolsModule.Get().RenameAssets(RenameDatas))
 	{
-		UGamedevHelperNotificationLibrary::ShowModal(TEXT("Assets Renamed Successfully"), EGamedevHelperModalStatus::Success, 3.0f);
+		UGamedevHelperAssetLibrary::FixupRedirectors(TEXT("/Game"));
 	}
 	else
 	{
-		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(TEXT("Failed to rename some assets"), 3.0f);
+		bRenameResult = false;
+	}
+
+
+	if (bRenameResult)
+	{
+		const FString Msg = FString::Printf(TEXT("Asset%s Renamed Successfully"), RenameDatas.Num() > 1 ? TEXT("s") : TEXT(""));
+		UGamedevHelperNotificationLibrary::ShowModal(Msg, EGamedevHelperModalStatus::Success, 3.0f);
+	}
+	else
+	{
+		const FString Msg = RenameDatas.Num() > 1 ? TEXT("Failed to rename some assets") : TEXT("Failed to rename asset");
+		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(Msg, 3.0f);
 	}
 }
 
@@ -314,20 +342,34 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 				OtherPrev.GetAssetData().ObjectPath.ToString().Equals(NewObjectPath);
 		});
 
-		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && !OldName.Equals(NewName, ESearchCase::CaseSensitive))
+		// if old name and new name have same name => OK 
+		// if other asset with exactly same name exists in content browser => DuplicateNameContentBrowser
+		// if other preview with exactly same and path exists => DuplicateNamePreview
+		// else => OkToRename
+
+		if (OldName.Equals(NewName, ESearchCase::CaseSensitive))
+		{
+			RenamePreview.SetStatus(EGamedevHelperRenameStatus::Ok);
+			Previews.Add(RenamePreview);
+			continue;
+		}
+		
+		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath))
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
+			Previews.Add(RenamePreview);
+			continue;
 		}
-		else if (!UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && !OldName.Equals(NewName, ESearchCase::CaseSensitive))
-		{
-			RenamePreview.SetStatus(EGamedevHelperRenameStatus::OkToRename);
-		}
-		else if (OtherPreviewWithSameName)
+		
+		if (OtherPreviewWithSameName)
 		{
 			OtherPreviewWithSameName->SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
+			Previews.Add(RenamePreview);
+			continue;
 		}
-
+		
+		RenamePreview.SetStatus(EGamedevHelperRenameStatus::OkToRename);
 		Previews.Add(RenamePreview);
 	}
 }

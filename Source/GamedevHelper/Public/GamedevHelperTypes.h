@@ -88,7 +88,7 @@ struct FGamedevHelperRenamePreview
 
 	bool IsValid() const
 	{
-		return Status == EGamedevHelperRenameStatus::OkToRename;
+		return Status == EGamedevHelperRenameStatus::OkToRename && AssetData.IsValid();
 	}
 
 	FAssetData GetAssetData() const
@@ -163,6 +163,11 @@ struct FGamedevHelperRenamePreview
 		if (Status == EGamedevHelperRenameStatus::DuplicateNameContentBrowser)
 		{
 			return TEXT("Asset with same name already exists at this location in content browser");
+		}
+
+		if (Status == EGamedevHelperRenameStatus::OkToRename)
+		{
+			return TEXT("Ok to rename");
 		}
 
 		return TEXT("OK");
