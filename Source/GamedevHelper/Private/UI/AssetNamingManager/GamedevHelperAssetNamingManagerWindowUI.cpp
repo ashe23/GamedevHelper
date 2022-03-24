@@ -14,6 +14,7 @@
 #include "IContentBrowserSingleton.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Editor/ContentBrowser/Public/ContentBrowserModule.h"
+#include "Misc/ScopedSlowTask.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -222,6 +223,12 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 void SAssetNamingManagerWindow::ListUpdate()
 {
+	FScopedSlowTask SlowTask(
+		1.0f,
+		FText::FromString("Scanning...")
+	);
+	SlowTask.MakeDialog(true);
+	
 	bRenameBtnActive = true;
 	AssetList.Reset();
 	
@@ -300,6 +307,8 @@ void SAssetNamingManagerWindow::ListUpdate()
 	}
 
 	ListSort();
+
+	SlowTask.EnterProgressFrame(1.0f);
 }
 
 void SAssetNamingManagerWindow::ListSort()
