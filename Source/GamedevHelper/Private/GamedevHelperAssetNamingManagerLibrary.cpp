@@ -9,6 +9,7 @@
 #include "AssetRegistryModule.h"
 #include "EditorAssetLibrary.h"
 #include "Misc/ScopedSlowTask.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 
 void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets)
 {
@@ -252,6 +253,13 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 	Previews.Reset();
 	Previews.Reserve(Assets.Num());
 
+	const auto NamingManagerSettings = GetDefault<UGamedevHelperAssetNamingManagerSettings>();
+	if (!NamingManagerSettings)
+	{
+		UE_LOG(LogGamedevHelper, Error, TEXT("Invalid Asset Naming Manager Settings"));
+		return;
+	}
+
 	for (const auto& Asset : Assets)
 	{
 		FGamedevHelperRenamePreview RenamePreview;
@@ -267,15 +275,33 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		}
 
 		const FString OldName = Asset.AssetName.ToString();
-
-		// {OldPrefix}_{BaseName}_{OldSuffix} => {BaseName}
 		FString BaseName = Normalize(OldName);
+
+		for (const auto& OldPrefix : NamingManagerSettings->OldPrefixes)
+		{
+			BaseName.RemoveFromStart(OldPrefix + TEXT("_"));
+		}
+
+		for (const auto& OldSuffix : NamingManagerSettings->OldSuffixes)
+		{
+			BaseName.RemoveFromEnd(TEXT("_") + OldSuffix);
+		}
+
+		for (const auto& Naming : NamingConvention->Namings)
+		{
+			if (Naming.Key)
+			{
+				BaseName.RemoveFromStart(Naming.Value.Prefix + TEXT("_"));
+				BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
+			}
+		}
+
 		BaseName.RemoveFromStart(NamingFormat.Prefix + TEXT("_"));
 		BaseName.RemoveFromEnd(TEXT("_") + NamingFormat.Suffix);
 
 		const FString Prefix = NamingFormat.Prefix.IsEmpty() ? TEXT("") : NamingFormat.Prefix + TEXT("_");
 		const FString Suffix = NamingFormat.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingFormat.Suffix;
-		const FString NewName = Prefix + ConvertNamingCase(BaseName, EGamedevHelperNamingCase::PascalCase) + Suffix;
+		const FString NewName = Prefix + ConvertNamingCase(BaseName, EGamedevHelperNamingCase::PascalSnakeCase) + Suffix;
 		const FString NewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *NewName, *NewName);
 		RenamePreview.SetNewName(NewName);
 		RenamePreview.SetNewObjectPath(NewObjectPath);

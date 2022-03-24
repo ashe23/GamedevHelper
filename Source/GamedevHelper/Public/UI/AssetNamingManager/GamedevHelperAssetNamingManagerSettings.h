@@ -29,6 +29,12 @@ public:
 	
 	FAssetNamingManagerSettingsChangeDelegate OnSettingsChangeDelegate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TArray<FString> OldPrefixes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings")
+	TArray<FString> OldSuffixes;
+
 private:
 	void SetDefaultSettings();
 };
