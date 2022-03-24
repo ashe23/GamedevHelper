@@ -34,9 +34,10 @@ void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetDa
 
 	for (const auto& Preview : Previews)
 	{
+		const FString RenameText = FString::Printf(TEXT("Renaming %s to %s"), *Preview.GetOldName(), *Preview.GetNewName());
 		SlowTask.EnterProgressFrame(
 			1.0f,
-			FText::FromString(Preview.GetNewName())
+			FText::FromString(RenameText)
 		);
 
 		if (!(Preview.IsValid() && UEditorAssetLibrary::RenameAsset(Preview.GetAssetData().ObjectPath.ToString(), Preview.GetNewObjectPath())))

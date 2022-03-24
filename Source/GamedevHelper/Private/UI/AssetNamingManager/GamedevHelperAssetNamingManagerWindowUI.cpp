@@ -23,7 +23,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	Settings = GetMutableDefault<UGamedevHelperAssetNamingManagerSettings>();
 	NamingConvention = GetMutableDefault<UGamedevHelperAssetNamingConvention>();
-	
+
 	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
 	NamingConvention->OnConventionPropertyChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
 
@@ -45,7 +45,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ViewArgs.bUpdatesFromSelection = false;
 	ViewArgs.bLockable = false;
 	ViewArgs.bShowScrollBar = true;
-	ViewArgs.bAllowSearch = false;
+	ViewArgs.bAllowSearch = true;
 	ViewArgs.bShowOptions = false;
 	ViewArgs.bAllowFavoriteSystem = false;
 	ViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
@@ -54,7 +54,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 	ViewArgs.ViewIdentifier = "AssetNamingConvention";
 	const TSharedPtr<IDetailsView> NamingConventionProperty = PropertyEditor.CreateDetailView(ViewArgs);
-	
+
 	SettingsProperty->SetObject(Settings);
 	NamingConventionProperty->SetObject(NamingConvention);
 
@@ -156,7 +156,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						.SelectionMode(ESelectionMode::Multi)
 						.OnGenerateRow(this, &SAssetNamingManagerWindow::OnGenerateRow)
 						.OnContextMenuOpening(this, &SAssetNamingManagerWindow::GetListContextMenu)
-						.OnMouseButtonClick_Static(&SAssetNamingManagerWindow::OnListItemDblClick)
+						.OnMouseButtonDoubleClick_Static(&SAssetNamingManagerWindow::OnListItemDblClick)
 						.HeaderRow
 						(
 							SNew(SHeaderRow)
@@ -204,6 +204,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 								.Text(LOCTEXT("Path", "Path"))
 							]
 							+ SHeaderRow::Column(FName("Note"))
+							  .OnSort_Raw(this, &SAssetNamingManagerWindow::OnListSort)
 							  .HAlignCell(HAlign_Center)
 							  .VAlignCell(VAlign_Center)
 							  .HAlignHeader(HAlign_Center)
@@ -228,10 +229,10 @@ void SAssetNamingManagerWindow::ListUpdate()
 		FText::FromString("Scanning...")
 	);
 	SlowTask.MakeDialog(true);
-	
+
 	bRenameBtnActive = true;
 	AssetList.Reset();
-	
+
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
 
 	FARFilter Filter;
@@ -247,7 +248,7 @@ void SAssetNamingManagerWindow::ListUpdate()
 		ConventionAssetClasses.Reserve(NamingConvention->Namings.Num());
 		Filter.ClassNames.Reserve(NamingConvention->Namings.Num());
 		NamingConvention->Namings.GetKeys(ConventionAssetClasses);
-		
+
 		for (const auto& AssetClass : ConventionAssetClasses)
 		{
 			Filter.ClassNames.Add(AssetClass->GetFName());
@@ -328,6 +329,11 @@ void SAssetNamingManagerWindow::ListSort()
 				return Data1->AssetData.PackagePath.Compare(Data2->AssetData.PackagePath) < 0;
 			}
 
+			if (SortColumn.IsEqual(TEXT("Note")))
+			{
+				return Data1->Note.Compare(Data2->Note) < 0;
+			}
+
 			return Data1->AssetData.AssetClass.Compare(Data2->AssetData.AssetClass) < 0;
 		});
 	}
@@ -345,6 +351,11 @@ void SAssetNamingManagerWindow::ListSort()
 			if (SortColumn.IsEqual(TEXT("Path")))
 			{
 				return Data1->AssetData.PackagePath.Compare(Data2->AssetData.PackagePath) > 0;
+			}
+
+			if (SortColumn.IsEqual(TEXT("Note")))
+			{
+				return Data1->Note.Compare(Data2->Note) > 0;
 			}
 
 			return Data1->AssetData.AssetClass.Compare(Data2->AssetData.AssetClass) > 0;
@@ -407,7 +418,7 @@ void SAssetNamingManagerWindow::OnListItemDblClick(TWeakObjectPtr<UGamedevHelper
 
 	TArray<FAssetData> Assets;
 	Assets.Add(Item.Get()->AssetData);
-	
+
 	const FContentBrowserModule& CBModule = FModuleManager::Get().LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
 	CBModule.Get().SyncBrowserToAssets(Assets);
 }
@@ -415,12 +426,12 @@ void SAssetNamingManagerWindow::OnListItemDblClick(TWeakObjectPtr<UGamedevHelper
 void SAssetNamingManagerWindow::OnRenameSelected()
 {
 	if (!ListView.IsValid()) return;
-	
+
 	const auto SelectedItems = ListView.Get()->GetSelectedItems();
 
 	TArray<FAssetData> Assets;
 	Assets.Reserve(SelectedItems.Num());
-	
+
 	for (const auto& Item : SelectedItems)
 	{
 		Assets.Add(Item.Get()->AssetData);
@@ -435,7 +446,7 @@ void SAssetNamingManagerWindow::OnOpenSelected() const
 {
 	if (!GEditor) return;
 	if (!ListView.IsValid()) return;
-	
+
 	TArray<FName> AssetNames;
 	const auto SelectedItems = ListView.Get()->GetSelectedItems();
 	for (const auto& Item : SelectedItems)
