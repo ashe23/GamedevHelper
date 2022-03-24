@@ -6,6 +6,7 @@
 #include "UI/GamedevHelperEditorStyle.h"
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindowUI.h"
+#include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerWindow.h"
 // Engine Headers
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "LevelEditor.h"
@@ -197,8 +198,7 @@ TSharedRef<SDockTab> FGamedevHelper::OpenWorldOutlinerManagerWindow(const FSpawn
 	return SNew(SDockTab)
 		.TabRole(MajorTab)
 		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("todo:World Outlinear manager")))
+			SNew(SWorldOutlinerManagerWindow)
 		];
 }
 
