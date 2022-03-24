@@ -10,6 +10,7 @@
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "LevelEditor.h"
 #include "ToolMenus.h"
+#include "UnrealEdMisc.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -30,6 +31,7 @@ private:
 	void InitMainMenuEntries(FMenuBuilder& MenuBuilder) const;
 	static void OnTabAssetNamingManagerClicked();
 	static void OnTabWorldOutlinerManagerClicked();
+	static void OnRestartEditorBtnClicked();
 	TSharedRef<SDockTab> OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 	TSharedRef<SDockTab> OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 
@@ -56,6 +58,11 @@ void FGamedevHelper::RegisterCommands()
 	PluginCommands->MapAction(
 		FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow,
 		FExecuteAction::CreateStatic(&FGamedevHelper::OnTabWorldOutlinerManagerClicked),
+		FCanExecuteAction()
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_EditorRestart,
+		FExecuteAction::CreateStatic(&FGamedevHelper::OnRestartEditorBtnClicked),
 		FCanExecuteAction()
 	);
 }
@@ -151,6 +158,10 @@ void FGamedevHelper::InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder)
 
 void FGamedevHelper::InitMainMenuEntries(FMenuBuilder& MenuBuilder) const
 {
+	MenuBuilder.BeginSection("GDHEditorSection", FText::FromString("Editor"));
+	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_EditorRestart);
+	MenuBuilder.EndSection();
+	
 	MenuBuilder.BeginSection("GDHManagementSection", FText::FromString("Management"));
 	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow);
 	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow);
@@ -165,6 +176,11 @@ void FGamedevHelper::OnTabAssetNamingManagerClicked()
 void FGamedevHelper::OnTabWorldOutlinerManagerClicked()
 {
 	FGlobalTabmanager::Get()->TryInvokeTab(TabWorldOutlinerManager);
+}
+
+void FGamedevHelper::OnRestartEditorBtnClicked()
+{
+	FUnrealEdMisc::Get().RestartEditor(true);
 }
 
 TSharedRef<SDockTab> FGamedevHelper::OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const

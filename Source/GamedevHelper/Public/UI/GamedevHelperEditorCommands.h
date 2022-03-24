@@ -23,4 +23,5 @@ public:
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerOpenAsset;
 	TSharedPtr<FUICommandInfo> Cmd_WorldOutlinerManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_EditorRestart;
 };
