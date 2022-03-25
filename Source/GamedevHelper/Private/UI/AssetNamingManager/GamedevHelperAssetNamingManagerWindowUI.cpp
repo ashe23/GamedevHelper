@@ -237,6 +237,8 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 void SAssetNamingManagerWindow::ListUpdate()
 {
+	// todo:ashe23 disable ticking when updating list?
+
 	FScopedSlowTask SlowTask(
 		1.0f,
 		FText::FromString("Scanning...")
@@ -263,7 +265,10 @@ void SAssetNamingManagerWindow::ListUpdate()
 
 		for (const auto& AssetClass : ConventionAssetClasses)
 		{
-			Filter.ClassNames.Add(AssetClass->GetFName());
+			if (AssetClass)
+			{
+				Filter.ClassNames.Add(AssetClass->GetFName());
+			}
 		}
 	}
 

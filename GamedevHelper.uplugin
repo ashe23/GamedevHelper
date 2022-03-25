@@ -21,9 +21,9 @@
       "Type": "Editor",
       "LoadingPhase": "PostDefault",
       "WhitelistPlatforms": [
-		"Win64",
-		"Win32"
-	  ]
+        "Win64",
+        "Win32"
+      ]
     }
   ],
   "Plugins": [
