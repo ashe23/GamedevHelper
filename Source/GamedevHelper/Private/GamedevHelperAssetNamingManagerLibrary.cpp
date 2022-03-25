@@ -269,6 +269,54 @@ FString UGamedevHelperAssetNamingManagerLibrary::ConvertToCamelCase(const FStrin
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
 }
 
+FString UGamedevHelperAssetNamingManagerLibrary::RemoveOldPrefixAndSuffix(const FString& OldAssetName,
+                                                                          const UGamedevHelperAssetNamingConvention* NamingConvention)
+{
+	if (OldAssetName.IsEmpty()) return OldAssetName;
+	if (!NamingConvention) return OldAssetName;
+
+	const auto NamingManagerSettings = GetDefault<UGamedevHelperAssetNamingManagerSettings>();
+	if (!NamingManagerSettings)
+	{
+		UE_LOG(LogGamedevHelper, Error, TEXT("Invalid Asset Naming Manager Settings"));
+		return OldAssetName;
+	}
+
+	FString BaseName = OldAssetName;
+
+	for (const auto& OldPrefix : NamingManagerSettings->OldPrefixes)
+	{
+		if (OldPrefix.IsEmpty()) continue;
+
+		BaseName.RemoveFromStart(OldPrefix + TEXT("_"));
+	}
+
+	for (const auto& OldSuffix : NamingManagerSettings->OldSuffixes)
+	{
+		if (OldSuffix.IsEmpty()) continue;
+
+		BaseName.RemoveFromEnd(TEXT("_") + OldSuffix);
+	}
+
+	for (const auto& Naming : NamingConvention->Namings)
+	{
+		if (Naming.Key)
+		{
+			if (!Naming.Value.Prefix.IsEmpty())
+			{
+				BaseName.RemoveFromStart(Naming.Value.Prefix + TEXT("_"));
+			}
+
+			if (!Naming.Value.Suffix.IsEmpty())
+			{
+				BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
+			}
+		}
+	}
+
+	return BaseName;
+}
+
 void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAssetData>& Assets,
                                                                 const UGamedevHelperAssetNamingConvention* NamingConvention,
                                                                 TArray<FGamedevHelperRenamePreview>& Previews)
@@ -281,13 +329,6 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 
 	Previews.Reset();
 	Previews.Reserve(Assets.Num());
-
-	const auto NamingManagerSettings = GetDefault<UGamedevHelperAssetNamingManagerSettings>();
-	if (!NamingManagerSettings)
-	{
-		UE_LOG(LogGamedevHelper, Error, TEXT("Invalid Asset Naming Manager Settings"));
-		return;
-	}
 
 	for (const auto& Asset : Assets)
 	{
@@ -304,33 +345,11 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		}
 
 		const FString OldName = Asset.AssetName.ToString();
-		FString BaseName = Normalize(OldName);
-
-		for (const auto& OldPrefix : NamingManagerSettings->OldPrefixes)
-		{
-			BaseName.RemoveFromStart(OldPrefix + TEXT("_"));
-		}
-
-		for (const auto& OldSuffix : NamingManagerSettings->OldSuffixes)
-		{
-			BaseName.RemoveFromEnd(TEXT("_") + OldSuffix);
-		}
-
-		for (const auto& Naming : NamingConvention->Namings)
-		{
-			if (Naming.Key)
-			{
-				BaseName.RemoveFromStart(Naming.Value.Prefix + TEXT("_"));
-				BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
-			}
-		}
-
-		BaseName.RemoveFromStart(NamingFormat.Prefix + TEXT("_"));
-		BaseName.RemoveFromEnd(TEXT("_") + NamingFormat.Suffix);
-
+		const FString TokenizedName = Tokenize(OldName);
+		const FString BaseNameWithoutPrefixAndSuffix = RemoveOldPrefixAndSuffix(TokenizedName, NamingConvention);
 		const FString Prefix = NamingFormat.Prefix.IsEmpty() ? TEXT("") : NamingFormat.Prefix + TEXT("_");
 		const FString Suffix = NamingFormat.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingFormat.Suffix;
-		const FString NewName = Prefix + ConvertNamingCase(BaseName, EGamedevHelperNamingCase::PascalSnakeCase) + Suffix;
+		const FString NewName = Prefix + ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, EGamedevHelperNamingCase::PascalSnakeCase) + Suffix;
 		const FString NewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *NewName, *NewName);
 		RenamePreview.SetNewName(NewName);
 		RenamePreview.SetNewObjectPath(NewObjectPath);
@@ -353,14 +372,14 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 			Previews.Add(RenamePreview);
 			continue;
 		}
-		
+
 		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && OldName.Equals(NewName, ESearchCase::CaseSensitive))
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
 			Previews.Add(RenamePreview);
 			continue;
 		}
-		
+
 		if (OtherPreviewWithSameName)
 		{
 			OtherPreviewWithSameName->SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
@@ -368,7 +387,7 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 			Previews.Add(RenamePreview);
 			continue;
 		}
-		
+
 		RenamePreview.SetStatus(EGamedevHelperRenameStatus::OkToRename);
 		Previews.Add(RenamePreview);
 	}

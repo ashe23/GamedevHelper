@@ -102,4 +102,14 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|AssetNamingManager")
 	static FString ConvertToCamelCase(const FString& OriginalString);
+
+private:
+	/**
+	 * @brief Removes old prefixes and suffixes from old asset name. Asset name must be normalized.
+	 * @param OldAssetName FString
+	 * @param NamingConvention UGamedevHelperAssetNamingConvention
+	 * @return FString
+	 */
+	static FString RemoveOldPrefixAndSuffix(const FString& OldAssetName,
+	                                        const UGamedevHelperAssetNamingConvention* NamingConvention);
 };
