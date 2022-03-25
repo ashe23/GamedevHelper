@@ -88,45 +88,6 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 				[
 					NamingConventionProperty.ToSharedRef()
 				]
-				+ SVerticalBox::Slot()
-				  .Padding(FMargin{10.0f})
-				  .AutoHeight()
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					  .HAlign(HAlign_Fill)
-					  .VAlign(VAlign_Center)
-					[
-						SNew(SButton)
-						.HAlign(HAlign_Center)
-						.VAlign(VAlign_Center)
-						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#4CAF50"))})
-						.ContentPadding(FMargin{0})
-						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRenameBtnClick)
-						.IsEnabled_Raw(this, &SAssetNamingManagerWindow::IsRenameBtnEnabled)
-						[
-							SNew(STextBlock)
-							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-							.Text(FText::FromString(TEXT("Rename Assets")))
-						]
-					]
-					+ SHorizontalBox::Slot()
-					  .HAlign(HAlign_Fill)
-					  .VAlign(VAlign_Center)
-					[
-						SNew(SButton)
-						.HAlign(HAlign_Center)
-						.VAlign(VAlign_Center)
-						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#9E9E9E"))})
-						.ContentPadding(FMargin{0})
-						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRefreshBtnClick)
-						[
-							SNew(STextBlock)
-							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-							.Text(FText::FromString(TEXT("Refresh")))
-						]
-					]
-				]
 			]
 		]
 		+ SSplitter::Slot()
@@ -139,6 +100,58 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 			+ SScrollBox::Slot()
 			[
 				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				  .Padding(FMargin{10.0f})
+				  .AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#4CAF50"))})
+						.ContentPadding(FMargin{10})
+						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRenameBtnClick)
+						.IsEnabled_Raw(this, &SAssetNamingManagerWindow::IsRenameBtnEnabled)
+						[
+							SNew(STextBlock)
+							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
+							.Text(FText::FromString(TEXT("Rename Assets")))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
+						.ContentPadding(FMargin{10})
+						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRefreshBtnClick)
+						[
+							SNew(STextBlock)
+							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
+							.Text(FText::FromString(TEXT("Refresh")))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#BDBDBD"))})
+						.ContentPadding(FMargin{10})
+						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnClearSelectionBtnClick)
+						[
+							SNew(STextBlock)
+							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
+							.Text(FText::FromString(TEXT("ClearSelection")))
+						]
+					]
+				]
 				+ SVerticalBox::Slot()
 				  .Padding(FMargin{10.0f})
 				  .HAlign(HAlign_Fill)
@@ -459,6 +472,16 @@ void SAssetNamingManagerWindow::OnOpenSelected() const
 FReply SAssetNamingManagerWindow::OnRefreshBtnClick()
 {
 	ListRefresh();
+
+	return FReply::Handled();
+}
+
+FReply SAssetNamingManagerWindow::OnClearSelectionBtnClick() const
+{
+	if (ListView.IsValid())
+	{
+		ListView->ClearSelection();
+	}
 
 	return FReply::Handled();
 }

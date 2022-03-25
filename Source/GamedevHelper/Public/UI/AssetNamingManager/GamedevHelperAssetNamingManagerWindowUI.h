@@ -24,11 +24,12 @@ private:
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGamedevHelperAssetNamingListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const;
 	TSharedPtr<SWidget> GetListContextMenu() const;
 	void OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
-	FReply OnRenameBtnClick();
 	static void OnListItemDblClick(TWeakObjectPtr<UGamedevHelperAssetNamingListItem> Item);
 	void OnRenameSelected();
 	void OnOpenSelected() const;
+	FReply OnRenameBtnClick();
 	FReply OnRefreshBtnClick();
+	FReply OnClearSelectionBtnClick() const;
 	bool IsRenameBtnEnabled() const;
 
 	TSharedPtr<FUICommandList> PluginCommands;

@@ -167,7 +167,7 @@ struct FGamedevHelperRenamePreview
 
 		if (Status == EGamedevHelperRenameStatus::OkToRename)
 		{
-			return TEXT("Ok to rename");
+			return TEXT("");
 		}
 
 		return TEXT("OK");
