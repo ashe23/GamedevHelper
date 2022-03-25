@@ -48,6 +48,7 @@ public class GamedevHelper : ModuleRules
 				"Blutility",
 				"Paper2D",
 				"IntroTutorials",
+				"CinematicCamera",
 			}
 		);
 	}

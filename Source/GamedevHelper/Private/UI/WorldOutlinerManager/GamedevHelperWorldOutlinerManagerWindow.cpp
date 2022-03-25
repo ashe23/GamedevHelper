@@ -6,6 +6,7 @@
 // Engine Headers
 #include "EditorLevelLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Widgets/Layout/SScrollBox.h"
 
 
 void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
@@ -28,27 +29,34 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 
 	ChildSlot
 	[
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot()
-		  .Padding(FMargin{10.0f})
-		  .AutoHeight()
+		SNew(SScrollBox)
+		.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+		.AnimateWheelScrolling(true)
+		.AllowOverscroll(EAllowOverscroll::No)
+		+ SScrollBox::Slot()
 		[
-			SettingsProperty.ToSharedRef()
-		]
-		+ SVerticalBox::Slot()
-		  .Padding(FMargin{10.0f})
-		  .AutoHeight()
-		[
-			SNew(SButton)
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#9E9E9E"))})
-			.ContentPadding(FMargin{0})
-			.OnClicked_Raw(this, &SWorldOutlinerManagerWindow::OnOrganizeBtnClicked)
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			  .Padding(FMargin{10.0f})
+			  .AutoHeight()
 			[
-				SNew(STextBlock)
-				.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-				.Text(FText::FromString(TEXT("Organize")))
+				SettingsProperty.ToSharedRef()
+			]
+			+ SVerticalBox::Slot()
+			  .Padding(FMargin{10.0f})
+			  .AutoHeight()
+			[
+				SNew(SButton)
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
+				.ContentPadding(FMargin{0})
+				.OnClicked_Raw(this, &SWorldOutlinerManagerWindow::OnOrganizeBtnClicked)
+				[
+					SNew(STextBlock)
+					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+					.Text(FText::FromString(TEXT("Organize")))
+				]
 			]
 		]
 	];
