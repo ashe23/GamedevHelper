@@ -239,7 +239,6 @@ void SAssetNamingManagerWindow::ListUpdate()
 	Filter.PackagePaths.Add(FName{*Settings->ScanPath.Path});
 	Filter.bRecursivePaths = Settings->bScanRecursive;
 	Filter.bRecursiveClasses = true;
-	Filter.RecursiveClassesExclusionSet.Add(UWorld::StaticClass()->GetFName());
 	Filter.RecursiveClassesExclusionSet.Add(UMapBuildDataRegistry::StaticClass()->GetFName());
 
 	if (!Settings->bShowMissingTypes)

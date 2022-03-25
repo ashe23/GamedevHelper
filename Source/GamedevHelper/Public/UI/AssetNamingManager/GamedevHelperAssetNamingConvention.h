@@ -34,6 +34,7 @@ private:
 	FGamedevHelperAssetNameFormat GetNamingByClass(const UClass* SearchClass) const;
 	
 	void SetDefaultSettings();
+	void SetLevelNamings();
 	void SetBlueprintNamings();
 	void SetAnimationNamings();
 	void SetAINamings();

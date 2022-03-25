@@ -354,7 +354,7 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 			continue;
 		}
 		
-		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath))
+		if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && OldName.Equals(NewName, ESearchCase::CaseSensitive))
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
 			Previews.Add(RenamePreview);

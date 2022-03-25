@@ -96,8 +96,6 @@
 #include "Engine/UserDefinedEnum.h"
 #include "Engine/UserDefinedStruct.h"
 
-// Other
-
 UGamedevHelperAssetNamingConvention::UGamedevHelperAssetNamingConvention()
 {
 	SetDefaultSettings();
@@ -178,6 +176,7 @@ FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConvention::GetNamingByCl
 
 void UGamedevHelperAssetNamingConvention::SetDefaultSettings()
 {
+	SetLevelNamings();
 	SetBlueprintNamings();
 	SetAnimationNamings();
 	SetAINamings();
@@ -189,6 +188,11 @@ void UGamedevHelperAssetNamingConvention::SetDefaultSettings()
 	SetSlateNamings();
 	SetSoundNamings();
 	SetMiscNamings();
+}
+
+void UGamedevHelperAssetNamingConvention::SetLevelNamings()
+{
+	Namings.Add(UWorld::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("LVL")});
 }
 
 void UGamedevHelperAssetNamingConvention::SetBlueprintNamings()
@@ -277,7 +281,7 @@ void UGamedevHelperAssetNamingConvention::SetTextureNamings()
 
 void UGamedevHelperAssetNamingConvention::SetFXNamings()
 {
-	Namings.Add(UParticleSystem::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Cascade")});
+	Namings.Add(UParticleSystem::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX")});
 	Namings.Add(UNiagaraScript::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Script")});
 	Namings.Add(UNiagaraEffectType::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"),TEXT("Type")});
 	Namings.Add(UNiagaraEmitter::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("FX"), TEXT("Emitter")});
