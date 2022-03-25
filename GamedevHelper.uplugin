@@ -2,6 +2,7 @@
   "FileVersion": 3,
   "Version": 1,
   "VersionName": "1.0.0",
+  "EngineVersion": "4.27.0",
   "FriendlyName": "GamedevHelper",
   "Description": "Collection of reusable functions and tools used in game development for unreal engine.",
   "Category": "Developer",
@@ -17,8 +18,12 @@
   "Modules": [
     {
       "Name": "GamedevHelper",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
+      "Type": "Editor",
+      "LoadingPhase": "PostDefault",
+      "WhitelistPlatforms": [
+		"Win64",
+		"Win32"
+	  ]
     }
   ],
   "Plugins": [
