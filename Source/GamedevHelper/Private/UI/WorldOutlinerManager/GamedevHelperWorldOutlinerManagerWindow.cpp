@@ -40,12 +40,6 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 			  .Padding(FMargin{10.0f})
 			  .AutoHeight()
 			[
-				SettingsProperty.ToSharedRef()
-			]
-			+ SVerticalBox::Slot()
-			  .Padding(FMargin{10.0f})
-			  .AutoHeight()
-			[
 				SNew(SButton)
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
@@ -54,9 +48,15 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 				.OnClicked_Raw(this, &SWorldOutlinerManagerWindow::OnOrganizeBtnClicked)
 				[
 					SNew(STextBlock)
-					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold20"))
 					.Text(FText::FromString(TEXT("Organize")))
 				]
+			]
+			+ SVerticalBox::Slot()
+			  .Padding(FMargin{10.0f})
+			  .AutoHeight()
+			[
+				SettingsProperty.ToSharedRef()
 			]
 		]
 	];
