@@ -303,6 +303,7 @@ UGamedevHelperWorldOutlinerSettings::UGamedevHelperWorldOutlinerSettings()
 	Mappings.Add(AVolumetricCloud::StaticClass(), TEXT("Light"));
 	Mappings.Add(AExponentialHeightFog::StaticClass(), TEXT("Light"));
 	Mappings.Add(AStaticMeshActor::StaticClass(), TEXT("Geometry"));
+	Mappings.Add(ABrush::StaticClass(), TEXT("Geometry"));
 	Mappings.Add(APlayerStart::StaticClass(), TEXT("Gameplay"));
 	Mappings.Add(APawn::StaticClass(), TEXT("Gameplay"));
 	Mappings.Add(ACharacter::StaticClass(), TEXT("Gameplay"));
