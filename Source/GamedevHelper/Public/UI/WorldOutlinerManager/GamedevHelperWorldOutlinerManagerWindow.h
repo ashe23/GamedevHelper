@@ -17,6 +17,7 @@ public:
 
 	FReply OnOrganizeBtnClicked() const;
 	static FReply OnUndoBtnClicked();
+	static FReply OnRemoveEmptyFoldersBtnClicked();
 private:
 	UGamedevHelperWorldOutlinerSettings* Settings = nullptr;
 };
