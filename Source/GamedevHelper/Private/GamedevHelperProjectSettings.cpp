@@ -127,7 +127,10 @@ UGamedevHelperAssetNamingConventionSettings::UGamedevHelperAssetNamingConvention
 	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::Interface,TEXT("BPI"));
 	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::FunctionLibrary,TEXT("BPFL"));
 	BlueprintTypePrefixes.Add(EGamedevHelperBlueprintType::MacroLibrary,TEXT("BPML"));
-
+	
+	// Level/Maps
+	Mappings.Add(UWorld::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("LVL")});
+	
 	// blueprints
 	Mappings.Add(UBlueprint::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP")});
 	Mappings.Add(AActor::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("BP")});
