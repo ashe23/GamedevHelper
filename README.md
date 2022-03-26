@@ -9,9 +9,8 @@ Collection of reusable functions and tools used in game development for unreal e
     - Array library
     - Asset Naming Manager library
     - Notification library
-    - Path library (todo)
 - Asset Naming Manager
-- World outliner Manager (todo)
+- World outliner Manager
 - FFmpeg Renderer (todo)
 - CLI tools (todo)
 - Project Folder Structure Manager (research)
