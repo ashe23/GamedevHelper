@@ -23,8 +23,6 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	
 	Settings = GetMutableDefault<UGamedevHelperAssetNamingManagerSettings>();
-	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
-	
 	NamingConventionSettings = GetMutableDefault<UGamedevHelperAssetNamingConventionSettings>();
 
 	PluginCommands = MakeShareable(new FUICommandList);
@@ -238,8 +236,6 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 void SAssetNamingManagerWindow::ListUpdate()
 {
-	// todo:ashe23 disable ticking when updating list?
-
 	FScopedSlowTask SlowTask(
 		1.0f,
 		FText::FromString("Scanning...")
@@ -417,7 +413,10 @@ FReply SAssetNamingManagerWindow::OnRenameBtnClick()
 
 	for (const auto& Asset : AssetList)
 	{
-		AssetsList.Add(Asset->AssetData);
+		if (Asset.IsValid())
+		{
+			AssetsList.Add(Asset->AssetData);
+		}
 	}
 
 	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(AssetsList);
@@ -452,7 +451,10 @@ void SAssetNamingManagerWindow::OnRenameSelected()
 
 	for (const auto& Item : SelectedItems)
 	{
-		Assets.Add(Item.Get()->AssetData);
+		if (Item.IsValid())
+		{
+			Assets.Add(Item.Get()->AssetData);
+		}
 	}
 
 	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(Assets);

@@ -8,15 +8,3 @@ UGamedevHelperAssetNamingManagerSettings::UGamedevHelperAssetNamingManagerSettin
 	bScanRecursive = true;
 	bShowMissingTypes = false;
 }
-
-#if WITH_EDITOR
-void UGamedevHelperAssetNamingManagerSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	if (OnSettingsChangeDelegate.IsBound())
-	{
-		OnSettingsChangeDelegate.Execute();
-	}
-}
-#endif

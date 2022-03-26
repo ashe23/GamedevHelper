@@ -5,18 +5,12 @@
 #include "CoreMinimal.h"
 #include "GamedevHelperAssetNamingManagerSettings.generated.h"
 
-DECLARE_DELEGATE(FAssetNamingManagerSettingsChangeDelegate);
-
 UCLASS(Transient)
 class UGamedevHelperAssetNamingManagerSettings : public UObject
 {
 	GENERATED_BODY()
 public:
 	UGamedevHelperAssetNamingManagerSettings();
-	
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ContentDir))
 	FDirectoryPath ScanPath;
@@ -32,6 +26,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ToolTip = "List of suffixes that will be removed from asset name, when renaming"))
 	TArray<FString> OldSuffixes;
-	
-	FAssetNamingManagerSettingsChangeDelegate OnSettingsChangeDelegate;
 };
