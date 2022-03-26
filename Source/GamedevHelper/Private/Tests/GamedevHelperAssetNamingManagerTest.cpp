@@ -77,18 +77,18 @@ struct FTestCase
 
 bool FAssetNamingManagerTest::RunTest(const FString& Parameters)
 {
-	const FTestRunner TestRunner;
+	// const FTestRunner TestRunner;
 
-	const auto NamingConvention = GetDefault<UGamedevHelperAssetNamingConvention>();
-	if (!NamingConvention)
-	{
-		return false;
-	}
-	
-	TArray<FAssetData> Assets;
-	Assets.Add(FAssetHelper::CreateAsset<UMaterial>(TEXT("MyMaterial01"), UMaterial::StaticClass()));
-
-	UGamedevHelperAssetNamingManagerLibrary::RenameAssets(Assets);
+	// const auto NamingConvention = GetDefault<UGamedevHelperAssetNamingConvention>();
+	// if (!NamingConvention)
+	// {
+	// 	return false;
+	// }
+	//
+	// TArray<FAssetData> Assets;
+	// Assets.Add(FAssetHelper::CreateAsset<UMaterial>(TEXT("MyMaterial01"), UMaterial::StaticClass()));
+	//
+	// UGamedevHelperAssetNamingManagerLibrary::RenameAssets(Assets);
 
 	// todo:ashe23	
 	// TArray<FGamedevHelperRenamePreview> Previews;

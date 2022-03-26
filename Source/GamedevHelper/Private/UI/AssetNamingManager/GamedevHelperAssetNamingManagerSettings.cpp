@@ -4,7 +4,9 @@
 
 UGamedevHelperAssetNamingManagerSettings::UGamedevHelperAssetNamingManagerSettings()
 {
-	SetDefaultSettings();
+	ScanPath.Path = TEXT("/Game");
+	bScanRecursive = true;
+	bShowMissingTypes = false;
 }
 
 #if WITH_EDITOR
@@ -18,10 +20,3 @@ void UGamedevHelperAssetNamingManagerSettings::PostEditChangeProperty(FPropertyC
 	}
 }
 #endif
-
-void UGamedevHelperAssetNamingManagerSettings::SetDefaultSettings()
-{
-	ScanPath.Path = TEXT("/Game");
-	bScanRecursive = true;
-	bShowMissingTypes = false;
-}

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GamedevHelperTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
 class UGamedevHelperWorldOutlinerSettings;

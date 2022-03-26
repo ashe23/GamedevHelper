@@ -208,6 +208,6 @@ struct FGamedevHelperAssetNameFormat
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat", meta = (EditCondition = "!bAssetClassAsSuffix"))
 	FString Suffix;
 
-	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat", meta = (ToolTip = "If enabled will append asset class (if exists) as suffix"))
-	bool bAssetClassAsSuffix = false;
+	// UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat", meta = (ToolTip = "If enabled will append asset class (if exists) as suffix"))
+	// bool bAssetClassAsSuffix = false;
 };

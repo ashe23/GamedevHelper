@@ -1,13 +1,13 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindowUI.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindow.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
-#include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerListRow.h"
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "GamedevHelper.h"
 #include "GamedevHelperAssetNamingManagerLibrary.h"
+#include "GamedevHelperProjectSettings.h"
 // Engine Headers
 #include "Widgets/Layout/SScrollBox.h"
 #include "AssetRegistryModule.h"
@@ -21,11 +21,11 @@
 void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 {
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	
 	Settings = GetMutableDefault<UGamedevHelperAssetNamingManagerSettings>();
-	NamingConvention = GetMutableDefault<UGamedevHelperAssetNamingConvention>();
-
 	Settings->OnSettingsChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
-	NamingConvention->OnConventionPropertyChangeDelegate.BindRaw(this, &SAssetNamingManagerWindow::ListRefresh);
+	
+	NamingConventionSettings = GetMutableDefault<UGamedevHelperAssetNamingConventionSettings>();
 
 	PluginCommands = MakeShareable(new FUICommandList);
 	PluginCommands->MapAction(
@@ -50,13 +50,14 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ViewArgs.bAllowFavoriteSystem = false;
 	ViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	ViewArgs.ViewIdentifier = "AssetNamingManagerSettings";
+	
 	const TSharedPtr<IDetailsView> SettingsProperty = PropertyEditor.CreateDetailView(ViewArgs);
+	SettingsProperty->SetObject(Settings);
 
 	ViewArgs.ViewIdentifier = "AssetNamingConvention";
 	const TSharedPtr<IDetailsView> NamingConventionProperty = PropertyEditor.CreateDetailView(ViewArgs);
+	NamingConventionProperty->SetObject(NamingConventionSettings);
 
-	SettingsProperty->SetObject(Settings);
-	NamingConventionProperty->SetObject(NamingConvention);
 
 	ListUpdate();
 
@@ -244,25 +245,25 @@ void SAssetNamingManagerWindow::ListUpdate()
 		FText::FromString("Scanning...")
 	);
 	SlowTask.MakeDialog(true);
-
+	
 	bRenameBtnActive = true;
 	AssetList.Reset();
-
+	
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
-
+	
 	FARFilter Filter;
 	Filter.PackagePaths.Add(FName{*Settings->ScanPath.Path});
 	Filter.bRecursivePaths = Settings->bScanRecursive;
 	Filter.bRecursiveClasses = true;
 	Filter.RecursiveClassesExclusionSet.Add(UMapBuildDataRegistry::StaticClass()->GetFName());
-
+	
 	if (!Settings->bShowMissingTypes)
 	{
 		TArray<UClass*> ConventionAssetClasses;
-		ConventionAssetClasses.Reserve(NamingConvention->Namings.Num());
-		Filter.ClassNames.Reserve(NamingConvention->Namings.Num());
-		NamingConvention->Namings.GetKeys(ConventionAssetClasses);
-
+		ConventionAssetClasses.Reserve(NamingConventionSettings->Mappings.Num());
+		Filter.ClassNames.Reserve(NamingConventionSettings->Mappings.Num());
+		NamingConventionSettings->Mappings.GetKeys(ConventionAssetClasses);
+	
 		for (const auto& AssetClass : ConventionAssetClasses)
 		{
 			if (AssetClass)
@@ -271,61 +272,61 @@ void SAssetNamingManagerWindow::ListUpdate()
 			}
 		}
 	}
-
+	
 	TArray<FAssetData> Assets;
 	AssetRegistryModule.Get().GetAssets(Filter, Assets);
-
+	
 	if (Assets.Num() == 0)
 	{
 		bRenameBtnActive = false;
 		return;
 	}
-
-	UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(Assets, NamingConvention, RenamePreviews);
-
+	
+	UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(Assets, NamingConventionSettings, RenamePreviews);
+	
 	if (RenamePreviews.Num() == 0)
 	{
 		bRenameBtnActive = false;
 		return;
 	}
-
+	
 	AssetList.Reserve(RenamePreviews.Num());
-
+	
 	for (const auto& RenamePreview : RenamePreviews)
 	{
 		if (!Settings->bShowMissingTypes && RenamePreview.GetStatus() == EGamedevHelperRenameStatus::MissingSettings)
 		{
 			continue;
 		}
-
+	
 		if (RenamePreview.GetStatus() == EGamedevHelperRenameStatus::Ok)
 		{
 			continue;
 		}
-
+	
 		UGamedevHelperAssetNamingListItem* ListItem = NewObject<UGamedevHelperAssetNamingListItem>();
-
+	
 		ListItem->OldName = RenamePreview.GetOldName();
 		ListItem->NewName = RenamePreview.GetNewName();
 		ListItem->AssetData = RenamePreview.GetAssetData();
 		ListItem->Note = RenamePreview.GetStatusMsg();
 		ListItem->Status = RenamePreview.GetStatus();
-
+	
 		if (!RenamePreview.IsValid())
 		{
 			bRenameBtnActive = false;
 		}
-
+	
 		AssetList.Add(ListItem);
 	}
-
+	
 	if (AssetList.Num() == 0)
 	{
 		bRenameBtnActive = false;
 	}
-
+	
 	ListSort();
-
+	
 	SlowTask.EnterProgressFrame(1.0f);
 }
 
@@ -340,21 +341,21 @@ void SAssetNamingManagerWindow::ListSort()
 			{
 				return Data1->AssetData.AssetName.Compare(Data2->AssetData.AssetName) < 0;
 			}
-
+	
 			if (SortColumn.IsEqual(TEXT("Path")))
 			{
 				return Data1->AssetData.PackagePath.Compare(Data2->AssetData.PackagePath) < 0;
 			}
-
+	
 			if (SortColumn.IsEqual(TEXT("Note")))
 			{
 				return Data1->Note.Compare(Data2->Note) < 0;
 			}
-
+	
 			return Data1->AssetData.AssetClass.Compare(Data2->AssetData.AssetClass) < 0;
 		});
 	}
-
+	
 	if (CurrentSortMode == EColumnSortMode::Descending)
 	{
 		AssetList.Sort([&](const TWeakObjectPtr<UGamedevHelperAssetNamingListItem>& Data1,
@@ -364,17 +365,17 @@ void SAssetNamingManagerWindow::ListSort()
 			{
 				return Data1->AssetData.AssetName.Compare(Data2->AssetData.AssetName) > 0;
 			}
-
+	
 			if (SortColumn.IsEqual(TEXT("Path")))
 			{
 				return Data1->AssetData.PackagePath.Compare(Data2->AssetData.PackagePath) > 0;
 			}
-
+	
 			if (SortColumn.IsEqual(TEXT("Note")))
 			{
 				return Data1->Note.Compare(Data2->Note) > 0;
 			}
-
+	
 			return Data1->AssetData.AssetClass.Compare(Data2->AssetData.AssetClass) > 0;
 		});
 	}
@@ -383,7 +384,7 @@ void SAssetNamingManagerWindow::ListSort()
 void SAssetNamingManagerWindow::ListRefresh()
 {
 	ListUpdate();
-
+	
 	if (ListView.IsValid())
 	{
 		ListView->RebuildList();

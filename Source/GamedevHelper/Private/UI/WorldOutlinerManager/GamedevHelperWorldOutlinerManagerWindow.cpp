@@ -1,8 +1,8 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerWindow.h"
-#include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerSettings.h"
 #include "UI/GamedevHelperEditorStyle.h"
+#include "GamedevHelperProjectSettings.h"
 // Engine Headers
 #include "EditorLevelLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -69,15 +69,15 @@ FReply SWorldOutlinerManagerWindow::OnOrganizeBtnClicked() const
 	                                       nullptr);
 
 	const auto LevelActors = UEditorLevelLibrary::GetAllLevelActors();
-	const auto Mappings = Settings->ActorFolderMappings;
+	const auto Mappings = Settings->Mappings;
 
 	for (const auto LevelActor : LevelActors)
 	{
 		FName FolderName = Settings->GetFolderNameByActor(LevelActor);
 
-		if (Settings->bMoveToUnsorted && FolderName.IsNone())
+		if (Settings->bMoveToUnsorted && FolderName.IsNone() && !Settings->UnsortedFolderName.IsEmpty())
 		{
-			FolderName = TEXT("Unsorted");
+			FolderName = FName{Settings->UnsortedFolderName};
 		}
 
 		if (!FolderName.IsNone())

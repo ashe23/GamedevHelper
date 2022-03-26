@@ -3,15 +3,18 @@
 #include "GamedevHelper.h"
 #include "GamedevHelperTypes.h"
 #include "GamedevHelperAssetLibrary.h"
+#include "GamedevHelperProjectSettings.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "UI/GamedevHelperEditorCommands.h"
-#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindowUI.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindow.h"
 #include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerWindow.h"
 // Engine Headers
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "LevelEditor.h"
 #include "ToolMenus.h"
 #include "UnrealEdMisc.h"
+#include "ISettingsModule.h"
+#include "Developer/Settings/Public/ISettingsContainer.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -27,6 +30,7 @@ private:
 	void RegisterCommands();
 	void RegisterMainMenu();
 	void RegisterContentBrowserContextMenu();
+	void RegisterProjectSettings() const;
 	void InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) const;
 	void InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder);
 	void InitMainMenuEntries(FMenuBuilder& MenuBuilder) const;
@@ -100,6 +104,30 @@ void FGamedevHelper::RegisterContentBrowserContextMenu()
 			FNewMenuDelegate::CreateRaw(this, &FGamedevHelper::InitContentBrowserContextMenu),
 			false,
 			FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Icon16")
+		);
+	}
+}
+
+void FGamedevHelper::RegisterProjectSettings() const
+{
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+	if (SettingsModule)
+	{
+		const TSharedPtr<ISettingsContainer> ProjectSettingsContainer = SettingsModule->GetContainer("Project");
+		ProjectSettingsContainer->DescribeCategory(
+			TEXT("GamedevHelper"),
+			FText::FromString("GamedevHelper"),
+			FText::FromString("GamedevHelper Plugin Settings"));
+
+		SettingsModule->RegisterSettings("Project", "GamedevHelper", "AssetNamingConventionSettings",
+			FText::FromString("Naming Convention"),
+			FText::FromString("Asset naming convention settings"),
+			GetMutableDefault<UGamedevHelperAssetNamingConventionSettings>()
+		);
+		SettingsModule->RegisterSettings("Project", "GamedevHelper", "WorldOutlinerSettings",
+			FText::FromString("World Outliner"),
+			FText::FromString("World outliner settings"),
+			GetMutableDefault<UGamedevHelperWorldOutlinerSettings>()
 		);
 	}
 }
@@ -273,6 +301,8 @@ void FGamedevHelper::StartupModule()
 
 	RegisterCommands();
 	RegisterMainMenu();
+	RegisterProjectSettings();
+	
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGamedevHelper::RegisterContentBrowserContextMenu));
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
@@ -297,6 +327,12 @@ void FGamedevHelper::ShutdownModule()
 	UToolMenus::UnregisterOwner(this);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabAssetNamingManager);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabWorldOutlinerManager);
+	
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+	if (SettingsModule)
+	{
+		SettingsModule->UnregisterSettings("Project", "GamedevHelper", "GamedevHelperProjectSettings");
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

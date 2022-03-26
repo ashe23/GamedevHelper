@@ -7,7 +7,8 @@
 #include "Widgets/SCompoundWidget.h"
 
 class UGamedevHelperAssetNamingManagerSettings;
-class UGamedevHelperAssetNamingConvention;
+class UGamedevHelperAssetNamingConventionSettings;
+class UGamedevHelperProjectSettings;
 class UGamedevHelperAssetNamingListItem;
 
 class SAssetNamingManagerWindow : public SCompoundWidget
@@ -33,8 +34,9 @@ private:
 	bool IsRenameBtnEnabled() const;
 
 	TSharedPtr<FUICommandList> PluginCommands;
+	UGamedevHelperAssetNamingConventionSettings* NamingConventionSettings = nullptr;
+	// UGamedevHelperProjectSettings* PluginProjectSettings = nullptr;
 	UGamedevHelperAssetNamingManagerSettings* Settings = nullptr;
-	UGamedevHelperAssetNamingConvention* NamingConvention = nullptr;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>> AssetList;
 	TArray<FGamedevHelperRenamePreview> RenamePreviews;

@@ -5,8 +5,9 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GamedevHelperTypes.h"
-#include "UI/AssetNamingManager/GamedevHelperAssetNamingConvention.h"
 #include "GamedevHelperAssetNamingManagerLibrary.generated.h"
+
+class UGamedevHelperAssetNamingConventionSettings;
 
 UCLASS()
 class UGamedevHelperAssetNamingManagerLibrary : public UBlueprintFunctionLibrary
@@ -23,11 +24,11 @@ public:
 	/**
 	 * @brief Returns rename previews for given assets. Does not rename assets.
 	 * @param Assets TArray<FAssetData>
-	 * @param NamingConvention UGamedevHelperAssetNamingConvention
+	 * @param NamingConvention UGamedevHelperAssetNamingConventionSettings
 	 * @param Previews TArray<FGamedevHelperRenamePreview>
 	 */
 	static void GetRenamePreviews(const TArray<FAssetData>& Assets,
-	                              const UGamedevHelperAssetNamingConvention* NamingConvention,
+	                              const UGamedevHelperAssetNamingConventionSettings* NamingConvention,
 	                              TArray<FGamedevHelperRenamePreview>& Previews);
 
 	/**
@@ -111,5 +112,5 @@ private:
 	 * @return FString
 	 */
 	static FString RemoveOldPrefixAndSuffix(const FString& OldAssetName,
-	                                        const UGamedevHelperAssetNamingConvention* NamingConvention);
+	                                        const UGamedevHelperAssetNamingConventionSettings* NamingConvention);
 };

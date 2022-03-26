@@ -49,6 +49,7 @@ public class GamedevHelper : ModuleRules
 				"Paper2D",
 				"IntroTutorials",
 				"CinematicCamera",
+				"Settings"
 			}
 		);
 	}

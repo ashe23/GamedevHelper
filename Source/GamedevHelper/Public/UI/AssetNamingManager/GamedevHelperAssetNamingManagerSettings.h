@@ -22,19 +22,16 @@ public:
 	FDirectoryPath ScanPath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ToolTip = "Scan folder recursively"))
-	bool bScanRecursive;
+	bool bScanRecursive = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ToolTip = "If enabled will show assets whose classes are missing in naming convention list"))
-	bool bShowMissingTypes;
-	
-	FAssetNamingManagerSettingsChangeDelegate OnSettingsChangeDelegate;
+	bool bShowMissingTypes = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ToolTip = "List of prefixes that will be removed from asset name, when renaming"))
 	TArray<FString> OldPrefixes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AssetNamingManagerSettings", meta = (ToolTip = "List of suffixes that will be removed from asset name, when renaming"))
 	TArray<FString> OldSuffixes;
-
-private:
-	void SetDefaultSettings();
+	
+	FAssetNamingManagerSettingsChangeDelegate OnSettingsChangeDelegate;
 };

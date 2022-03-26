@@ -3,6 +3,7 @@
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "GamedevHelper.h"
 #include "GamedevHelperAssetLibrary.h"
+#include "GamedevHelperProjectSettings.h"
 #include "GamedevHelperNotificationLibrary.h"
 // Engine Headers
 #include "Kismet/KismetStringLibrary.h"
@@ -15,7 +16,7 @@
 
 void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets)
 {
-	const auto NamingConvention = GetDefault<UGamedevHelperAssetNamingConvention>();
+	const auto NamingConvention = GetDefault<UGamedevHelperAssetNamingConventionSettings>();
 	if (!NamingConvention) return;
 
 	bool bRenameResult = true;
@@ -270,7 +271,7 @@ FString UGamedevHelperAssetNamingManagerLibrary::ConvertToCamelCase(const FStrin
 }
 
 FString UGamedevHelperAssetNamingManagerLibrary::RemoveOldPrefixAndSuffix(const FString& OldAssetName,
-                                                                          const UGamedevHelperAssetNamingConvention* NamingConvention)
+                                                                          const UGamedevHelperAssetNamingConventionSettings* NamingConvention)
 {
 	if (OldAssetName.IsEmpty()) return OldAssetName;
 	if (!NamingConvention) return OldAssetName;
@@ -298,7 +299,7 @@ FString UGamedevHelperAssetNamingManagerLibrary::RemoveOldPrefixAndSuffix(const 
 		BaseName.RemoveFromEnd(TEXT("_") + OldSuffix);
 	}
 
-	for (const auto& Naming : NamingConvention->Namings)
+	for (const auto& Naming : NamingConvention->Mappings)
 	{
 		if (Naming.Key)
 		{
@@ -318,7 +319,7 @@ FString UGamedevHelperAssetNamingManagerLibrary::RemoveOldPrefixAndSuffix(const 
 }
 
 void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAssetData>& Assets,
-                                                                const UGamedevHelperAssetNamingConvention* NamingConvention,
+                                                                const UGamedevHelperAssetNamingConventionSettings* NamingConvention,
                                                                 TArray<FGamedevHelperRenamePreview>& Previews)
 {
 	if (!NamingConvention)
@@ -336,7 +337,7 @@ void UGamedevHelperAssetNamingManagerLibrary::GetRenamePreviews(const TArray<FAs
 		RenamePreview.SetAssetData(Asset);
 		if (!RenamePreview.GetAssetData().IsValid()) continue;
 
-		const FGamedevHelperAssetNameFormat NamingFormat = NamingConvention->GetAssetNameFormat(Asset);
+		const FGamedevHelperAssetNameFormat NamingFormat = NamingConvention->GetNameFormatByAssetData(Asset);
 		if (NamingFormat.IsEmpty())
 		{
 			RenamePreview.SetStatus(EGamedevHelperRenameStatus::MissingSettings);
