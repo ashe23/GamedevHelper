@@ -110,6 +110,21 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						SNew(SButton)
 						.HAlign(HAlign_Center)
 						.VAlign(VAlign_Center)
+						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
+						.ContentPadding(FMargin{10})
+						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRefreshBtnClick)
+						[
+							SNew(STextBlock)
+							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
+							.Text(FText::FromString(TEXT("Refresh")))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
 						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#4CAF50"))})
 						.ContentPadding(FMargin{10})
 						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRenameBtnClick)
@@ -126,24 +141,10 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 						SNew(SButton)
 						.HAlign(HAlign_Center)
 						.VAlign(VAlign_Center)
-						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
-						.ContentPadding(FMargin{10})
-						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnRefreshBtnClick)
-						[
-							SNew(STextBlock)
-							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
-							.Text(FText::FromString(TEXT("Refresh")))
-						]
-					]
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNew(SButton)
-						.HAlign(HAlign_Center)
-						.VAlign(VAlign_Center)
 						.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#BDBDBD"))})
 						.ContentPadding(FMargin{10})
 						.OnClicked_Raw(this, &SAssetNamingManagerWindow::OnClearSelectionBtnClick)
+						.IsEnabled_Raw(this, &SAssetNamingManagerWindow::IsClearSelectionBtnEnabled)
 						[
 							SNew(STextBlock)
 							.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
@@ -497,6 +498,16 @@ FReply SAssetNamingManagerWindow::OnClearSelectionBtnClick() const
 bool SAssetNamingManagerWindow::IsRenameBtnEnabled() const
 {
 	return bRenameBtnActive;
+}
+
+bool SAssetNamingManagerWindow::IsClearSelectionBtnEnabled() const
+{
+	if (ListView.IsValid())
+	{
+		return ListView->GetSelectedItems().Num() > 0;
+	}
+
+	return false;
 }
 
 void SAssetNamingManagerWindow::OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode)

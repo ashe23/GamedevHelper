@@ -32,6 +32,7 @@ private:
 	FReply OnRefreshBtnClick();
 	FReply OnClearSelectionBtnClick() const;
 	bool IsRenameBtnEnabled() const;
+	bool IsClearSelectionBtnEnabled() const;
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	UGamedevHelperAssetNamingConventionSettings* NamingConventionSettings = nullptr;
