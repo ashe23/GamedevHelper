@@ -29,16 +29,17 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 
 	ChildSlot
 	[
-		SNew(SScrollBox)
-		.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
-		.AnimateWheelScrolling(true)
-		.AllowOverscroll(EAllowOverscroll::No)
-		+ SScrollBox::Slot()
+		SNew(SSplitter)
+		.Style(FEditorStyle::Get(), "ContentBrowser.Splitter")
+		.Orientation(Orient_Horizontal)
+		.PhysicalSplitterHandleSize(5.0f)
+		+ SSplitter::Slot()
+		.Value(0.3f)
 		[
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
-			  .Padding(FMargin{10.0f})
-			  .AutoHeight()
+			.Padding(FMargin{10.0f})
+			.AutoHeight()
 			[
 				SNew(SButton)
 				.HAlign(HAlign_Center)
@@ -53,10 +54,37 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 				]
 			]
 			+ SVerticalBox::Slot()
-			  .Padding(FMargin{10.0f})
-			  .AutoHeight()
+			.Padding(FMargin{10.0f})
+			.AutoHeight()
 			[
-				SettingsProperty.ToSharedRef()
+				SNew(SButton)
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#FFEE58"))})
+				.ContentPadding(FMargin{0})
+				.OnClicked_Static(&SWorldOutlinerManagerWindow::OnUndoBtnClicked)
+				[
+					SNew(STextBlock)
+					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold20"))
+					.Text(FText::FromString(TEXT("Undo")))
+				]
+			]
+		]
+		+ SSplitter::Slot()
+		[
+			SNew(SScrollBox)
+			.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+			.AnimateWheelScrolling(true)
+			.AllowOverscroll(EAllowOverscroll::No)
+			+ SScrollBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(FMargin{10.0f})
+				.AutoHeight()
+				[
+					SettingsProperty.ToSharedRef()
+				]
 			]
 		]
 	];
@@ -90,5 +118,15 @@ FReply SWorldOutlinerManagerWindow::OnOrganizeBtnClicked() const
 
 	UKismetSystemLibrary::EndTransaction();
 
+	return FReply::Handled();
+}
+
+FReply SWorldOutlinerManagerWindow::OnUndoBtnClicked()
+{
+	if (GEditor)
+	{
+		GEditor->UndoTransaction();
+	}
+	
 	return FReply::Handled();
 }

@@ -16,6 +16,7 @@ public:
 	void Construct(const FArguments& InArgs);
 
 	FReply OnOrganizeBtnClicked() const;
+	static FReply OnUndoBtnClicked();
 private:
 	UGamedevHelperWorldOutlinerSettings* Settings = nullptr;
 };
