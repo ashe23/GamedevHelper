@@ -8,7 +8,7 @@
 
 namespace GamedevHelperConstants
 {
-	static const FName ModuleName{TEXT("GamedevHelper")};
+	static const FName ModuleName = TEXT("GamedevHelper");
 	static const FString AlphaLower = TEXT("abcdefghijklmnopqrstuvwxyz");
 	static const FString AlphaUpper = AlphaLower.ToUpper();
 	static const FString AlphaMixed = AlphaLower + AlphaLower.ToUpper();
