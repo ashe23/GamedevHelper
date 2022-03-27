@@ -3,6 +3,7 @@
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindow.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerListRow.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerRenamePreview.h"
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "GamedevHelper.h"

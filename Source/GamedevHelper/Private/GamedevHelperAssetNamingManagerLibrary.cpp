@@ -5,6 +5,8 @@
 #include "GamedevHelperAssetLibrary.h"
 #include "GamedevHelperProjectSettings.h"
 #include "GamedevHelperNotificationLibrary.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
+#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerRenamePreview.h"
 // Engine Headers
 #include "Kismet/KismetStringLibrary.h"
 #include "AssetRegistryModule.h"
@@ -12,7 +14,6 @@
 #include "EditorAssetLibrary.h"
 #include "IAssetTools.h"
 #include "Misc/ScopedSlowTask.h"
-#include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 
 void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetData>& Assets)
 {

@@ -130,7 +130,6 @@ FReply SWorldOutlinerManagerWindow::OnOrganizeBtnClicked() const
 		if (!FolderName.IsNone())
 		{
 			UKismetSystemLibrary::TransactObject(LevelActor);
-			// todo:ashe23 rename actor if settings enabled
 			LevelActor->SetFolderPath(FolderName);
 		}
 	}

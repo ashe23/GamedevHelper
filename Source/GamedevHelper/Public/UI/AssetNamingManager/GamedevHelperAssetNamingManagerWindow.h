@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GamedevHelperTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
 class UGamedevHelperAssetNamingManagerSettings;
 class UGamedevHelperAssetNamingConventionSettings;
 class UGamedevHelperProjectSettings;
 class UGamedevHelperAssetNamingListItem;
+struct FGamedevHelperRenamePreview;
 
 class SAssetNamingManagerWindow : public SCompoundWidget
 {
@@ -36,7 +36,6 @@ private:
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	UGamedevHelperAssetNamingConventionSettings* NamingConventionSettings = nullptr;
-	// UGamedevHelperProjectSettings* PluginProjectSettings = nullptr;
 	UGamedevHelperAssetNamingManagerSettings* Settings = nullptr;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGamedevHelperAssetNamingListItem>> AssetList;

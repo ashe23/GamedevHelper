@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GamedevHelperProjectSettings.h"
+#include "GamedevHelperAssetLibrary.h"
 // Engine Headers
 #include "Engine/DirectionalLight.h"
 #include "Engine/PointLight.h"
@@ -111,7 +112,6 @@
 #include "Sound/SoundWave.h"
 #include "Sound/SoundConcurrency.h"
 // Misc
-#include "GamedevHelperAssetLibrary.h"
 #include "Engine/DataAsset.h"
 #include "Engine/DataTable.h"
 #include "Curves/CurveLinearColor.h"
@@ -236,7 +236,6 @@ UGamedevHelperAssetNamingConventionSettings::UGamedevHelperAssetNamingConvention
 	Mappings.Add(USoundWave::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("S"), TEXT("Wave")});
 	Mappings.Add(UReverbEffect::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SX")});
 	Mappings.Add(USoundAttenuation::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("SX")});
-	// todo:ashe23 update list for sounds
 
 	// misc
 	Mappings.Add(UDataAsset::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("DA")});

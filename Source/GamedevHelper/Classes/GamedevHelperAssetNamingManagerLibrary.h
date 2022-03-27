@@ -8,6 +8,7 @@
 #include "GamedevHelperAssetNamingManagerLibrary.generated.h"
 
 class UGamedevHelperAssetNamingConventionSettings;
+struct FGamedevHelperRenamePreview;
 
 UCLASS()
 class UGamedevHelperAssetNamingManagerLibrary : public UBlueprintFunctionLibrary

@@ -21,10 +21,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|String")
 	static FString GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed = 0);
 
-	// todo:ashe23 implement later
-	// static FString GetRandomStringFromFormat();
-	// static FString GetRandomStringFromStringCase();
-
 	/**
 	 * @brief Returns first letter of given string
 	 * - "abc" => "a"
