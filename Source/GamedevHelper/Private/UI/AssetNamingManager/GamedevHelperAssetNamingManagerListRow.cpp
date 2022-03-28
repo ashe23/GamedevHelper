@@ -22,19 +22,20 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 		const TSharedPtr<FAssetThumbnail> AssetThumbnail = MakeShareable(new FAssetThumbnail(RowItem->AssetData, 16, 16, nullptr));
 		const FAssetThumbnailConfig ThumbnailConfig;
 
-		return SNew(SBox)
+		return
+			SNew(SBox)
 			.WidthOverride(16)
 			.HeightOverride(16)
-		[
-			AssetThumbnail->MakeThumbnailWidget(ThumbnailConfig)
-		];
+			[
+				AssetThumbnail->MakeThumbnailWidget(ThumbnailConfig)
+			];
 	}
-	
+
 	if (InColumnName == TEXT("AssetClass"))
 	{
 		return SNew(STextBlock).Text(FText::FromString(RowItem->AssetData.AssetClass.ToString()));
 	}
-	
+
 	if (InColumnName == TEXT("Result"))
 	{
 		return

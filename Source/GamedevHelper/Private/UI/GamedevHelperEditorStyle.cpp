@@ -92,6 +92,10 @@ TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 	Style->Set("GamedevHelper.Cmd_WorldOutlinerManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon20x20));
 	Style->Set("GamedevHelper.Cmd_EditorRestart", new IMAGE_BRUSH(TEXT("IconRestart64"), Icon40x40));
 	Style->Set("GamedevHelper.Cmd_EditorRestart.Small", new IMAGE_BRUSH(TEXT("IconRestart64"), Icon20x20));
+	Style->Set("GamedevHelper.Cmd_AssetNamingManagerOpenAsset", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon40x40));
+	Style->Set("GamedevHelper.Cmd_AssetNamingManagerOpenAsset.Small", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon20x20));
+	Style->Set("GamedevHelper.Cmd_AssetNamingManagerRenameSelected", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
+	Style->Set("GamedevHelper.Cmd_AssetNamingManagerRenameSelected.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 
 	// colors
 	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#C62828"))}});
