@@ -6,8 +6,9 @@
 // Engine Headers
 #include "EditorActorFolders.h"
 #include "EditorLevelLibrary.h"
-#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Subsystems/EditorActorSubsystem.h"
+#include "Editor/EditorEngine.h"
 #include "Widgets/Layout/SScrollBox.h"
 
 void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
@@ -31,7 +32,7 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 	ChildSlot
 	[
 		SNew(SSplitter)
-		.Style(FEditorStyle::Get(), "ContentBrowser.Splitter")
+		.Style(&FAppStyle::Get().GetWidgetStyle<FSplitterStyle>("Splitter"))
 		.Orientation(Orient_Horizontal)
 		.PhysicalSplitterHandleSize(5.0f)
 		+ SSplitter::Slot()
@@ -72,23 +73,23 @@ void SWorldOutlinerManagerWindow::Construct(const FArguments& InArgs)
 					.Text(FText::FromString(TEXT("Undo")))
 				]
 			]
-			+ SVerticalBox::Slot()
-			  .Padding(FMargin{2.0f})
-			  .AutoHeight()
-			[
-				SNew(SButton)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#EF5350"))})
-				.ContentPadding(FMargin{5})
-				.OnClicked_Static(&SWorldOutlinerManagerWindow::OnRemoveEmptyFoldersBtnClicked)
-				.ToolTipText(FText::FromString(TEXT("Removes all empty folders in world outliner")))
-				[
-					SNew(STextBlock)
-					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
-					.Text(FText::FromString(TEXT("Remove empty folders")))
-				]
-			]
+			// + SVerticalBox::Slot()
+			//   .Padding(FMargin{2.0f})
+			//   .AutoHeight()
+			// [
+			// 	SNew(SButton)
+			// 	.HAlign(HAlign_Center)
+			// 	.VAlign(VAlign_Center)
+			// 	.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#EF5350"))})
+			// 	.ContentPadding(FMargin{5})
+			// 	.OnClicked_Static(&SWorldOutlinerManagerWindow::OnRemoveEmptyFoldersBtnClicked)
+			// 	.ToolTipText(FText::FromString(TEXT("Removes all empty folders in world outliner")))
+			// 	[
+			// 		SNew(STextBlock)
+			// 		.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Bold10"))
+			// 		.Text(FText::FromString(TEXT("Remove empty folders")))
+			// 	]
+			// ]
 		]
 		+ SSplitter::Slot()
 		[
@@ -115,7 +116,10 @@ FReply SWorldOutlinerManagerWindow::OnOrganizeBtnClicked() const
 	                                       FText::FromString(TEXT("Organizes all actors in world outliner")),
 	                                       nullptr);
 
-	const auto LevelActors = UEditorLevelLibrary::GetAllLevelActors();
+	UEditorActorSubsystem* EditorActorSubsystem = GEditor->GetEditorSubsystem<UEditorActorSubsystem>();
+	if (!EditorActorSubsystem) return FReply::Handled();
+	
+	const auto LevelActors = EditorActorSubsystem->GetAllLevelActors();
 	const auto Mappings = Settings->Mappings;
 
 	for (const auto LevelActor : LevelActors)
@@ -151,55 +155,76 @@ FReply SWorldOutlinerManagerWindow::OnUndoBtnClicked()
 
 FReply SWorldOutlinerManagerWindow::OnRemoveEmptyFoldersBtnClicked()
 {
-	UWorld* World = UEditorLevelLibrary::GetEditorWorld();
+	// if (!GEditor) return FReply::Handled();
+	//
+	// const TObjectPtr<UEditorActorSubsystem> EditorActorSubsystem = GEditor->GetEditorSubsystem<UEditorActorSubsystem>();
+	// if (!EditorActorSubsystem) return FReply::Handled();
+	//
+	// const FWorldContext& WorldContext = GEditor->GetEditorWorldContext(false);
+	// if (!WorldContext.World()) return FReply::Handled();
+	//
+	// TArray<FFolder> LevelFolders;
+	// TArray<FFolder> RootObjectFolders;
+	// FActorFolders::Get().ForEachFolder(*WorldContext.World(),[&LevelFolders, &RootObjectFolders](const FFolder& Folder)
+	// {
+	// 	if (Folder.HasRootObject())
+	// 	{
+	// 		RootObjectFolders.Add(Folder);
+	// 		return true;
+	// 	}
+	// 	
+	// 	LevelFolders.Add(Folder);
+	// 	return true;
+	// });
 
-	if (!World) return FReply::Handled();
-
-	const auto LevelFolders = FActorFolders::Get().GetFolderPropertiesForWorld(*World);
-	const auto LevelActors = UEditorLevelLibrary::GetAllLevelActors();
-
-	TSet<FString> UsedFolders;
-	UsedFolders.Reserve(LevelFolders.Num());
-
-	for (const auto& LevelActor : LevelActors)
-	{
-		const auto ActorFolderPath = LevelActor->GetFolderPath();
-
-		// add also parent folders hierarchy
-		const TArray<FString> ParentFoldersParts = UKismetStringLibrary::ParseIntoArray(ActorFolderPath.ToString(), TEXT("/"), true);
-		if (ParentFoldersParts.Num() > 0)
-		{
-			FString CurrentPath;
-			CurrentPath.Append(ParentFoldersParts[0]);
-			UsedFolders.Add(CurrentPath);
-
-			for (int32 i = 1; i < ParentFoldersParts.Num(); ++i)
-			{
-				CurrentPath.Append(TEXT("/") + ParentFoldersParts[i]);
-				UsedFolders.Add(CurrentPath);
-			}
-		}
-		else
-		{
-			UsedFolders.Add(ActorFolderPath.ToString());
-		}
-	}
-
-	TSet<FName> EmptyFolders;
-	EmptyFolders.Reserve(LevelFolders.Num());
-
-	for (const auto& LevelFolder : LevelFolders)
-	{
-		if (!UsedFolders.Contains(LevelFolder.Key.ToString()))
-		{
-			EmptyFolders.Add(LevelFolder.Key);
-		}
-	}
-
-	for (const auto& EmptyFolder : EmptyFolders)
-	{
-		FActorFolders::Get().DeleteFolder(*World, EmptyFolder);
-	}
+	// todo:ashe23 engine clears all empty folders automatically, for now we just hide remove button and do it later
+	
+	// const auto LevelFolders = FActorFolders::Get().GetFolderPropertiesForWorld(*World);
+	// const auto LevelFolders = FActorFolders::GetDefaultFolderName(*World, FFolder{TEXT("")});
+	// const auto LevelActors = EditorActorSubsystem->GetAllLevelActors();
+	//
+	// TSet<FString> UsedFolders;
+	// UsedFolders.Reserve(LevelFolders.Num());
+	//
+	// for (const auto& LevelActor : LevelActors)
+	// {
+	// 	const auto ActorFolderPath = LevelActor->GetFolderPath();
+	//
+	// 	// add also parent folders hierarchy
+	// 	const TArray<FString> ParentFoldersParts = UKismetStringLibrary::ParseIntoArray(ActorFolderPath.ToString(), TEXT("/"), true);
+	// 	if (ParentFoldersParts.Num() > 0)
+	// 	{
+	// 		FString CurrentPath;
+	// 		CurrentPath.Append(ParentFoldersParts[0]);
+	// 		UsedFolders.Add(CurrentPath);
+	//
+	// 		for (int32 i = 1; i < ParentFoldersParts.Num(); ++i)
+	// 		{
+	// 			CurrentPath.Append(TEXT("/") + ParentFoldersParts[i]);
+	// 			UsedFolders.Add(CurrentPath);
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		UsedFolders.Add(ActorFolderPath.ToString());
+	// 	}
+	// }
+	//
+	// TSet<FName> EmptyFolders;
+	// EmptyFolders.Reserve(LevelFolders.Num());
+	//
+	// for (const auto& LevelFolder : LevelFolders)
+	// {
+	// 	if (!UsedFolders.Contains(LevelFolder.Key.ToString()))
+	// 	{
+	// 		EmptyFolders.Add(LevelFolder.Key);
+	// 	}
+	// }
+	//
+	// for (const auto& EmptyFolder : EmptyFolders)
+	// {
+	// 	FActorFolders::Get().DeleteFolder(*World, EmptyFolder);
+	// }
 
 	return FReply::Handled();
 }

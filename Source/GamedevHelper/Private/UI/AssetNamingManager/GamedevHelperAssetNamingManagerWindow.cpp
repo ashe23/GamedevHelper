@@ -62,7 +62,7 @@ void SAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 	ChildSlot
 	[
 		SNew(SSplitter)
-		.Style(FEditorStyle::Get(), "ContentBrowser.Splitter")
+		.Style(&FAppStyle::Get().GetWidgetStyle<FSplitterStyle>("Splitter"))
 		.Orientation(Orient_Horizontal)
 		.PhysicalSplitterHandleSize(5.0f)
 		+ SSplitter::Slot()
