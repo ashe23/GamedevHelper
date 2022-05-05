@@ -27,6 +27,10 @@ Tool for automatically configuring static meshes and textures for vertex animati
 
 ![](https://i.ibb.co/VVWp8y0/gamedevhelper-05.png)
 
+## 🟢 Plugin settings import/export in ProjectSettings
+
+![](https://i.ibb.co/99mStSv/gamedevhelper-07.png)
+
 ## 🔴 Todo & Research
 - FFmpeg Renderer (todo)
 - CLI tools (todo)
