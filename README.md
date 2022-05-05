@@ -3,6 +3,8 @@ Collection of reusable functions and tools used in game development for unreal e
 
 ![](https://i.ibb.co/DwNhs6q/gamedevhelper-06.png)
 
+## Installation
+Download latest `.zip` file from releases page and copy to `Plugins` folder in your project.
 
 ## :yellow_circle: Different utility libraries
 ![](https://i.ibb.co/zV4W9SP/gamedevhelper-04.png)
