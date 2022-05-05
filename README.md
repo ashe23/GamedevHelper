@@ -1,7 +1,7 @@
 # Gamedev Helper plugin
 Collection of reusable functions and tools used in game development for unreal engine.
 
-![](https://i.ibb.co/qxG3ZkS/gamedevhelper-02.png)
+![](https://i.ibb.co/DwNhs6q/gamedevhelper-06.png)
 
 
 ## :yellow_circle: Different utility libraries
