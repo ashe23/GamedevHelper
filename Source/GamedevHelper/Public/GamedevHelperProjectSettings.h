@@ -6,12 +6,20 @@
 #include "GamedevHelperTypes.h"
 #include "GamedevHelperProjectSettings.generated.h"
 
-UCLASS(Config=EditorUserSettings)
+UCLASS(Config=EditorPerProjectUserSettings)
 class UGamedevHelperAssetNamingConventionSettings : public UObject
 {
 	GENERATED_BODY()
 public:
 	UGamedevHelperAssetNamingConventionSettings();
+	
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
+	{
+		Super::PostEditChangeProperty(PropertyChangedEvent);
+
+		SaveConfig();
+	}
+	
 	FGamedevHelperAssetNameFormat GetNameFormatByAssetData(const FAssetData& Asset) const;
 	FGamedevHelperAssetNameFormat GetNameFormatByClass(const UClass* SearchClass) const;
 
@@ -20,14 +28,23 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention", DisplayName = "Asset Namings", meta = (ToolTip = "Asset class and name format mappings"))
 	TMap<UClass*, FGamedevHelperAssetNameFormat> Mappings;
+
 };
 
-UCLASS(Config=EditorUserSettings)
+UCLASS(Config=EditorPerProjectUserSettings)
 class UGamedevHelperWorldOutlinerSettings : public UObject
 {
 	GENERATED_BODY()
 public:
 	UGamedevHelperWorldOutlinerSettings();
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
+	{
+		Super::PostEditChangeProperty(PropertyChangedEvent);
+
+		SaveConfig();
+	}
+	
 	FName GetFolderNameByActor(const AActor* Actor);
 	
 	UPROPERTY(EditAnywhere, Config, Category="World Outliner Settings", DisplayName = "Move To Unsorted",  meta = (ToolTip = "Move actors whos class is not specified, to 'Unsorted' folder"))
