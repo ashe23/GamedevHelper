@@ -12,12 +12,14 @@ class UGamedevHelperAssetNamingManagerSettings : public UObject
 public:
 	UGamedevHelperAssetNamingManagerSettings();
 
+#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
 	{
 		Super::PostEditChangeProperty(PropertyChangedEvent);
 
 		SaveConfig();
 	}
+#endif
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="AssetNamingManagerSettings", meta = (ContentDir))
 	FDirectoryPath ScanPath;

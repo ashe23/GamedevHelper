@@ -248,6 +248,15 @@ UGamedevHelperAssetNamingConventionSettings::UGamedevHelperAssetNamingConvention
 	Mappings.Add(UUserDefinedStruct::StaticClass(), FGamedevHelperAssetNameFormat{TEXT("F")});
 }
 
+#if WITH_EDITOR
+void UGamedevHelperAssetNamingConventionSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	
+	SaveConfig();
+}
+#endif
+
 FGamedevHelperAssetNameFormat UGamedevHelperAssetNamingConventionSettings::GetNameFormatByAssetData(const FAssetData& Asset) const
 {
 	if (!Asset.IsValid())
@@ -322,6 +331,16 @@ UGamedevHelperWorldOutlinerSettings::UGamedevHelperWorldOutlinerSettings()
 	Mappings.Add(APlaneReflectionCapture::StaticClass(), TEXT("ReflectionCaptures"));
 	Mappings.Add(ADecalActor::StaticClass(), TEXT("Decals"));
 }
+
+
+#if WITH_EDITOR
+void UGamedevHelperWorldOutlinerSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	SaveConfig();
+}
+#endif
 
 FName UGamedevHelperWorldOutlinerSettings::GetFolderNameByActor(const AActor* Actor)
 {
