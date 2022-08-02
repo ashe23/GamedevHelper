@@ -80,7 +80,7 @@ void FGamedevHelper::RegisterMainMenu()
 		LevelEditorMenuExtensibilityManager = LevelEditorModule.GetMenuExtensibilityManager();
 		MenuExtender = MakeShareable(new FExtender);
 		MenuExtender->AddMenuBarExtension(
-			"Window",
+			"Help",
 			EExtensionHook::After,
 			PluginCommands,
 			FMenuBarExtensionDelegate::CreateRaw(this, &FGamedevHelper::InitMainMenuBuilder));
