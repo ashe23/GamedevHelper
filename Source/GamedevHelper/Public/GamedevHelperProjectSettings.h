@@ -12,13 +12,10 @@ class UGamedevHelperAssetNamingConventionSettings : public UObject
 	GENERATED_BODY()
 public:
 	UGamedevHelperAssetNamingConventionSettings();
-	
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
-	{
-		Super::PostEditChangeProperty(PropertyChangedEvent);
 
-		SaveConfig();
-	}
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 	
 	FGamedevHelperAssetNameFormat GetNameFormatByAssetData(const FAssetData& Asset) const;
 	FGamedevHelperAssetNameFormat GetNameFormatByClass(const UClass* SearchClass) const;
@@ -38,12 +35,9 @@ class UGamedevHelperWorldOutlinerSettings : public UObject
 public:
 	UGamedevHelperWorldOutlinerSettings();
 
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
-	{
-		Super::PostEditChangeProperty(PropertyChangedEvent);
-
-		SaveConfig();
-	}
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 	
 	FName GetFolderNameByActor(const AActor* Actor);
 	
