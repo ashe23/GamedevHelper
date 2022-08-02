@@ -2,7 +2,7 @@
   "FileVersion": 3,
   "Version": 1,
   "VersionName": "1.1.0",
-  "EngineVersion": "5.0.0",
+  "EngineVersion": "4.27.0",
   "FriendlyName": "GamedevHelper",
   "Description": "Collection of reusable functions and tools used in game development for unreal engine.",
   "Category": "Developer",
