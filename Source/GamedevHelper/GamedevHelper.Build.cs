@@ -49,7 +49,15 @@ public class GamedevHelper : ModuleRules
 				"Paper2D",
 				"IntroTutorials",
 				"CinematicCamera",
-				"Settings"
+				"Settings",
+				"MovieRenderPipelineCore",
+				"MovieRenderPipelineEditor",
+				"MovieRenderPipelineRenderPasses",
+				"MovieRenderPipelineEditor",
+				"MovieRenderPipelineSettings",
+				"LevelSequence",
+				"MovieScene",
+				"SequencerScripting",
 			}
 		);
 	}

@@ -8,6 +8,7 @@
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindow.h"
 #include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerWindow.h"
+#include "UI/Renderer/GamedevHelperRendererUI.h"
 // Engine Headers
 #include "GamedevHelperAssetNamingManagerLibrary.h"
 #include "LevelEditor.h"
@@ -75,7 +76,7 @@ void FGamedevHelper::RegisterCommands()
 		FGamedevHelperEditorCommands::Get().Cmd_RendererWindow,
 		FExecuteAction::CreateLambda([]()
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Opening renderer tab"));
+			FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperConstants::TabRendererWindow);
 		}),
 		FCanExecuteAction()
 	);
@@ -225,7 +226,10 @@ TSharedRef<SDockTab> FGamedevHelper::OpenWorldOutlinerManagerWindow(const FSpawn
 TSharedRef<SDockTab> FGamedevHelper::OpenRendererWindow(const FSpawnTabArgs& SpawnTabArgs) const
 {
 	return SNew(SDockTab)
-		.TabRole(MajorTab); // todo:ashe23
+		.TabRole(MajorTab)
+		[
+			SNew(SGamedevHelperRendererUI)
+		];
 }
 
 void FGamedevHelper::OnContextMenuVatStaticMeshesClicked()

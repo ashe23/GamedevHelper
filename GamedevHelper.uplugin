@@ -41,6 +41,20 @@
     {
       "Name": "Paper2D",
       "Enabled": true
+    },
+    {
+      "Name": "MovieRenderPipeline",
+      "Enabled": true
+    },
+    {
+      "Name": "MoviePipelineMaskRenderPass",
+      "Enabled": true,
+      "Optional": true
+    },
+    {
+      "Name": "SequencerScripting",
+      "Enabled": true,
+      "Optional": true
     }
   ]
 }

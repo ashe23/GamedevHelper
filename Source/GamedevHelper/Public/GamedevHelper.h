@@ -16,6 +16,13 @@ namespace GamedevHelperConstants
 	static const FString AlphaUpper = AlphaLower.ToUpper();
 	static const FString AlphaMixed = AlphaLower + AlphaLower.ToUpper();
 	static const FString Digits = TEXT("0123456789");
+	static constexpr int32 MaxResolution{4096};
+	static const FIntPoint Resolution360P{480, 360};
+	static const FIntPoint Resolution480P{640, 480};
+	static const FIntPoint Resolution720P{1280, 720};
+	static const FIntPoint Resolution1080P{1920, 1080};
+	static const FIntPoint Resolution2160P{3840, 2160};
+	static const FFrameRate DefaultFrameRate{30, 1};
 }
 
 class IGamedevHelper : public IModuleInterface
