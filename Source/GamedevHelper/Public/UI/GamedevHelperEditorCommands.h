@@ -19,9 +19,12 @@ public:
 	virtual void RegisterCommands() override;
 
 	// main menu
+	TSharedPtr<FUICommandInfo> Cmd_EditorRestart;
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_WorldOutlinerManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_RendererWindow;
+
+	// context menu
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerOpenAsset;
-	TSharedPtr<FUICommandInfo> Cmd_WorldOutlinerManagerWindow;
-	TSharedPtr<FUICommandInfo> Cmd_EditorRestart;
 };

@@ -18,9 +18,6 @@
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
-static const FName TabAssetNamingManager{TEXT("TabAssetNamingManager")};
-static const FName TabWorldOutlinerManager{TEXT("TabWorldOutlinerManager")};
-
 class FGamedevHelper : public IGamedevHelper
 {
 public:
@@ -31,14 +28,9 @@ private:
 	void RegisterMainMenu();
 	void RegisterContentBrowserContextMenu();
 	void RegisterProjectSettings() const;
-	void InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) const;
-	void InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder);
-	void InitMainMenuEntries(FMenuBuilder& MenuBuilder) const;
-	static void OnTabAssetNamingManagerClicked();
-	static void OnTabWorldOutlinerManagerClicked();
-	static void OnRestartEditorBtnClicked();
 	TSharedRef<SDockTab> OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 	TSharedRef<SDockTab> OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
+	TSharedRef<SDockTab> OpenRendererWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 
 	// actions
 	static void OnContextMenuVatStaticMeshesClicked();
@@ -57,17 +49,34 @@ void FGamedevHelper::RegisterCommands()
 	PluginCommands = MakeShareable(new FUICommandList);
 	PluginCommands->MapAction(
 		FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow,
-		FExecuteAction::CreateStatic(&FGamedevHelper::OnTabAssetNamingManagerClicked),
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperConstants::TabAssetNamingManager);
+		}),
 		FCanExecuteAction()
 	);
 	PluginCommands->MapAction(
 		FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow,
-		FExecuteAction::CreateStatic(&FGamedevHelper::OnTabWorldOutlinerManagerClicked),
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperConstants::TabWorldOutlinerManager);
+		}),
 		FCanExecuteAction()
 	);
 	PluginCommands->MapAction(
 		FGamedevHelperEditorCommands::Get().Cmd_EditorRestart,
-		FExecuteAction::CreateStatic(&FGamedevHelper::OnRestartEditorBtnClicked),
+		FExecuteAction::CreateLambda([]()
+		{
+			FUnrealEdMisc::Get().RestartEditor(true);
+		}),
+		FCanExecuteAction()
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_RendererWindow,
+		FExecuteAction::CreateLambda([]()
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Opening renderer tab"));
+		}),
 		FCanExecuteAction()
 	);
 }
@@ -83,7 +92,31 @@ void FGamedevHelper::RegisterMainMenu()
 			"Help",
 			EExtensionHook::After,
 			PluginCommands,
-			FMenuBarExtensionDelegate::CreateRaw(this, &FGamedevHelper::InitMainMenuBuilder));
+			FMenuBarExtensionDelegate::CreateLambda([&](FMenuBarBuilder& MenuBarBuilder)
+			{
+				MenuBarBuilder.AddPullDownMenu(
+					FText::FromString("GamedevHelper"),
+					FText::FromString("Open GamedevHelper Menu"),
+					FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
+					{
+						MenuBuilder.BeginSection("GDHEditorSection", FText::FromString("Editor"));
+						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_EditorRestart);
+						MenuBuilder.EndSection();
+
+						MenuBuilder.BeginSection("GDHManagementSection", FText::FromString("Management"));
+						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow);
+						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow);
+						MenuBuilder.EndSection();
+
+						MenuBuilder.BeginSection("GHDRendererSection", FText::FromString("Rendering"));
+						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RendererWindow);
+						MenuBuilder.EndSection();
+					}),
+					"GamedevHelper",
+					FName(TEXT("GamedevHelperMenu"))
+				);
+			})
+		);
 
 		LevelEditorMenuExtensibilityManager->AddExtender(MenuExtender);
 	}
@@ -101,7 +134,47 @@ void FGamedevHelper::RegisterContentBrowserContextMenu()
 			"GamedevHelperSubMenu",
 			LOCTEXT("GamedevHelperSubMenu", "GamedevHelper Actions"),
 			LOCTEXT("GamedevHelperSubMenu_ToolTip", "GamedevHelper Helper Actions"),
-			FNewMenuDelegate::CreateRaw(this, &FGamedevHelper::InitContentBrowserContextMenu),
+			FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
+			{
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Animation Tool"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("VAT_StaticMesh", "StaticMesh"),
+					LOCTEXT("VAT_StaticMesh_ToolTip", "Configure static meshes for vertex animation"),
+					FSlateIcon(),
+					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked))
+				);
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("VAT_TextureNormal", "Texture Normal"),
+					LOCTEXT("VAT_TextureNormalToolTip", "Configure normal textures for vertex animation"),
+					FSlateIcon(),
+					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::Normal))
+				);
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("VAT_TextureUV", "Texture UV"),
+					LOCTEXT("VAT_TextureUVToolTip", "Configure UV textures for vertex animation"),
+					FSlateIcon(),
+					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV))
+				);
+				MenuBuilder.EndSection();
+
+				MenuBuilder.BeginSection("Section_Utility", FText::FromString("Utility"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("Utility_DisableCollision", "Disable Collision"),
+					LOCTEXT("Utility_DisableCollision_ToolTip", "Disable collision on selected static meshes"),
+					FSlateIcon(),
+					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked))
+				);
+				MenuBuilder.EndSection();
+
+				MenuBuilder.BeginSection("Section_Naming", FText::FromString("Naming"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("Naming_FixName", "Fix Asset Name"),
+					LOCTEXT("Naming_FixName_ToolTip", "Fixes selected asset name by convention"),
+					FSlateIcon(),
+					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuFixAssetNamesClicked))
+				);
+				MenuBuilder.EndSection();
+			}),
 			false,
 			FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Icon16")
 		);
@@ -110,8 +183,7 @@ void FGamedevHelper::RegisterContentBrowserContextMenu()
 
 void FGamedevHelper::RegisterProjectSettings() const
 {
-	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
-	if (SettingsModule)
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
 		const TSharedPtr<ISettingsContainer> ProjectSettingsContainer = SettingsModule->GetContainer("Project");
 		ProjectSettingsContainer->DescribeCategory(
@@ -120,96 +192,16 @@ void FGamedevHelper::RegisterProjectSettings() const
 			FText::FromString("GamedevHelper Plugin Settings"));
 
 		SettingsModule->RegisterSettings("Project", "GamedevHelper", "AssetNamingConventionSettings",
-			FText::FromString("Naming Convention"),
-			FText::FromString("Asset naming convention settings"),
-			GetMutableDefault<UGamedevHelperAssetNamingConventionSettings>()
+		                                 FText::FromString("Naming Convention"),
+		                                 FText::FromString("Asset naming convention settings"),
+		                                 GetMutableDefault<UGamedevHelperAssetNamingConventionSettings>()
 		);
 		SettingsModule->RegisterSettings("Project", "GamedevHelper", "WorldOutlinerSettings",
-			FText::FromString("World Outliner"),
-			FText::FromString("World outliner settings"),
-			GetMutableDefault<UGamedevHelperWorldOutlinerSettings>()
+		                                 FText::FromString("World Outliner"),
+		                                 FText::FromString("World outliner settings"),
+		                                 GetMutableDefault<UGamedevHelperWorldOutlinerSettings>()
 		);
 	}
-}
-
-void FGamedevHelper::InitContentBrowserContextMenu(FMenuBuilder& MenuBuilder) const
-{
-	MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Animation Tool"));
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("VAT_StaticMesh", "StaticMesh"),
-		LOCTEXT("VAT_StaticMesh_ToolTip", "Configure static meshes for vertex animation"),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked))
-	);
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("VAT_TextureNormal", "Texture Normal"),
-		LOCTEXT("VAT_TextureNormalToolTip", "Configure normal textures for vertex animation"),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::Normal))
-	);
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("VAT_TextureUV", "Texture UV"),
-		LOCTEXT("VAT_TextureUVToolTip", "Configure UV textures for vertex animation"),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV))
-	);
-	MenuBuilder.EndSection();
-
-	MenuBuilder.BeginSection("Section_Utility", FText::FromString("Utility"));
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("Utility_DisableCollision", "Disable Collision"),
-		LOCTEXT("Utility_DisableCollision_ToolTip", "Disable collision on selected static meshes"),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked))
-	);
-	MenuBuilder.EndSection();
-
-	MenuBuilder.BeginSection("Section_Naming", FText::FromString("Naming"));
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("Naming_FixName", "Fix Asset Name"),
-		LOCTEXT("Naming_FixName_ToolTip", "Fixes selected asset name by convention"),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuFixAssetNamesClicked))
-	);
-	MenuBuilder.EndSection();
-}
-
-void FGamedevHelper::InitMainMenuBuilder(FMenuBarBuilder& MenuBarBuilder)
-{
-	MenuBarBuilder.AddPullDownMenu(
-		FText::FromString("GamedevHelper"),
-		FText::FromString("Open GamedevHelper Menu"),
-		FNewMenuDelegate::CreateRaw(this, &FGamedevHelper::InitMainMenuEntries),
-		"GamedevHelper",
-		FName(TEXT("GamedevHelperMenu"))
-	);
-}
-
-void FGamedevHelper::InitMainMenuEntries(FMenuBuilder& MenuBuilder) const
-{
-	MenuBuilder.BeginSection("GDHEditorSection", FText::FromString("Editor"));
-	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_EditorRestart);
-	MenuBuilder.EndSection();
-	
-	MenuBuilder.BeginSection("GDHManagementSection", FText::FromString("Management"));
-	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow);
-	MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow);
-	MenuBuilder.EndSection();
-}
-
-void FGamedevHelper::OnTabAssetNamingManagerClicked()
-{
-	FGlobalTabmanager::Get()->TryInvokeTab(TabAssetNamingManager);
-}
-
-void FGamedevHelper::OnTabWorldOutlinerManagerClicked()
-{
-	FGlobalTabmanager::Get()->TryInvokeTab(TabWorldOutlinerManager);
-}
-
-void FGamedevHelper::OnRestartEditorBtnClicked()
-{
-	FUnrealEdMisc::Get().RestartEditor(true);
 }
 
 TSharedRef<SDockTab> FGamedevHelper::OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const
@@ -228,6 +220,12 @@ TSharedRef<SDockTab> FGamedevHelper::OpenWorldOutlinerManagerWindow(const FSpawn
 		[
 			SNew(SWorldOutlinerManagerWindow)
 		];
+}
+
+TSharedRef<SDockTab> FGamedevHelper::OpenRendererWindow(const FSpawnTabArgs& SpawnTabArgs) const
+{
+	return SNew(SDockTab)
+		.TabRole(MajorTab); // todo:ashe23
 }
 
 void FGamedevHelper::OnContextMenuVatStaticMeshesClicked()
@@ -302,20 +300,26 @@ void FGamedevHelper::StartupModule()
 	RegisterCommands();
 	RegisterMainMenu();
 	RegisterProjectSettings();
-	
+
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGamedevHelper::RegisterContentBrowserContextMenu));
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        TabAssetNamingManager,
+		                        GamedevHelperConstants::TabAssetNamingManager,
 		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenAssetNamingManagerWindow)
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabAssetNamingManager", "Asset Naming Manager"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        TabWorldOutlinerManager,
+		                        GamedevHelperConstants::TabWorldOutlinerManager,
 		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenWorldOutlinerManagerWindow)
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabWorlOutlinerManager", "World Outliner Manager"))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        GamedevHelperConstants::TabRendererWindow,
+		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenRendererWindow)
+	                        )
+	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabRendererWindow", "Renderer"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
@@ -325,11 +329,11 @@ void FGamedevHelper::ShutdownModule()
 	FGamedevHelperEditorCommands::Unregister();
 	UToolMenus::UnRegisterStartupCallback(this);
 	UToolMenus::UnregisterOwner(this);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabAssetNamingManager);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabWorldOutlinerManager);
-	
-	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
-	if (SettingsModule)
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabAssetNamingManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabWorldOutlinerManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabRendererWindow);
+
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
 		SettingsModule->UnregisterSettings("Project", "GamedevHelper", "GamedevHelperProjectSettings");
 	}
