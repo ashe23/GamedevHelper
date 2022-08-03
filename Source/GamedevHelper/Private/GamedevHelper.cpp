@@ -15,6 +15,7 @@
 #include "ToolMenus.h"
 #include "UnrealEdMisc.h"
 #include "ISettingsModule.h"
+#include "LevelSequence.h"
 #include "Developer/Settings/Public/ISettingsContainer.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
@@ -37,12 +38,33 @@ private:
 	static void OnContextMenuVatStaticMeshesClicked();
 	static void OnContextMenuVatTexturesClicked(EGamedevHelperVertexAnimTexture TextureType);
 	static void OnContextMenuDisableCollisionsClicked();
+	static void OnContextMenuRenderSequencesClicked();
 	static void OnContextMenuFixAssetNamesClicked();
+
+	template <class ClassType>
+	static bool CanExecuteActionOnSpecifiedAssets();
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
 	TSharedPtr<FExtender> MenuExtender;
 };
+
+template <class ClassType>
+bool FGamedevHelper::CanExecuteActionOnSpecifiedAssets()
+{
+	TArray<FAssetData> Assets;
+	UGamedevHelperAssetLibrary::GetSelectedAssets(Assets);
+
+	for (const auto& Asset : Assets)
+	{
+		if (!Cast<ClassType>(Asset.GetAsset()))
+		{
+			return false;
+		}
+	}
+							
+	return true;
+}
 
 void FGamedevHelper::RegisterCommands()
 {
@@ -142,19 +164,37 @@ void FGamedevHelper::RegisterContentBrowserContextMenu()
 					LOCTEXT("VAT_StaticMesh", "StaticMesh"),
 					LOCTEXT("VAT_StaticMesh_ToolTip", "Configure static meshes for vertex animation"),
 					FSlateIcon(),
-					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked))
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UStaticMesh>();
+						})
+					)
 				);
 				MenuBuilder.AddMenuEntry(
 					LOCTEXT("VAT_TextureNormal", "Texture Normal"),
 					LOCTEXT("VAT_TextureNormalToolTip", "Configure normal textures for vertex animation"),
 					FSlateIcon(),
-					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::Normal))
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::Normal),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UTexture2D>();
+						})
+					)
 				);
 				MenuBuilder.AddMenuEntry(
 					LOCTEXT("VAT_TextureUV", "Texture UV"),
 					LOCTEXT("VAT_TextureUVToolTip", "Configure UV textures for vertex animation"),
 					FSlateIcon(),
-					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV))
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UTexture2D>();
+						})
+					)
 				);
 				MenuBuilder.EndSection();
 
@@ -163,7 +203,25 @@ void FGamedevHelper::RegisterContentBrowserContextMenu()
 					LOCTEXT("Utility_DisableCollision", "Disable Collision"),
 					LOCTEXT("Utility_DisableCollision_ToolTip", "Disable collision on selected static meshes"),
 					FSlateIcon(),
-					FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked))
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UStaticMesh>();
+						})
+					)
+				);
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("Utility_RenderSequences", "Render Sequences"),
+					LOCTEXT("Utility_RenderSequences_ToolTip", "Render selected sequences"),
+					FSlateIcon(),
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuRenderSequencesClicked),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<ULevelSequence>();
+						})
+					)
 				);
 				MenuBuilder.EndSection();
 
@@ -287,6 +345,24 @@ void FGamedevHelper::OnContextMenuDisableCollisionsClicked()
 	}
 
 	UGamedevHelperAssetLibrary::DisableCollisions(StaticMeshes);
+}
+
+void FGamedevHelper::OnContextMenuRenderSequencesClicked()
+{
+	TArray<FAssetData> SelectedAssets;
+	UGamedevHelperAssetLibrary::GetSelectedAssets(SelectedAssets);
+
+	TArray<ULevelSequence*> LevelSequences;
+
+	for (const auto& Asset : SelectedAssets)
+	{
+		ULevelSequence* LevelSequence = Cast<ULevelSequence>(Asset.GetAsset());
+		if (!LevelSequence) continue;
+
+		LevelSequences.Add(LevelSequence);
+	}
+
+	UE_LOG(LogGamedevHelper, Warning, TEXT("Level Sequences: %d"), LevelSequences.Num()); // todo:ashe23 show new popup window with basic settings
 }
 
 void FGamedevHelper::OnContextMenuFixAssetNamesClicked()
