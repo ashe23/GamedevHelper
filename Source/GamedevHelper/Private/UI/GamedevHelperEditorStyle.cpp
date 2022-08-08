@@ -63,6 +63,36 @@ FSlateColor FGamedevHelperEditorStyle::GetColor(const FString& Specifier)
 	return Get().GetSlateColor(*Specifier);
 }
 
+FString FGamedevHelperEditorStyle::GetIconByStatus(const EGamedevHelperRendererStatus State)
+{
+	if (State == EGamedevHelperRendererStatus::OK)
+	{
+		return TEXT("GamedevHelper.Icon.Check20");
+	}
+
+	if (State == EGamedevHelperRendererStatus::Warning)
+	{
+		return TEXT("GamedevHelper.Icon.Warning20");
+	}
+
+	return TEXT("GamedevHelper.Icon.Cross20");
+}
+
+FLinearColor FGamedevHelperEditorStyle::GetColorByStatus(const EGamedevHelperRendererStatus State)
+{
+	if (State == EGamedevHelperRendererStatus::OK)
+	{
+		return FLinearColor::Green;
+	}
+
+	if (State == EGamedevHelperRendererStatus::Warning)
+	{
+		return FLinearColor::Yellow;
+	}
+
+	return FLinearColor::Red;
+}
+
 TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 {
 	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("GamedevHelperStyle"));
@@ -86,6 +116,9 @@ TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 	Style->Set("GamedevHelper.Icon16", new IMAGE_BRUSH(TEXT("Icon16"), Icon16x16));
 	Style->Set("GamedevHelper.Icon.ArrowRight.16", new IMAGE_BRUSH(TEXT("IconArrowRight512"), Icon16x16));
 	Style->Set("GamedevHelper.Icon.BG.16", new IMAGE_BRUSH(TEXT("IconBG16"), Icon16x16));
+	Style->Set("GamedevHelper.Icon.Check20", new IMAGE_BRUSH(TEXT("IconCheck128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Cross20", new IMAGE_BRUSH(TEXT("IconCross128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Warning20", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon20x20));
 	Style->Set("GamedevHelper.Cmd_AssetNamingManagerWindow", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
 	Style->Set("GamedevHelper.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 	Style->Set("GamedevHelper.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));
