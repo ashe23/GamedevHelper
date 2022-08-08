@@ -97,6 +97,15 @@ enum class EGamedevHelperRendererImageFormat : uint8
 };
 
 UENUM(BlueprintType)
+enum class EGamedevHelperRendererStatus : uint8
+{
+	None UMETA(DisplayName = "None", Hidden),
+	OK UMETA(DisplayName = "OK"),
+	Warning UMETA(DisplayName = "Warning"),
+	Error UMETA(DisplayName = "Error"),
+};
+
+UENUM(BlueprintType)
 enum class EGamedevHelperRendererResolutionPreset : uint8
 {
 	Res360P UMETA(DisplayName = "360p (480x360)", ToolTip = "360p"),
