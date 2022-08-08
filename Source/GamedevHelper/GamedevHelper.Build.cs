@@ -6,10 +6,10 @@ public class GamedevHelper : ModuleRules
 {
 	public GamedevHelper(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(
-			new string[]
+			new []
 			{
 				"Core",
 			}
@@ -17,7 +17,7 @@ public class GamedevHelper : ModuleRules
 
 
 		PrivateDependencyModuleNames.AddRange(
-			new string[]
+			new []
 			{
 				"CoreUObject",
 				"Engine",
