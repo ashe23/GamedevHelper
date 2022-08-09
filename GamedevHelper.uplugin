@@ -5,7 +5,7 @@
   "EngineVersion": "5.0.0",
   "FriendlyName": "GamedevHelper",
   "Description": "Collection of reusable functions and tools used in game development for unreal engine.",
-  "Category": "Developer",
+  "Category": "ProjectManagementTools",
   "CreatedBy": "Ashot Barkhudaryan",
   "CreatedByURL": "https://github.com/ashe23",
   "DocsURL": "",

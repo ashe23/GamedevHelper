@@ -62,7 +62,7 @@ bool FGamedevHelper::CanExecuteActionOnSpecifiedAssets()
 			return false;
 		}
 	}
-							
+
 	return true;
 }
 
@@ -149,95 +149,124 @@ void FGamedevHelper::RegisterContentBrowserContextMenu()
 {
 	FToolMenuOwnerScoped OwnerScoped(this);
 
-	// {
-	// 	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.StaticMesh");
-	// 	FToolMenuSection& Section = Menu->AddSection("GamedevHelperActions", LOCTEXT("GamedevHelperActionsHeading", "GamedevHelper"));
-	// 	Section.InsertPosition = FToolMenuInsert("CommonAssetActions", EToolMenuInsertType::After);
-	// 	Section.AddSubMenu(
-	// 		"GamedevHelperSubMenu",
-	// 		LOCTEXT("GamedevHelperSubMenu", "GamedevHelper Actions"),
-	// 		LOCTEXT("GamedevHelperSubMenu_ToolTip", "GamedevHelper Helper Actions"),
-	// 		FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
-	// 		{
-	// 			MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Animation Tool"));
-	// 			MenuBuilder.AddMenuEntry(
-	// 				LOCTEXT("VAT_StaticMesh", "StaticMesh"),
-	// 				LOCTEXT("VAT_StaticMesh_ToolTip", "Configure static meshes for vertex animation"),
-	// 				FSlateIcon(),
-	// 				FUIAction(
-	// 					FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked),
-	// 					FCanExecuteAction::CreateLambda([&]()
-	// 					{
-	// 						return CanExecuteActionOnSpecifiedAssets<UStaticMesh>();
-	// 					})
-	// 				)
-	// 			);
-	// 			MenuBuilder.AddMenuEntry(
-	// 				LOCTEXT("VAT_TextureNormal", "Texture Normal"),
-	// 				LOCTEXT("VAT_TextureNormalToolTip", "Configure normal textures for vertex animation"),
-	// 				FSlateIcon(),
-	// 				FUIAction(
-	// 					FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::Normal),
-	// 					FCanExecuteAction::CreateLambda([&]()
-	// 					{
-	// 						return CanExecuteActionOnSpecifiedAssets<UTexture2D>();
-	// 					})
-	// 				)
-	// 			);
-	// 			MenuBuilder.AddMenuEntry(
-	// 				LOCTEXT("VAT_TextureUV", "Texture UV"),
-	// 				LOCTEXT("VAT_TextureUVToolTip", "Configure UV textures for vertex animation"),
-	// 				FSlateIcon(),
-	// 				FUIAction(
-	// 					FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV),
-	// 					FCanExecuteAction::CreateLambda([&]()
-	// 					{
-	// 						return CanExecuteActionOnSpecifiedAssets<UTexture2D>();
-	// 					})
-	// 				)
-	// 			);
-	// 			MenuBuilder.EndSection();
-	//
-	// 			MenuBuilder.BeginSection("Section_Utility", FText::FromString("Utility"));
-	// 			MenuBuilder.AddMenuEntry(
-	// 				LOCTEXT("Utility_DisableCollision", "Disable Collision"),
-	// 				LOCTEXT("Utility_DisableCollision_ToolTip", "Disable collision on selected static meshes"),
-	// 				FSlateIcon(),
-	// 				FUIAction(
-	// 					FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked),
-	// 					FCanExecuteAction::CreateLambda([&]()
-	// 					{
-	// 						return CanExecuteActionOnSpecifiedAssets<UStaticMesh>();
-	// 					})
-	// 				)
-	// 			);
-	// 			MenuBuilder.AddMenuEntry(
-	// 				LOCTEXT("Utility_RenderSequences", "Render Sequences"),
-	// 				LOCTEXT("Utility_RenderSequences_ToolTip", "Render selected sequences"),
-	// 				FSlateIcon(),
-	// 				FUIAction(
-	// 					FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuRenderSequencesClicked),
-	// 					FCanExecuteAction::CreateLambda([&]()
-	// 					{
-	// 						return CanExecuteActionOnSpecifiedAssets<ULevelSequence>();
-	// 					})
-	// 				)
-	// 			);
-	// 			MenuBuilder.EndSection();
-	//
-	// 			MenuBuilder.BeginSection("Section_Naming", FText::FromString("Naming"));
-	// 			MenuBuilder.AddMenuEntry(
-	// 				LOCTEXT("Naming_FixName", "Fix Asset Name"),
-	// 				LOCTEXT("Naming_FixName_ToolTip", "Fixes selected asset name by convention"),
-	// 				FSlateIcon(),
-	// 				FUIAction(FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuFixAssetNamesClicked))
-	// 			);
-	// 			MenuBuilder.EndSection();
-	// 		}),
-	// 		false,
-	// 		FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Icon16")
-	// 	);
-	// }
+	// static mesh actions
+	{
+		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.StaticMesh");
+		FToolMenuSection& Section = Menu->FindOrAddSection("GamedevHelperActions");
+
+		Section.AddSubMenu(
+			"GamedevHelperSubMenu",
+			LOCTEXT("GamedevHelperSubMenu", "GamedevHelper Actions"),
+			LOCTEXT("GamedevHelperSubMenu_ToolTip", "GamedevHelper plugin static mesh asset helper actions"),
+			FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
+			{
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Animation Tools"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("VAT_StaticMesh", "Configure"),
+					LOCTEXT("VAT_StaticMesh_ToolTip", "Configure selected static meshes for vertex animation"),
+					FSlateIcon(),
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatStaticMeshesClicked),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UStaticMesh>();
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+				MenuBuilder.BeginSection("Section_Utility", FText::FromString("Utility"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("Utility_DisableCollision", "Disable Collision"),
+					LOCTEXT("Utility_DisableCollision_ToolTip", "Disable collision on selected static meshes"),
+					FSlateIcon(),
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuDisableCollisionsClicked),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UStaticMesh>();
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+			}),
+			false,
+			FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Icon16")
+		);
+	}
+
+	// texture asset actions
+	{
+		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.Texture");
+		FToolMenuSection& Section = Menu->FindOrAddSection("GamedevHelperActions");
+		
+		Section.AddSubMenu(
+			"GamedevHelperSubMenu",
+			LOCTEXT("GamedevHelperSubMenu", "GamedevHelper Actions"),
+			LOCTEXT("GamedevHelperSubMenu_ToolTip", "GamedevHelper plugin asset helper actions"),
+			FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
+			{
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Animation Tools"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("VAT_TextureNormal", "Configure as Normal"),
+					LOCTEXT("VAT_TextureNormalToolTip", "Configure normal textures for vertex animation"),
+					FSlateIcon(),
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::Normal),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UTexture2D>();
+						})
+					)
+				);
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("VAT_TextureUV", "Configure as UV"),
+					LOCTEXT("VAT_TextureUVToolTip", "Configure UV textures for vertex animation"),
+					FSlateIcon(),
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuVatTexturesClicked, EGamedevHelperVertexAnimTexture::UV),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<UTexture2D>();
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+			}),
+			false,
+			FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Icon16")
+		);
+	}
+
+	// level sequence asset actions
+	{
+		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.LevelSequence");
+		FToolMenuSection& Section = Menu->FindOrAddSection("GamedevHelperActions");
+		
+		Section.AddSubMenu(
+			"GamedevHelperSubMenu",
+			LOCTEXT("GamedevHelperSubMenu", "GamedevHelper Actions"),
+			LOCTEXT("GamedevHelperSubMenu_ToolTip", "GamedevHelper plugin asset helper actions"),
+			FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
+			{
+				MenuBuilder.BeginSection("Section_Util", FText::FromString("Utility"));
+				MenuBuilder.AddMenuEntry(
+					LOCTEXT("Util_Render", "Render"),
+					LOCTEXT("Util_Render_ToolTip", "Renders specified level sequences using movie render and then creates video files from them"),
+					FSlateIcon(),
+					FUIAction(
+						FExecuteAction::CreateStatic(&FGamedevHelper::OnContextMenuRenderSequencesClicked),
+						FCanExecuteAction::CreateLambda([&]()
+						{
+							return CanExecuteActionOnSpecifiedAssets<ULevelSequence>();
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+			}),
+			false,
+			FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Icon16")
+		);
+	}
 }
 
 void FGamedevHelper::RegisterProjectSettings() const
