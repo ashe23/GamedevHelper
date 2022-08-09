@@ -357,7 +357,7 @@ FName UGamedevHelperWorldOutlinerSettings::GetFolderNameByActor(const AActor* Ac
 
 	for (const auto Mapping : Mappings)
 	{
-		UClass* MappingClass = Mapping.Key;
+		const UClass* MappingClass = Mapping.Key;
 		if (!MappingClass) continue;
 
 		if (MappingClass == OtherActorClass || OtherActorClass->IsChildOf(MappingClass))

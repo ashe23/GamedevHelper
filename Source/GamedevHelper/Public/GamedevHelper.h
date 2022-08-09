@@ -25,6 +25,19 @@ namespace GamedevHelperConstants
 	static const FFrameRate DefaultFrameRate{30, 1};
 }
 
+namespace GamedevHelperStandardText
+{
+	static const FString ConfiguringStaticMeshes{TEXT("Configuring StaticMeshes for vertex animation")};
+	static const FString ConfiguringStaticMeshesSuccess{TEXT("StaticMeshes configured successfully for vertex animation")};
+	static const FString ConfiguringStaticMeshesFail{TEXT("Failed to configure some StaticMeshes")};
+	static const FString ConfiguringTextures{TEXT("Configuring textures for vertex animation")};
+	static const FString ConfiguringTexturesSuccess{TEXT("Textures configured successfully")};
+	static const FString ConfiguringTexturesFail{TEXT("Failed to configure some textures")};
+	static const FString DisablingStaticMeshesCollision{TEXT("Disabling collisions on StaticMeshes")};
+	static const FString DisablingStaticMeshesCollisionSuccess{TEXT("Collisions disabled successfully")};
+	static const FString DisablingStaticMeshesCollisionFail{TEXT("Failed to disable collisions")};
+}
+
 class IGamedevHelper : public IModuleInterface
 {
 public:

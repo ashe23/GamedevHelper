@@ -4,7 +4,7 @@
 #include "GamedevHelper.h"
 #include "GamedevHelperAssetLibrary.h"
 #include "GamedevHelperProjectSettings.h"
-#include "GamedevHelperNotificationLibrary.h"
+#include "GamedevHelperSubsystem.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerSettings.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerRenamePreview.h"
 // Engine Headers
@@ -27,7 +27,7 @@ void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetDa
 
 	if (Previews.Num() == 0)
 	{
-		UGamedevHelperNotificationLibrary::ShowModal(TEXT("No assets to rename"), EGamedevHelperModalStatus::None, 3.0f);
+		UGamedevHelperSubsystem::ShowModal(TEXT("No assets to rename"), EGamedevHelperModalStatus::None, 3.0f);
 		return;
 	}
 
@@ -79,12 +79,12 @@ void UGamedevHelperAssetNamingManagerLibrary::RenameAssets(const TArray<FAssetDa
 	if (bRenameResult)
 	{
 		const FString Msg = FString::Printf(TEXT("Asset%s Renamed Successfully"), RenameDatas.Num() > 1 ? TEXT("s") : TEXT(""));
-		UGamedevHelperNotificationLibrary::ShowModal(Msg, EGamedevHelperModalStatus::Success, 3.0f);
+		UGamedevHelperSubsystem::ShowModal(Msg, EGamedevHelperModalStatus::Success, 3.0f);
 	}
 	else
 	{
 		const FString Msg = RenameDatas.Num() > 1 ? TEXT("Failed to rename some assets") : TEXT("Failed to rename asset");
-		UGamedevHelperNotificationLibrary::ShowModalWithOutputLog(Msg, 3.0f);
+		UGamedevHelperSubsystem::ShowModalWithOutputLog(Msg, 3.0f);
 	}
 }
 

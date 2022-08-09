@@ -58,6 +58,7 @@ public class GamedevHelper : ModuleRules
 				"LevelSequence",
 				"MovieScene",
 				"SequencerScripting",
+				"EditorSubsystem"
 			}
 		);
 	}
