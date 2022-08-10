@@ -1,38 +1,33 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "UI/Renderer/GamedevHelperRendererSettings.h"
+#include "UI/RenderingManager/GamedevHelperRenderingManagerSettings.h"
 #include "GamedevHelper.h"
 // Engine Headers
 #include "MoviePipelineImageSequenceOutput.h"
 
-UGamedevHelperRendererSettings::UGamedevHelperRendererSettings()
+UGamedevHelperRenderingManagerSettings::UGamedevHelperRenderingManagerSettings()
 {
-	bUseMovieRenderPresetSettings = false;
+	ResolutionPreset = EGamedevHelperRendererResolutionPreset::Res1080P;
 	Resolution = GamedevHelperConstants::Resolution1080P;
 	CustomResolution = GamedevHelperConstants::Resolution1080P;
-	ResolutionPreset = EGamedevHelperRendererResolutionPreset::Res1080P;
 	VideoFormat = EGamedevHelperRendererVideoFormat::Mp4;
 	ImageFormat = EGamedevHelperRendererImageFormat::Png;
 	Framerate = GamedevHelperConstants::DefaultFrameRate;
-	PlaybackSpeed = 1.0f;
-	bRenderUI = false;
-	AdditionalCmdFlags = TEXT("");
-	bCanUseCustomResolution = false;
 }
 
-FIntPoint UGamedevHelperRendererSettings::GetResolution() const
+FIntPoint UGamedevHelperRenderingManagerSettings::GetResolution() const
 {
 	return Resolution;
 }
 
-FString UGamedevHelperRendererSettings::GetResolutionAsString(const FString& Separator) const
+FString UGamedevHelperRenderingManagerSettings::GetResolutionAsString(const FString& Separator) const
 {
 	if (Separator.IsEmpty()) return Separator;
 
 	return FString::Printf(TEXT("%d%s%d"), Resolution.X, *Separator, Resolution.Y);
 }
 
-FString UGamedevHelperRendererSettings::GetVideoFormatAsString(const bool IncludeDot) const
+FString UGamedevHelperRenderingManagerSettings::GetVideoFormatAsString(const bool IncludeDot) const
 {
 	switch (VideoFormat)
 	{
@@ -47,7 +42,7 @@ FString UGamedevHelperRendererSettings::GetVideoFormatAsString(const bool Includ
 	}
 }
 
-FString UGamedevHelperRendererSettings::GetImageFormatAsString(const bool IncludeDot) const
+FString UGamedevHelperRenderingManagerSettings::GetImageFormatAsString(const bool IncludeDot) const
 {
 	switch (ImageFormat)
 	{
@@ -62,7 +57,7 @@ FString UGamedevHelperRendererSettings::GetImageFormatAsString(const bool Includ
 	}
 }
 
-UClass* UGamedevHelperRendererSettings::GetMoviePipelineOutputSettingImageClass() const
+UClass* UGamedevHelperRenderingManagerSettings::GetMoviePipelineOutputSettingImageClass() const
 {
 	switch (ImageFormat)
 	{
@@ -77,41 +72,47 @@ UClass* UGamedevHelperRendererSettings::GetMoviePipelineOutputSettingImageClass(
 	}
 }
 
+FString UGamedevHelperRenderingManagerSettings::GetErrorText() const
+{
+	return ErrorText;
+}
 
 #if WITH_EDITOR
-void UGamedevHelperRendererSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void UGamedevHelperRenderingManagerSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	bCanUseCustomResolution = bUseMovieRenderPresetSettings == false && ResolutionPreset == EGamedevHelperRendererResolutionPreset::ResCustom;
 
 	SaveConfig();
 }
 #endif
 
-bool UGamedevHelperRendererSettings::IsValid() const
+bool UGamedevHelperRenderingManagerSettings::IsValid()
 {
 	if (FFmpegExePath.FilePath.IsEmpty())
 	{
+		ErrorText = GamedevHelperStandardText::ErrFFmpegExePathNotSpecified;
 		return false;
 	}
 
 	if (!FPaths::FileExists(FPaths::ConvertRelativePathToFull(FFmpegExePath.FilePath)))
 	{
+		ErrorText = GamedevHelperStandardText::ErrFFmpegExePathDoestNotExist;
 		return false;
 	}
 
 	if (OutputDir.Path.IsEmpty())
 	{
+		ErrorText = GamedevHelperStandardText::ErrOutputDirNotSpecified;
 		return false;
 	}
 
 	if (!FPaths::DirectoryExists(FPaths::ConvertRelativePathToFull(OutputDir.Path)))
 	{
+		ErrorText = GamedevHelperStandardText::ErrOutputDirDoesNotExist;
 		return false;
 	}
 
-	// todo:ashe23 add all other parameters validation
-
+	ErrorText = TEXT("");
+	
 	return true;
 }

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GamedevHelper.h"
+#include "MoviePipelineQueue.h"
 #include "GamedevHelperTypes.generated.h"
 
 template <typename EnumType>
@@ -133,4 +135,15 @@ struct FGamedevHelperAssetNameFormat
 
 	UPROPERTY(EditAnywhere, Category = "GamedevHelper|AssetNameFormat", meta = (EditCondition = "!bAssetClassAsSuffix"))
 	FString Suffix;
+};
+
+USTRUCT(BlueprintType)
+struct FGamedevHelperRenderingManagerQueueItemData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|RenderingManager", meta = (AllowedClasses="MoviePipelineQueue"))
+	FSoftObjectPath QueueAsset;
+
+	// todo:ashe23 audio parameters will be here
 };

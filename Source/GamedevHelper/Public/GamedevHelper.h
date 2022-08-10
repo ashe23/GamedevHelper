@@ -11,7 +11,7 @@ namespace GamedevHelperConstants
 	static const FName ModuleName = TEXT("GamedevHelper");
 	static const FName TabAssetNamingManager{TEXT("TabAssetNamingManager")};
 	static const FName TabWorldOutlinerManager{TEXT("TabWorldOutlinerManager")};
-	static const FName TabRendererWindow{TEXT("TabRendererWindow")};
+	static const FName TabRenderingManager{TEXT("TabRendererWindow")};
 	static const FString AlphaLower = TEXT("abcdefghijklmnopqrstuvwxyz");
 	static const FString AlphaUpper = AlphaLower.ToUpper();
 	static const FString AlphaMixed = AlphaLower + AlphaLower.ToUpper();
@@ -36,6 +36,14 @@ namespace GamedevHelperStandardText
 	static const FString DisablingStaticMeshesCollision{TEXT("Disabling collisions on StaticMeshes")};
 	static const FString DisablingStaticMeshesCollisionSuccess{TEXT("Collisions disabled successfully")};
 	static const FString DisablingStaticMeshesCollisionFail{TEXT("Failed to disable collisions")};
+	static const FString ErrFFmpegExePathNotSpecified{TEXT("Error: FFmpeg exe path not specified")};
+	static const FString ErrFFmpegExePathDoestNotExist{TEXT("Error: FFmpeg exe path does not exist")};
+	static const FString ErrOutputDirNotSpecified{TEXT("Error: Output directory not specified")};
+	static const FString ErrOutputDirDoesNotExist{TEXT("Error: Output directory does not exist")};
+	static const FString ErrFailedToLoadAsset{TEXT("Error: Failed to load asset")};
+	static const FString ErrNoJobsInQueue{TEXT("Error: No jobs in queue")};
+	static const FString ErrInvalidQueue{TEXT("Error: Invalid queue asset")};
+	static const FString PreparingQueueJobs{TEXT("Error: Invalid queue asset")};
 }
 
 class IGamedevHelper : public IModuleInterface

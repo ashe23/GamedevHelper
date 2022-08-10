@@ -6,7 +6,8 @@
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindow.h"
 #include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerWindow.h"
-#include "UI/Renderer/GamedevHelperRendererUI.h"
+#include "UI/RenderingManager/GamedevHelperRenderingManagerUI.h"
+// #include "UI/Renderer/GamedevHelperRendererUI.h"
 // Engine Headers
 #include "LevelEditor.h"
 #include "ToolMenus.h"
@@ -27,9 +28,6 @@ private:
 	void RegisterMainMenu();
 	void RegisterContentBrowserContextMenu();
 	void RegisterProjectSettings() const;
-	TSharedRef<SDockTab> OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
-	TSharedRef<SDockTab> OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const;
-	TSharedRef<SDockTab> OpenRendererWindow(const FSpawnTabArgs& SpawnTabArgs) const;
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
@@ -57,18 +55,18 @@ void FGamedevHelper::RegisterCommands()
 		FCanExecuteAction()
 	);
 	PluginCommands->MapAction(
-		FGamedevHelperEditorCommands::Get().Cmd_EditorRestart,
+		FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerWindow,
 		FExecuteAction::CreateLambda([]()
 		{
-			FUnrealEdMisc::Get().RestartEditor(true);
+			FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperConstants::TabRenderingManager);
 		}),
 		FCanExecuteAction()
 	);
 	PluginCommands->MapAction(
-		FGamedevHelperEditorCommands::Get().Cmd_RendererWindow,
+		FGamedevHelperEditorCommands::Get().Cmd_EditorRestart,
 		FExecuteAction::CreateLambda([]()
 		{
-			FGlobalTabmanager::Get()->TryInvokeTab(GamedevHelperConstants::TabRendererWindow);
+			FUnrealEdMisc::Get().RestartEditor(true);
 		}),
 		FCanExecuteAction()
 	);
@@ -99,10 +97,7 @@ void FGamedevHelper::RegisterMainMenu()
 						MenuBuilder.BeginSection("GDHManagementSection", FText::FromString("Management"));
 						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_AssetNamingManagerWindow);
 						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_WorldOutlinerManagerWindow);
-						MenuBuilder.EndSection();
-
-						MenuBuilder.BeginSection("GHDRendererSection", FText::FromString("Rendering"));
-						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RendererWindow);
+						MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerWindow);
 						MenuBuilder.EndSection();
 					}),
 					"GamedevHelper",
@@ -143,33 +138,6 @@ void FGamedevHelper::RegisterProjectSettings() const
 	}
 }
 
-TSharedRef<SDockTab> FGamedevHelper::OpenAssetNamingManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const
-{
-	return SNew(SDockTab)
-		.TabRole(MajorTab)
-		[
-			SNew(SAssetNamingManagerWindow)
-		];
-}
-
-TSharedRef<SDockTab> FGamedevHelper::OpenWorldOutlinerManagerWindow(const FSpawnTabArgs& SpawnTabArgs) const
-{
-	return SNew(SDockTab)
-		.TabRole(MajorTab)
-		[
-			SNew(SWorldOutlinerManagerWindow)
-		];
-}
-
-TSharedRef<SDockTab> FGamedevHelper::OpenRendererWindow(const FSpawnTabArgs& SpawnTabArgs) const
-{
-	return SNew(SDockTab)
-		.TabRole(MajorTab)
-		[
-			SNew(SGamedevHelperRendererUI)
-		];
-}
-
 void FGamedevHelper::StartupModule()
 {
 	FGamedevHelperEditorStyle::Initialize();
@@ -183,19 +151,28 @@ void FGamedevHelper::StartupModule()
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 		                        GamedevHelperConstants::TabAssetNamingManager,
-		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenAssetNamingManagerWindow)
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
+		                        {
+			                        return SNew(SDockTab).TabRole(MajorTab)[SNew(SAssetNamingManagerWindow)];
+		                        })
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabAssetNamingManager", "Asset Naming Manager"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 		                        GamedevHelperConstants::TabWorldOutlinerManager,
-		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenWorldOutlinerManagerWindow)
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
+		                        {
+			                        return SNew(SDockTab).TabRole(MajorTab)[SNew(SWorldOutlinerManagerWindow)];
+		                        })
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabWorlOutlinerManager", "World Outliner Manager"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        GamedevHelperConstants::TabRendererWindow,
-		                        FOnSpawnTab::CreateRaw(this, &FGamedevHelper::OpenRendererWindow)
+		                        GamedevHelperConstants::TabRenderingManager,
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
+		                        {
+			                        return SNew(SDockTab).TabRole(MajorTab)[SNew(SGamedevHelperRenderingManagerUI)];
+		                        })
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabRendererWindow", "Renderer"))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
@@ -209,7 +186,7 @@ void FGamedevHelper::ShutdownModule()
 	UToolMenus::UnregisterOwner(this);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabAssetNamingManager);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabWorldOutlinerManager);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabRendererWindow);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GamedevHelperConstants::TabRenderingManager);
 
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
