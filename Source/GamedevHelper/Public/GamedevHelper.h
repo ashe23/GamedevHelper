@@ -44,6 +44,13 @@ namespace GamedevHelperStandardText
 	static const FString ErrNoJobsInQueue{TEXT("Error: No jobs in queue")};
 	static const FString ErrInvalidQueue{TEXT("Error: Invalid queue asset")};
 	static const FString PreparingQueueJobs{TEXT("Error: Invalid queue asset")};
+	static const FString PreparingQueue{TEXT("Preparing render queue...")};
+	static const FString JobInvalid{TEXT("Invalid Job Settings")};
+	static const FString JobMissingLevelSequence{TEXT("Missing LevelSequence")};
+	static const FString JobMissingMap{TEXT("Missing Map")};
+	static const FString JobInvalidConfigs{TEXT("Invalid configs")};
+	static const FString JobCantLoadLevelSequence{TEXT("Could not load LevelSequence asset")};
+	static const FString JobNameNotSpecified{TEXT("Job name not specified")};
 }
 
 class IGamedevHelper : public IModuleInterface

@@ -82,6 +82,14 @@ void UGamedevHelperRenderingManagerSettings::PostEditChangeProperty(FPropertyCha
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
+	if (PropertyChangedEvent.MemberProperty->GetFName().IsEqual("OutputDir"))
+	{
+		if (!OutputDir.Path.IsEmpty() && FPaths::DirectoryExists(FPaths::ConvertRelativePathToFull(OutputDir.Path)))
+		{
+			CreateOutputSubdirectories();
+		}
+	}
+	
 	SaveConfig();
 }
 #endif
@@ -115,4 +123,41 @@ bool UGamedevHelperRenderingManagerSettings::IsValid()
 	ErrorText = TEXT("");
 	
 	return true;
+}
+
+void UGamedevHelperRenderingManagerSettings::CreateOutputSubdirectories() const
+{
+	if (OutputDir.Path.IsEmpty()) return;
+	
+	
+	const FString SubDirectoriesRoot = FPaths::ConvertRelativePathToFull(FString::Printf(TEXT("%s/%s/"), *OutputDir.Path, FApp::GetProjectName()));
+
+	if (!FPaths::DirectoryExists(SubDirectoriesRoot))
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		if (!PlatformFile.CreateDirectoryTree(*SubDirectoriesRoot))
+		{
+			UE_LOG(LogGamedevHelper, Error, TEXT("Failed to create directory %s"), *SubDirectoriesRoot);
+		}
+
+		// our OutputDirectory folder must always contain subdirectories
+		// - image - Contains all rendered images
+		// - video - Contains only video files without audio
+		// - mixed - Contains video files mixed with audio
+
+		TArray<FString> SubDirectories;
+		SubDirectories.Reserve(3);
+		SubDirectories.Add(TEXT("image"));
+		SubDirectories.Add(TEXT("video"));
+		SubDirectories.Add(TEXT("mixed"));
+
+		for (const auto& Dir : SubDirectories)
+		{
+			const FString Path = FString::Printf(TEXT("%s/%s"), *SubDirectoriesRoot, *Dir);
+			if (!PlatformFile.CreateDirectoryTree(*Path))
+			{
+				UE_LOG(LogGamedevHelper, Error, TEXT("Failed to create directory %s"), *Path);
+			}
+		}
+	}
 }

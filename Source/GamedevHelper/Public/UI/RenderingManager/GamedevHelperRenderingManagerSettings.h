@@ -62,7 +62,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "RendererSettings|Format", DisplayName = "Framerate", meta = (ToolTip = "Output framerate"))
 	FFrameRate Framerate;
+protected:
 
+	void CreateOutputSubdirectories() const;
 private:
 	UPROPERTY()
 	FIntPoint Resolution;

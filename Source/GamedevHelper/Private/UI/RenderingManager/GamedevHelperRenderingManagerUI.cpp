@@ -327,7 +327,6 @@ TSharedRef<ITableRow> SGamedevHelperRenderingManagerUI::OnGenerateRow(TWeakObjec
 
 void SGamedevHelperRenderingManagerUI::ListUpdateData()
 {
-	// todo:ashe23 move standard texts to global namespace later
 	bCanStartRender = true;
 	
 	Queue.Reset();
@@ -335,7 +334,7 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 
 	FScopedSlowTask SlowTaskQueue{
 	    static_cast<float>(RenderingManagerQueueSettings->Queue.Num()),
-	    FText::FromString(TEXT("Preparing render queue..."))
+	    FText::FromString(GamedevHelperStandardText::PreparingQueue)
     };
     SlowTaskQueue.MakeDialog();
 
@@ -382,7 +381,7 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 			
 			if (!Job)
 			{
-				QueueItem->Note = TEXT("Invalid Job Settings");
+				QueueItem->Note = GamedevHelperStandardText::JobInvalid;
 				QueueItem->Status = EGamedevHelperRendererStatus::Error;
 				Queue.Add(QueueItem);
 				bCanStartRender = false;
@@ -391,7 +390,7 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 
 			if (!Job->Sequence.IsValid())
 			{
-				QueueItem->Note = TEXT("Missing LevelSequence");
+				QueueItem->Note = GamedevHelperStandardText::JobMissingLevelSequence;
 				QueueItem->Status = EGamedevHelperRendererStatus::Error;
 				Queue.Add(QueueItem);
 				bCanStartRender = false;
@@ -400,7 +399,7 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 
 			if (!Job->Map.IsValid())
 			{
-				QueueItem->Note = TEXT("Missing Map");
+				QueueItem->Note = GamedevHelperStandardText::JobMissingMap;
 				QueueItem->Status = EGamedevHelperRendererStatus::Error;
 				Queue.Add(QueueItem);
 				bCanStartRender = false;
@@ -410,7 +409,7 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 			const UMoviePipelineMasterConfig* MasterConfig = Job->GetConfiguration();
 			if (!MasterConfig)
 			{
-				QueueItem->Note = TEXT("Invalid configs");
+				QueueItem->Note = GamedevHelperStandardText::JobInvalidConfigs;
 				QueueItem->Status = EGamedevHelperRendererStatus::Error;
 				Queue.Add(QueueItem);
 				bCanStartRender = false;
@@ -420,14 +419,12 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 			const ULevelSequence* LevelSequence = Cast<ULevelSequence>(Job->Sequence.TryLoad());
 			if (!LevelSequence)
 			{
-				QueueItem->Note = TEXT("Could not load LevelSequence asset");
+				QueueItem->Note = GamedevHelperStandardText::JobCantLoadLevelSequence;
 				QueueItem->Status = EGamedevHelperRendererStatus::Error;
 				Queue.Add(QueueItem);
 				bCanStartRender = false;
 				continue;
 			}
-
-			
 
 			UMovieScene* MovieScene = LevelSequence->MovieScene;
 			const FFrameRate DisplayRate = MovieScene->GetDisplayRate();
@@ -456,13 +453,12 @@ void SGamedevHelperRenderingManagerUI::ListUpdateData()
 
 			if (Job->JobName.IsEmpty())
 			{
-				QueueItem->Note = TEXT("Job name not specified");
+				QueueItem->Note = GamedevHelperStandardText::JobNameNotSpecified;
 				QueueItem->Status = EGamedevHelperRendererStatus::Warning;
 			}
 			
 			Queue.Add(QueueItem);
 		}
-
 	}
 }
 
