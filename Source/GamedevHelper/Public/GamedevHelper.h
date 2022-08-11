@@ -51,6 +51,7 @@ namespace GamedevHelperStandardText
 	static const FString JobInvalidConfigs{TEXT("Invalid configs")};
 	static const FString JobCantLoadLevelSequence{TEXT("Could not load LevelSequence asset")};
 	static const FString JobNameNotSpecified{TEXT("Job name not specified")};
+	static const FString QueueIsEmpty{TEXT("QueueAssets is empty")};
 }
 
 class IGamedevHelper : public IModuleInterface

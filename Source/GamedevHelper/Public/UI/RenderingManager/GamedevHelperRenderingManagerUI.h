@@ -28,7 +28,9 @@ protected:
 	void ListRefresh() const;
 
 	FReply OnBtnRefreshClicked();
+	FReply OnBtnRenderClicked();
 	bool IsBtnRefreshEnabled() const;
+	bool IsBtnRenderEnabled() const;
 	
 private:
 	UGamedevHelperRenderingManagerSettings* RenderingManagerSettings = nullptr;

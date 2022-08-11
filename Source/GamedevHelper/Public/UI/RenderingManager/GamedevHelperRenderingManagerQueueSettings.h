@@ -15,4 +15,7 @@ public:
 	TArray<FGamedevHelperRenderingManagerQueueItemData> Queue;
 
 	bool IsValid();
+	FString GetErrorText() const;
+private:
+	FString ErrorText;
 };

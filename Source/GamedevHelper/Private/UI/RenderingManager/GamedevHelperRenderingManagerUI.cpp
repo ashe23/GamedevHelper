@@ -145,9 +145,9 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 							.VAlign(VAlign_Center)
 							.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#66BB6A"))})
 							.ContentPadding(FMargin{5})
+							.OnClicked_Raw(this, &SGamedevHelperRenderingManagerUI::OnBtnRenderClicked)
+							.IsEnabled_Raw(this, &SGamedevHelperRenderingManagerUI::IsBtnRenderEnabled)
 							.ToolTipText(FText::FromString(TEXT("Start rendering everything in list")))
-							// .OnClicked_Raw(this, &SGamedevHelperRendererUI::OnBtnRenderClicked)
-							// .IsEnabled_Raw(this, &SGamedevHelperRendererUI::IsBtnRenderEnabled)
 							[
 								SNew(STextBlock)
 								.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
@@ -307,17 +307,17 @@ FText SGamedevHelperRenderingManagerUI::GetConsoleBoxText() const
 		return FText::FromString(RenderingManagerSettings->GetErrorText());
 	}
 
-	// if (!RenderingManagerSettings->IsValid())
-	// {
-	// 	return FText::FromString(RenderingManagerQueue->GetErrorText());
-	// }
+	if (!RenderingManagerQueueSettings->IsValid())
+	{
+		return FText::FromString(RenderingManagerQueueSettings->GetErrorText());
+	}
 	
 	return FText::FromString(TEXT(""));
 }
 
 EVisibility SGamedevHelperRenderingManagerUI::GetConsoleBoxVisibility() const
 {
-	return RenderingManagerSettings->IsValid() ? EVisibility::Hidden : EVisibility::Visible;
+	return RenderingManagerSettings->IsValid() && RenderingManagerQueueSettings->IsValid() ? EVisibility::Hidden : EVisibility::Visible;
 }
 
 TSharedRef<ITableRow> SGamedevHelperRenderingManagerUI::OnGenerateRow(TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const
@@ -328,6 +328,12 @@ TSharedRef<ITableRow> SGamedevHelperRenderingManagerUI::OnGenerateRow(TWeakObjec
 void SGamedevHelperRenderingManagerUI::ListUpdateData()
 {
 	bCanStartRender = true;
+
+	if (RenderingManagerQueueSettings->Queue.Num() == 0)
+	{
+		bCanStartRender = false;
+		return;
+	}
 	
 	Queue.Reset();
 	Queue.Reserve(RenderingManagerQueueSettings->Queue.Num());
@@ -483,9 +489,20 @@ FReply SGamedevHelperRenderingManagerUI::OnBtnRefreshClicked()
 	return FReply::Handled();
 }
 
+FReply SGamedevHelperRenderingManagerUI::OnBtnRenderClicked()
+{
+	// todo:ashe23 rendering queue
+	return FReply::Handled();
+}
+
 bool SGamedevHelperRenderingManagerUI::IsBtnRefreshEnabled() const
 {
-	return RenderingManagerSettings->IsValid();
+	return RenderingManagerSettings->IsValid() && RenderingManagerQueueSettings->IsValid();
+}
+
+bool SGamedevHelperRenderingManagerUI::IsBtnRenderEnabled() const
+{
+	return bCanStartRender;
 }
 
 #undef LOCTEXT_NAMESPACE
