@@ -1,8 +1,0 @@
-{
-    "python.autoComplete.extraPaths": [
-        "W:/ue_projects/WorkshopPlugins5/Intermediate/PythonStub"
-    ],
-    "python.analysis.extraPaths": [
-        "W:/ue_projects/WorkshopPlugins5/Intermediate/PythonStub"
-    ]
-}
