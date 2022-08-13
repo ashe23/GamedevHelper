@@ -55,6 +55,10 @@
       "Name": "SequencerScripting",
       "Enabled": true,
       "Optional": true
+    },
+    {
+      "Name": "PythonScriptPlugin",
+      "Enabled": true
     }
   ]
 }

@@ -1,12 +1,11 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/RenderingManager/GamedevHelperRenderingManagerUI.h"
-#include "UI/RenderingManager/GamedevHelperRenderingManagerSettings.h"
 #include "UI/RenderingManager/GamedevHelperRenderingManagerQueueSettings.h"
 #include "UI/RenderingManager/GamedevHelperRenderingManagerQueueItemUI.h"
-#include "UI/RenderingManager/GamedevHelperRenderingManagerQueueItem.h"
 #include "UI/GamedevHelperEditorStyle.h"
 #include "GamedevHelperTypes.h"
+#include "GamedevHelperProjectSettings.h"
 // Engine Headers
 #include "MoviePipelineQueue.h"
 #include "MoviePipelineQueueSubsystem.h"
@@ -14,9 +13,16 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Input/SHyperlink.h"
 #include "AssetRegistryModule.h"
+#include "GamedevHelperSubsystem.h"
 #include "MoviePipelineGameOverrideSetting.h"
+#include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "Misc/ScopedSlowTask.h"
+#include "IPythonScriptPlugin.h"
+#include "Dom/JsonObject.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -24,11 +30,15 @@
 void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 {
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	RenderingManagerSettings = GetMutableDefault<UGamedevHelperRenderingManagerSettings>();
-	verify(RenderingManagerSettings);
+	RenderingSettings = GetMutableDefault<UGamedevHelperRenderingSettings>();
+	verify(RenderingSettings);
+
+	RenderingSettings->PostEditChange();
 
 	RenderingManagerQueueSettings = GetMutableDefault<UGamedevHelperRenderingManagerQueueSettings>();
 	verify(RenderingManagerQueueSettings);
+
+	RenderingManagerQueueSettings->PostEditChange();
 
 	FDetailsViewArgs DetailsViewArgs;
 	DetailsViewArgs.bUpdatesFromSelection = false;
@@ -42,11 +52,14 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 	DetailsViewArgs.ViewIdentifier = "GamedevHelperRenderingManagerSettings";
 
 	const TSharedPtr<IDetailsView> RenderingManagerSettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
-	RenderingManagerSettingsProperty->SetObject(RenderingManagerSettings);
+	RenderingManagerSettingsProperty->SetObject(RenderingSettings);
 
 	DetailsViewArgs.ViewIdentifier = "GamedevHelperRenderingManagerQueueSettings";
 	const TSharedPtr<IDetailsView> RenderingManagerQueueProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
 	RenderingManagerQueueProperty->SetObject(RenderingManagerQueueSettings);
+
+	ListUpdateData();
+	ListRefresh();
 	
 	ChildSlot
 	[
@@ -171,6 +184,24 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 								.Text(FText::FromString(TEXT("Clean Output Directory")))
 							]
 						]
+						+ SHorizontalBox::Slot()
+						.Padding(FMargin{0.0f, 0.0f, 5.0f , 0.0f})
+						.AutoWidth()
+						[
+							SNew(SButton)
+							.HAlign(HAlign_Center)
+							.VAlign(VAlign_Center)
+							.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#BDBDBD"))})
+							.ContentPadding(FMargin{5})
+							.ToolTipText(FText::FromString(TEXT("Opens OutputDirectory in Explorer")))
+							.OnClicked_Raw(this, &SGamedevHelperRenderingManagerUI::OnBtnOpenOutputDirClicked)
+							.IsEnabled_Raw(this, &SGamedevHelperRenderingManagerUI::IsBtnOpenOutputDirEnabled)
+							[
+								SNew(STextBlock)
+								.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
+								.Text(FText::FromString(TEXT("Open Output Directory")))
+							]
+						]
 					]
 					+ SVerticalBox::Slot()
 					.AutoHeight()
@@ -220,7 +251,7 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									.FixedWidth(250.0f)
+									// .FixedWidth(250.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceNameColumn", "Level Sequence"))
@@ -230,7 +261,7 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									.FixedWidth(200.0f)
+									// .FixedWidth(200.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceDurationColumn", "Duration"))
@@ -245,25 +276,25 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceFrameStartColumn", "Start Frame"))
 									]
-									+ SHeaderRow::Column(FName("SequenceRenderedFrames"))
-									.HAlignCell(HAlign_Center)
-									.VAlignCell(VAlign_Center)
-									.HAlignHeader(HAlign_Center)
-									.HeaderContentPadding(FMargin(10.0f))
-									.FixedWidth(120.0f)
-									[
-										SNew(STextBlock)
-										.Text(LOCTEXT("SequenceRenderedFramesColumn", "Rendered Frames"))
-									]
-									+ SHeaderRow::Column(FName("SequenceOutputDir"))
-									.HAlignCell(HAlign_Center)
-									.VAlignCell(VAlign_Center)
-									.HAlignHeader(HAlign_Center)
-									.HeaderContentPadding(FMargin(10.0f))
-									[
-										SNew(STextBlock)
-										.Text(LOCTEXT("SequenceOutputDirColumn", "Output Directory"))
-									]
+									// + SHeaderRow::Column(FName("SequenceRenderedFrames"))
+									// .HAlignCell(HAlign_Center)
+									// .VAlignCell(VAlign_Center)
+									// .HAlignHeader(HAlign_Center)
+									// .HeaderContentPadding(FMargin(10.0f))
+									// .FixedWidth(120.0f)
+									// [
+									// 	SNew(STextBlock)
+									// 	.Text(LOCTEXT("SequenceRenderedFramesColumn", "Rendered Frames"))
+									// ]
+									// + SHeaderRow::Column(FName("SequenceOutputDir"))
+									// .HAlignCell(HAlign_Center)
+									// .VAlignCell(VAlign_Center)
+									// .HAlignHeader(HAlign_Center)
+									// .HeaderContentPadding(FMargin(10.0f))
+									// [
+									// 	SNew(STextBlock)
+									// 	.Text(LOCTEXT("SequenceOutputDirColumn", "Output Directory"))
+									// ]
 									+ SHeaderRow::Column(FName("Note"))
 									.HAlignCell(HAlign_Center)
 									.VAlignCell(VAlign_Center)
@@ -302,14 +333,14 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 
 FText SGamedevHelperRenderingManagerUI::GetConsoleBoxText() const
 {
-	if (!RenderingManagerSettings->IsValid())
+	if (!RenderingSettings->IsValid())
 	{
-		return FText::FromString(RenderingManagerSettings->GetErrorText());
+		return FText::FromString(RenderingSettings->GetErrorMsg());
 	}
 
 	if (!RenderingManagerQueueSettings->IsValid())
 	{
-		return FText::FromString(RenderingManagerQueueSettings->GetErrorText());
+		return FText::FromString(RenderingManagerQueueSettings->GetErrorMsg());
 	}
 	
 	return FText::FromString(TEXT(""));
@@ -317,7 +348,7 @@ FText SGamedevHelperRenderingManagerUI::GetConsoleBoxText() const
 
 EVisibility SGamedevHelperRenderingManagerUI::GetConsoleBoxVisibility() const
 {
-	return RenderingManagerSettings->IsValid() && RenderingManagerQueueSettings->IsValid() ? EVisibility::Hidden : EVisibility::Visible;
+	return RenderingSettings->IsValid() && RenderingManagerQueueSettings->IsValid() ? EVisibility::Hidden : EVisibility::Visible;
 }
 
 TSharedRef<ITableRow> SGamedevHelperRenderingManagerUI::OnGenerateRow(TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const
@@ -327,145 +358,10 @@ TSharedRef<ITableRow> SGamedevHelperRenderingManagerUI::OnGenerateRow(TWeakObjec
 
 void SGamedevHelperRenderingManagerUI::ListUpdateData()
 {
-	bCanStartRender = true;
-
-	if (RenderingManagerQueueSettings->Queue.Num() == 0)
-	{
-		bCanStartRender = false;
-		return;
-	}
-	
 	Queue.Reset();
-	Queue.Reserve(RenderingManagerQueueSettings->Queue.Num());
-
-	FScopedSlowTask SlowTaskQueue{
-	    static_cast<float>(RenderingManagerQueueSettings->Queue.Num()),
-	    FText::FromString(GamedevHelperStandardText::PreparingQueue)
-    };
-    SlowTaskQueue.MakeDialog();
-
-	for (FGamedevHelperRenderingManagerQueueItemData& QueueItemData : RenderingManagerQueueSettings->Queue)
-	{
-		if (!QueueItemData.QueueAsset.IsValid())
-		{
-			continue;
-		}
-
-		
-		SlowTaskQueue.EnterProgressFrame(1.0f, FText::FromString(FString::Printf(TEXT("Preparing %s"), *QueueItemData.QueueAsset.GetAssetName())));
-		if (SlowTaskQueue.ShouldCancel())
-		{
-			break;
-		}
-
-		const UMoviePipelineQueue* MoviePipelineQueue = Cast<UMoviePipelineQueue>(QueueItemData.QueueAsset.TryLoad());
-		if (!MoviePipelineQueue) continue;
-
-		FScopedSlowTask SlowTaskJobs{
-			static_cast<float>(MoviePipelineQueue->GetJobs().Num()),
-			FText::FromString(GamedevHelperStandardText::PreparingQueueJobs)
-		};
-		SlowTaskJobs.MakeDialog();
-
-		const TArray<UMoviePipelineExecutorJob*> Jobs = MoviePipelineQueue->GetJobs();
-
-		Queue.Reserve(Queue.Num() + Jobs.Num());
-
-		for (const auto& Job : Jobs)
-		{
-			SlowTaskJobs.EnterProgressFrame(1.0f);
-
-			if (SlowTaskJobs.ShouldCancel())
-			{
-				break;
-			}
-			
-			UGamedevHelperRenderingManagerQueueItem* QueueItem = NewObject<UGamedevHelperRenderingManagerQueueItem>();
-			QueueItem->Status = EGamedevHelperRendererStatus::OK;
-			QueueItem->QueueName = MoviePipelineQueue->GetName();
-			QueueItem->SequenceOutputDir = RenderingManagerSettings->OutputDir.Path; // todo:ashe23 change later
-			
-			if (!Job)
-			{
-				QueueItem->Note = GamedevHelperStandardText::JobInvalid;
-				QueueItem->Status = EGamedevHelperRendererStatus::Error;
-				Queue.Add(QueueItem);
-				bCanStartRender = false;
-				continue;
-			}
-
-			if (!Job->Sequence.IsValid())
-			{
-				QueueItem->Note = GamedevHelperStandardText::JobMissingLevelSequence;
-				QueueItem->Status = EGamedevHelperRendererStatus::Error;
-				Queue.Add(QueueItem);
-				bCanStartRender = false;
-				continue;
-			}
-
-			if (!Job->Map.IsValid())
-			{
-				QueueItem->Note = GamedevHelperStandardText::JobMissingMap;
-				QueueItem->Status = EGamedevHelperRendererStatus::Error;
-				Queue.Add(QueueItem);
-				bCanStartRender = false;
-				continue;
-			}
-
-			const UMoviePipelineMasterConfig* MasterConfig = Job->GetConfiguration();
-			if (!MasterConfig)
-			{
-				QueueItem->Note = GamedevHelperStandardText::JobInvalidConfigs;
-				QueueItem->Status = EGamedevHelperRendererStatus::Error;
-				Queue.Add(QueueItem);
-				bCanStartRender = false;
-				continue;
-			}
-
-			const ULevelSequence* LevelSequence = Cast<ULevelSequence>(Job->Sequence.TryLoad());
-			if (!LevelSequence)
-			{
-				QueueItem->Note = GamedevHelperStandardText::JobCantLoadLevelSequence;
-				QueueItem->Status = EGamedevHelperRendererStatus::Error;
-				Queue.Add(QueueItem);
-				bCanStartRender = false;
-				continue;
-			}
-
-			UMovieScene* MovieScene = LevelSequence->MovieScene;
-			const FFrameRate DisplayRate = MovieScene->GetDisplayRate();
-			const int32 StartFrame = ConvertFrameTime(
-				UE::MovieScene::DiscreteInclusiveLower(MovieScene->GetPlaybackRange()),
-				MovieScene->GetTickResolution(),
-				DisplayRate
-			).FloorToFrame().Value;
-			const int32 EndFrame = ConvertFrameTime(
-				UE::MovieScene::DiscreteExclusiveUpper(MovieScene->GetPlaybackRange()),
-				MovieScene->GetTickResolution(),
-				DisplayRate
-			).FloorToFrame().Value;
-
-			const int32 ShotDurationInFrames = EndFrame - StartFrame; 
-			const double ShotDurationInSeconds = ShotDurationInFrames / RenderingManagerSettings->Framerate.AsDecimal();
-
-			MovieScene->SetDisplayRate(RenderingManagerSettings->Framerate);
-			MovieScene->PostEditChange();
-
-			QueueItem->SequenceName = LevelSequence->GetName();
-			QueueItem->SequenceDuration = FString::Printf(TEXT("%d frames (%.2f seconds)"), ShotDurationInFrames, ShotDurationInSeconds);
-			QueueItem->SequenceDurationInFrames = ShotDurationInFrames;
-			QueueItem->SequenceStartFrame = StartFrame;
-			QueueItem->SequenceRenderedFrames = 0; // todo:ashe23
-
-			if (Job->JobName.IsEmpty())
-			{
-				QueueItem->Note = GamedevHelperStandardText::JobNameNotSpecified;
-				QueueItem->Status = EGamedevHelperRendererStatus::Warning;
-			}
-			
-			Queue.Add(QueueItem);
-		}
-	}
+	Queue.Reserve(RenderingManagerQueueSettings->GetQueueItems().Num());
+	
+	Queue = RenderingManagerQueueSettings->GetQueueItems();
 }
 
 void SGamedevHelperRenderingManagerUI::ListRefresh() const
@@ -483,6 +379,8 @@ FReply SGamedevHelperRenderingManagerUI::OnBtnRefreshClicked()
 		return FReply::Handled();
 	}
 
+	RenderingManagerQueueSettings->Validate();
+	
 	ListUpdateData();
 	ListRefresh();
 
@@ -491,18 +389,93 @@ FReply SGamedevHelperRenderingManagerUI::OnBtnRefreshClicked()
 
 FReply SGamedevHelperRenderingManagerUI::OnBtnRenderClicked()
 {
-	// todo:ashe23 rendering queue
+	if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
+	{
+		return FReply::Handled();
+	}
+
+	GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue()->CopyFrom(RenderingManagerQueueSettings->GetCustomPipeline());
+	const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
+	Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
+	{
+		if (!ExecutorBase) return;
+
+		ListUpdateData();
+		ListRefresh();
+
+		if (!bSuccess)
+		{
+			GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(GamedevHelperStandardText::RenderFail, 3.0f);
+			return;
+		}
+
+		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(GamedevHelperStandardText::RenderSuccess, EGamedevHelperModalStatus::Success, 3.0f);
+
+		ExportToJson();
+
+		const FString JsonFile = RenderingSettings->OutputDirectory.Path + TEXT("/ffmpeg_commands.json");
+		const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFile);
+		IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd);
+	});
+	
+	return FReply::Handled();
+}
+
+FReply SGamedevHelperRenderingManagerUI::OnBtnOpenOutputDirClicked()
+{
+	if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
+	{
+		return FReply::Handled();
+	}
+
+	if (FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path))
+	{
+		FPlatformProcess::ExploreFolder(*RenderingSettings->OutputDirectory.Path);
+	}
+	
 	return FReply::Handled();
 }
 
 bool SGamedevHelperRenderingManagerUI::IsBtnRefreshEnabled() const
 {
-	return RenderingManagerSettings->IsValid() && RenderingManagerQueueSettings->IsValid();
+	return RenderingSettings->IsValid() && RenderingManagerQueueSettings->IsValid();
 }
 
 bool SGamedevHelperRenderingManagerUI::IsBtnRenderEnabled() const
 {
-	return bCanStartRender;
+	return RenderingSettings->IsValid() && RenderingManagerQueueSettings->IsValid();
+}
+
+bool SGamedevHelperRenderingManagerUI::IsBtnOpenOutputDirEnabled() const
+{
+	return FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path);
+}
+
+void SGamedevHelperRenderingManagerUI::ExportToJson() const
+{
+	if (RenderingManagerQueueSettings->GetFFmpegCommands().Num() == 0)
+	{
+		return;
+	}
+
+	const FString JsonFilePath = RenderingSettings->OutputDirectory.Path + TEXT("/ffmpeg_commands.json");
+	const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+	for (const auto& Command : RenderingManagerQueueSettings->GetFFmpegCommands())
+	{
+		const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
+		RootObject->SetStringField(PipelineFieldName, Command.Command);
+	}
+
+	FString JsonStr;
+	const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
+	FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+
+	if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
+		UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
+		return;
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

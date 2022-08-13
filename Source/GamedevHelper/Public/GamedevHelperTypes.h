@@ -138,12 +138,74 @@ struct FGamedevHelperAssetNameFormat
 };
 
 USTRUCT(BlueprintType)
-struct FGamedevHelperRenderingManagerQueueItemData
+struct FGamedevHelperAudioTrack
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|AudioTrack", meta = (ToolTip = "Audio track name"))
+	FString Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|AudioTrack", meta = (ToolTip = "Audio track path. Supported formats is .mp3 and .wav"))
+	FFilePath Path;
+
+	void Validate()
+	{
+		if (Name.IsEmpty())
+		{
+			ErrorMsg = GamedevHelperStandardText::AudioTrackNameIsEmpty;
+			return;
+		}
+
+		if (Path.FilePath.IsEmpty())
+		{
+			ErrorMsg = GamedevHelperStandardText::AudioTrackPathNotSpecified;
+			return;
+		}
+
+		if (!FPaths::FileExists(Path.FilePath))
+		{
+			ErrorMsg = GamedevHelperStandardText::AudioTrackNotExist;
+			return;
+		}
+
+		const FString Extension = FPaths::GetExtension(Path.FilePath, false).ToLower();
+		if (!Extension.Equals("mp3") && !Extension.Equals("wav"))
+		{
+			ErrorMsg = GamedevHelperStandardText::AudioTrackInvalidExtension;
+			return;
+		}
+
+		ErrorMsg.Reset();
+	}
+
+	bool IsValid() const
+	{
+		return ErrorMsg.IsEmpty();
+	}
+
+	FString GetErrorMsg() const
+	{
+		return ErrorMsg;
+	}
+
+private:
+	FString ErrorMsg;
+};
+
+USTRUCT()
+struct FGamedevHelperFFmpegCommand
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|RenderingManager", meta = (AllowedClasses="MoviePipelineQueue"))
-	FSoftObjectPath QueueAsset;
+	FString QueueName;
+	FString SequenceName;
+	FString AudioTrack;
+	FString Command;
+	FString CommandTitle;
 
-	// todo:ashe23 audio parameters will be here
+	bool IsValid() const
+	{
+		return !QueueName.IsEmpty() && !SequenceName.IsEmpty() && !Command.IsEmpty();
+	}
+	
 };

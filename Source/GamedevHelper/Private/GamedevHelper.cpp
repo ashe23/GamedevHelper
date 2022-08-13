@@ -136,9 +136,9 @@ void FGamedevHelper::RegisterProjectSettings() const
 		                                 GetMutableDefault<UGamedevHelperWorldOutlinerSettings>()
 		);
 		SettingsModule->RegisterSettings("Project", "GamedevHelper", "RenderingSettings",
-										 FText::FromString("Rendering Settings"),
-										 FText::FromString("FFmpeg rendering settings"),
-										 GetMutableDefault<UGamedevHelperRenderingSettings>()
+		                                 FText::FromString("Rendering Settings"),
+		                                 FText::FromString("FFmpeg rendering settings"),
+		                                 GetMutableDefault<UGamedevHelperRenderingSettings>()
 		);
 	}
 }
@@ -162,7 +162,8 @@ void FGamedevHelper::StartupModule()
 		                        })
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabAssetNamingManager", "Asset Naming Manager"))
-	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden)
+	                        .SetIcon(FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Cmd_AssetNamingManagerWindow"));
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 		                        GamedevHelperConstants::TabWorldOutlinerManager,
 		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
@@ -171,7 +172,8 @@ void FGamedevHelper::StartupModule()
 		                        })
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabWorlOutlinerManager", "World Outliner Manager"))
-	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden)
+	                        .SetIcon(FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Cmd_WorldOutlinerManagerWindow"));
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 		                        GamedevHelperConstants::TabRenderingManager,
 		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
@@ -179,8 +181,9 @@ void FGamedevHelper::StartupModule()
 			                        return SNew(SDockTab).TabRole(MajorTab)[SNew(SGamedevHelperRenderingManagerUI)];
 		                        })
 	                        )
-	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabRendererWindow", "Renderer"))
-	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabRenderingManager", "FFmpeg Rendering Manager"))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden)
+	                        .SetIcon(FSlateIcon(FGamedevHelperEditorStyle::GetStyleSetName(), "GamedevHelper.Cmd_RenderingManagerWindow"));
 }
 
 void FGamedevHelper::ShutdownModule()

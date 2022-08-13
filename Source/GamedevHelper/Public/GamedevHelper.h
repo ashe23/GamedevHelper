@@ -9,9 +9,9 @@
 namespace GamedevHelperConstants
 {
 	static const FName ModuleName = TEXT("GamedevHelper");
-	static const FName TabAssetNamingManager{TEXT("TabAssetNamingManager")};
-	static const FName TabWorldOutlinerManager{TEXT("TabWorldOutlinerManager")};
-	static const FName TabRenderingManager{TEXT("TabRendererWindow")};
+	static const FName TabAssetNamingManager = TEXT("TabAssetNamingManager");
+	static const FName TabWorldOutlinerManager =TEXT("TabWorldOutlinerManager");
+	static const FName TabRenderingManager = TEXT("TabRendererWindow");
 	static const FString AlphaLower = TEXT("abcdefghijklmnopqrstuvwxyz");
 	static const FString AlphaUpper = AlphaLower.ToUpper();
 	static const FString AlphaMixed = AlphaLower + AlphaLower.ToUpper();
@@ -52,6 +52,12 @@ namespace GamedevHelperStandardText
 	static const FString JobCantLoadLevelSequence{TEXT("Could not load LevelSequence asset")};
 	static const FString JobNameNotSpecified{TEXT("Job name not specified")};
 	static const FString QueueIsEmpty{TEXT("QueueAssets is empty")};
+	static const FString AudioTrackNameIsEmpty{TEXT("Audio track name is empty")};
+	static const FString AudioTrackPathNotSpecified{TEXT("Audio track path is not specified")};
+	static const FString AudioTrackNotExist{TEXT("Audio track does not exist")};
+	static const FString AudioTrackInvalidExtension{TEXT("Invalid audio track extension, supported audio tracks are .mp3 and .wav")};
+	static const FString RenderSuccess{TEXT("Rendering finished successfully")};
+	static const FString RenderFail{TEXT("Rendering finished with errors")};
 }
 
 class IGamedevHelper : public IModuleInterface

@@ -1,7 +1,6 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/RenderingManager/GamedevHelperRenderingManagerQueueItemUI.h"
-#include "UI/RenderingManager/GamedevHelperRenderingManagerQueueItem.h"
 #include "UI/GamedevHelperEditorStyle.h"
 // Engine Headers
 #include "MoviePipelineQueueSubsystem.h"
@@ -50,28 +49,6 @@ TSharedRef<SWidget> SGamedevHelperRenderingManagerQueueItemUI::GenerateWidgetFor
 	if (InColumnName == TEXT("SequenceDuration"))
 	{
 		return SNew(STextBlock).Text(FText::FromString(QueueItem->SequenceDuration));
-	}
-	
-	if (InColumnName == TEXT("SequenceOutputDir"))
-	{
-		return SNew(SBox)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		.ToolTipText(FText::FromString(QueueItem->SequenceOutputDir))
-		[
-			SNew(SHyperlink)
-			.Text(FText::FromString(QueueItem->SequenceOutputDir))
-			.OnNavigate_Lambda([=]()
-			{
-				// ignore if we currently rendering sequences
-				if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
-				{
-					return;
-				}
-				
-				FPlatformProcess::ExploreFolder(*QueueItem->SequenceOutputDir);
-			})
-		];
 	}
 	
 	if (InColumnName == TEXT("SequenceRenderedFrames"))

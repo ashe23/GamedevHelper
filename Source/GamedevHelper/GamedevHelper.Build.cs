@@ -58,7 +58,9 @@ public class GamedevHelper : ModuleRules
 				"LevelSequence",
 				"MovieScene",
 				"SequencerScripting",
-				"EditorSubsystem"
+				"EditorSubsystem",
+				"PythonScriptPlugin",
+				"Json"
 			}
 		);
 	}

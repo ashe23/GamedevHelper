@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Widgets/SCompoundWidget.h"
 
-class UGamedevHelperRenderingManagerSettings;
+class UGamedevHelperRenderingSettings;
+// class UGamedevHelperRenderingManagerSettings;
 class UGamedevHelperRenderingManagerQueueSettings;
 class UGamedevHelperRenderingManagerQueueItem;
 
@@ -29,17 +31,19 @@ protected:
 
 	FReply OnBtnRefreshClicked();
 	FReply OnBtnRenderClicked();
+	FReply OnBtnOpenOutputDirClicked();
 	bool IsBtnRefreshEnabled() const;
 	bool IsBtnRenderEnabled() const;
+	bool IsBtnOpenOutputDirEnabled() const;
+
+	void ExportToJson() const;
 	
 private:
-	UGamedevHelperRenderingManagerSettings* RenderingManagerSettings = nullptr;
+	UGamedevHelperRenderingSettings* RenderingSettings = nullptr;
 	UGamedevHelperRenderingManagerQueueSettings* RenderingManagerQueueSettings = nullptr;
 	
 	TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>> Queue;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>>> QueueList;
-
-	bool bCanStartRender = false;
 };
 
 

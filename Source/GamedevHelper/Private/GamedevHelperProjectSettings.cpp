@@ -468,10 +468,10 @@ void UGamedevHelperRenderingSettings::PostEditChangeProperty(FPropertyChangedEve
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	if (PropertyChangedEvent.MemberProperty && PropertyChangedEvent.MemberProperty->GetFName().IsEqual("OutputDirectory"))
-	{
+	// if (PropertyChangedEvent.MemberProperty && PropertyChangedEvent.MemberProperty->GetFName().IsEqual("OutputDirectory"))
+	// {
 		CheckSubFoldersIntegrity();
-	}
+	// }
 
 	Validate();
 
