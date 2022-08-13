@@ -368,3 +368,106 @@ FName UGamedevHelperWorldOutlinerSettings::GetFolderNameByActor(const AActor* Ac
 
 	return NAME_None;
 }
+
+UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
+{
+	OutputDirectory.Path = FPaths::ProjectSavedDir();
+}
+
+FString UGamedevHelperRenderingSettings::GetSubDirImage() const
+{
+	return FString::Printf(TEXT("%s/%s/image"), *OutputDirectory.Path, FApp::GetProjectName());
+}
+
+FString UGamedevHelperRenderingSettings::GetSubDirVideo() const
+{
+	return FString::Printf(TEXT("%s/%s/video"), *OutputDirectory.Path, FApp::GetProjectName());
+}
+
+FString UGamedevHelperRenderingSettings::GetSubDirMixed() const
+{
+	return FString::Printf(TEXT("%s/%s/mixed"), *OutputDirectory.Path, FApp::GetProjectName());
+}
+
+bool UGamedevHelperRenderingSettings::IsValid() const
+{
+	return ErrorMsg.IsEmpty();
+}
+
+FString UGamedevHelperRenderingSettings::GetErrorMsg() const
+{
+	return ErrorMsg;
+}
+
+#if WITH_EDITOR
+void UGamedevHelperRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (PropertyChangedEvent.MemberProperty && PropertyChangedEvent.MemberProperty->GetFName().IsEqual("OutputDirectory"))
+	{
+		CheckSubFoldersIntegrity();
+	}
+
+	Validate();
+
+	if (IsValid())
+	{
+		SaveConfig();
+	}
+}
+#endif
+
+
+void UGamedevHelperRenderingSettings::CheckSubFoldersIntegrity() const
+{
+	if (OutputDirectory.Path.IsEmpty()) return;
+
+	// No matter what directory user picked we must have 3 sub directories created in it
+	// - image - Contains only rendered images
+	// - video - Contains only video files without audio
+	// - mixed - Contains video files with audio
+
+	const FString RootDir = FString::Printf(TEXT("%s/%s"), *OutputDirectory.Path, FApp::GetProjectName());
+	TArray<FString> RequiredDirectories;
+	RequiredDirectories.Add(TEXT("image"));
+	RequiredDirectories.Add(TEXT("video"));
+	RequiredDirectories.Add(TEXT("mixed"));
+	
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	for (const auto RequiredDirectory : RequiredDirectories)
+	{
+		const FString CurrentPath = FString::Printf(TEXT("%s/%s"), *RootDir, *RequiredDirectory);
+		if (!FPaths::DirectoryExists(CurrentPath))
+		{
+			if (!PlatformFile.CreateDirectoryTree(*CurrentPath))
+			{
+				UE_LOG(LogGamedevHelper, Error, TEXT("Failed to create %s directory"), *CurrentPath);
+			}
+		}
+	}
+}
+
+void UGamedevHelperRenderingSettings::Validate()
+{
+	if (FFmpegExe.FilePath.IsEmpty())
+	{
+		ErrorMsg = GamedevHelperStandardText::ErrFFmpegExePathNotSpecified;
+		return;
+	}
+
+	if (OutputDirectory.Path.IsEmpty())
+	{
+		ErrorMsg = GamedevHelperStandardText::ErrOutputDirNotSpecified;
+		return;
+	}
+
+	if (!FPaths::DirectoryExists(OutputDirectory.Path))
+	{
+		ErrorMsg = GamedevHelperStandardText::ErrOutputDirDoesNotExist;
+		return;
+	}
+
+	ErrorMsg.Reset();
+}
+

@@ -135,6 +135,11 @@ void FGamedevHelper::RegisterProjectSettings() const
 		                                 FText::FromString("World outliner settings"),
 		                                 GetMutableDefault<UGamedevHelperWorldOutlinerSettings>()
 		);
+		SettingsModule->RegisterSettings("Project", "GamedevHelper", "RenderingSettings",
+										 FText::FromString("Rendering Settings"),
+										 FText::FromString("FFmpeg rendering settings"),
+										 GetMutableDefault<UGamedevHelperRenderingSettings>()
+		);
 	}
 }
 
