@@ -176,7 +176,7 @@ void UGamedevHelperRenderingManagerQueueSettings::Validate()
 			}
 
 			OutputSetting->OutputDirectory.Path = RenderingSettings->GetSubDirImage();
-			OutputSetting->FileNameFormat = FString::Printf(TEXT("{sequence_name}_{output_resolution}_%s_{frame_number_rel}"), *FString::SanitizeFloat(RenderingSettings->Framerate.AsDecimal())); // todo:ashe23 make this public function
+			OutputSetting->FileNameFormat = RenderingSettings->GetFileNameFormat();
 			OutputSetting->OutputResolution = RenderingSettings->GetResolution();
 			OutputSetting->bUseCustomFrameRate = true;
 			OutputSetting->OutputFrameRate = RenderingSettings->Framerate;

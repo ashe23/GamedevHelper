@@ -463,15 +463,17 @@ UClass* UGamedevHelperRenderingSettings::GetMoviePipelineOutputSettingImageClass
 	}
 }
 
+FString UGamedevHelperRenderingSettings::GetFileNameFormat() const
+{
+	return FString::Printf(TEXT("{sequence_name}_{output_resolution}_%.1f_{frame_number_rel}"), Framerate.AsDecimal());
+}
+
 #if WITH_EDITOR
 void UGamedevHelperRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	// if (PropertyChangedEvent.MemberProperty && PropertyChangedEvent.MemberProperty->GetFName().IsEqual("OutputDirectory"))
-	// {
-		CheckSubFoldersIntegrity();
-	// }
+	CheckSubFoldersIntegrity();
 
 	Validate();
 

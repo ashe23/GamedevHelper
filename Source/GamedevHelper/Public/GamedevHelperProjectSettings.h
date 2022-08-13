@@ -68,6 +68,7 @@ public:
 	FString GetImageFormatAsString(const bool IncludeDot = false) const;
 	FIntPoint GetResolution() const;
 	UClass* GetMoviePipelineOutputSettingImageClass() const;
+	FString GetFileNameFormat() const;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
