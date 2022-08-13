@@ -26,6 +26,7 @@
 #include "LevelSequenceActor.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/VolumetricCloudComponent.h"
+#include "MoviePipelineImageSequenceOutput.h"
 // Blueprint classes
 #include "EditorUtilityWidgetBlueprint.h"
 #include "Blutility/Classes/EditorUtilityBlueprint.h"
@@ -372,6 +373,12 @@ FName UGamedevHelperWorldOutlinerSettings::GetFolderNameByActor(const AActor* Ac
 UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
 {
 	OutputDirectory.Path = FPaths::ProjectSavedDir();
+	ResolutionPreset = EGamedevHelperRendererResolutionPreset::Res1080P;
+	Resolution = GamedevHelperConstants::Resolution1080P;
+	CustomResolution = Resolution;
+	VideoFormat = EGamedevHelperRendererVideoFormat::Mp4;
+	ImageFormat = EGamedevHelperRendererImageFormat::Png;
+	Framerate = GamedevHelperConstants::DefaultFrameRate;
 }
 
 FString UGamedevHelperRenderingSettings::GetSubDirImage() const
@@ -397,6 +404,63 @@ bool UGamedevHelperRenderingSettings::IsValid() const
 FString UGamedevHelperRenderingSettings::GetErrorMsg() const
 {
 	return ErrorMsg;
+}
+
+FIntPoint UGamedevHelperRenderingSettings::GetResolution() const
+{
+	return Resolution;
+}
+
+FString UGamedevHelperRenderingSettings::GetResolutionAsString(const FString& Separator) const
+{
+	if (Separator.IsEmpty()) return Separator;
+
+	return FString::Printf(TEXT("%d%s%d"), Resolution.X, *Separator, Resolution.Y);
+}
+
+FString UGamedevHelperRenderingSettings::GetVideoFormatAsString(const bool IncludeDot) const
+{
+	switch (VideoFormat)
+	{
+		case EGamedevHelperRendererVideoFormat::Mp4:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+		case EGamedevHelperRendererVideoFormat::Mkv:
+			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
+		case EGamedevHelperRendererVideoFormat::Avi:
+			return IncludeDot ? TEXT(".avi") : TEXT("avi");
+		default:
+			return TEXT("None");
+	}
+}
+
+FString UGamedevHelperRenderingSettings::GetImageFormatAsString(const bool IncludeDot) const
+{
+	switch (ImageFormat)
+	{
+		case EGamedevHelperRendererImageFormat::Png:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+		case EGamedevHelperRendererImageFormat::Jpg:
+			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
+		case EGamedevHelperRendererImageFormat::Bmp:
+			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
+		default:
+			return TEXT("None");
+	}
+}
+
+UClass* UGamedevHelperRenderingSettings::GetMoviePipelineOutputSettingImageClass() const
+{
+	switch (ImageFormat)
+	{
+		case EGamedevHelperRendererImageFormat::Png:
+			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
+		case EGamedevHelperRendererImageFormat::Jpg:
+			return UMoviePipelineImageSequenceOutput_JPG::StaticClass();
+		case EGamedevHelperRendererImageFormat::Bmp:
+			return UMoviePipelineImageSequenceOutput_BMP::StaticClass();
+		default:
+			return nullptr;
+	}
 }
 
 #if WITH_EDITOR
