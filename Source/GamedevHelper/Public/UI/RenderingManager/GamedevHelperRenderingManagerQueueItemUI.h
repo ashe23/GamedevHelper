@@ -34,6 +34,9 @@ public:
 	
 	UPROPERTY()
 	FString Note;
+
+	UPROPERTY()
+	FSoftObjectPath QueueAsset;
 };
 
 class SGamedevHelperRenderingManagerQueueItemUI : public SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>>

@@ -84,6 +84,6 @@ with unreal.ScopedSlowTask(steps, "Rendering...") as slow_task:
         rendered+=1
 
 elapsed_time = time.time() - start_time
-msg = "Rendered {} of {} shots in {}".format(rendered, steps, display_time(elapsed_time))
+msg = "Completed {} of {} jobs in {}".format(rendered, steps, display_time(elapsed_time))
 unreal.log_warning(msg)
 gdh_subsystem.show_modal(msg, unreal.GamedevHelperModalStatus.SUCCESS, 10.0)

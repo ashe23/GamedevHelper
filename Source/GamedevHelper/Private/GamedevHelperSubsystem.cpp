@@ -2,7 +2,9 @@
 
 #include "GamedevHelperSubsystem.h"
 #include "GamedevHelper.h"
+#include "GamedevHelperProjectSettings.h"
 #include "UI/GamedevHelperEditorStyle.h"
+#include "UI/RenderingManager/GamedevHelperRenderingManagerQueueSettings.h"
 // Engine Headers
 #include "ToolMenus.h"
 #include "ContentBrowserModule.h"
@@ -10,6 +12,11 @@
 #include "IContentBrowserSingleton.h"
 #include "Misc/FeedbackContext.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "IPythonScriptPlugin.h"
+#include "Dom/JsonObject.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -238,6 +245,43 @@ void UGamedevHelperSubsystem::ShowModalWithHyperLink(const FString& Msg, const F
 	Info.Hyperlink = FSimpleDelegate::CreateStatic([](FString InDirectory) { FPlatformProcess::ExploreFolder(*InDirectory); }, Link);
 	Info.HyperlinkText = NSLOCTEXT("GamedevHelperOpenFolder", "GamedevHelperOpenFolder", "Open Folder...");
 	FSlateNotificationManager::Get().AddNotification(Info);
+}
+
+void UGamedevHelperSubsystem::RunFFmpegPythonScript()
+{
+	// exporting ffmpeg commands to json first
+	const auto RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
+	const auto RenderingQueueSettings = GetDefault<UGamedevHelperRenderingManagerQueueSettings>();
+	
+	if (RenderingQueueSettings->GetFFmpegCommands().Num() == 0)
+	{
+		return;
+	}
+
+	const FString JsonFilePath = RenderingSettings->GetJsonFilePath();
+	const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+	for (const auto& Command : RenderingQueueSettings->GetFFmpegCommands())
+	{
+		const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
+		RootObject->SetStringField(PipelineFieldName, Command.Command);
+	}
+
+	FString JsonStr;
+	const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
+	FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+
+	if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
+		UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
+		return;
+	}
+	
+	const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFilePath);
+	if (!IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd))
+	{
+		ShowModalWithOutputLog(TEXT("Python Script Failed to Run"), 5.0f);
+	}
 }
 
 void UGamedevHelperSubsystem::RegisterContextMenuActions() const

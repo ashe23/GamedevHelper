@@ -87,6 +87,7 @@ void UGamedevHelperRenderingManagerQueueSettings::Validate()
 			const auto QueueItem = NewObject<UGamedevHelperRenderingManagerQueueItem>();
 			QueueItem->QueueName = PipelineQueue->GetName();
 			QueueItem->Status = EGamedevHelperRendererStatus::OK;
+			QueueItem->QueueAsset = QueueAsset;
 
 			UMoviePipelineExecutorJob* CustomJob = CustomPipeline->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
 			if (!CustomJob)
@@ -175,7 +176,7 @@ void UGamedevHelperRenderingManagerQueueSettings::Validate()
 				continue;
 			}
 
-			OutputSetting->OutputDirectory.Path = RenderingSettings->GetSubDirImage();
+			OutputSetting->OutputDirectory.Path = RenderingSettings->GetSubDirImage() + TEXT("/") + QueueAsset.GetAssetName();
 			OutputSetting->FileNameFormat = RenderingSettings->GetFileNameFormat();
 			OutputSetting->OutputResolution = RenderingSettings->GetResolution();
 			OutputSetting->bUseCustomFrameRate = true;
@@ -215,46 +216,90 @@ void UGamedevHelperRenderingManagerQueueSettings::Validate()
 
 	FFmpegCommands.Reset();
 	FFmpegCommands.Reserve(QueueItems.Num());
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	
 	// if everything is valid, then we generate ffmpeg commands
 	for (const auto& QueueItem : QueueItems)
 	{
 		// {ffmpeg_exe_path} -y -i {input_image_format} -r {framerate} -vf scale={resolution} {output_video_file}
-		// {input_image_format} - {OutputDir}/image/{PipelineName}/{ShotName}.%0{frame_pad}d.{image_format} Example: D:/renders/image/MyPipeline/MyShot_30.0_1920_1080_%04d.png
-		// {framerate} - shot rendered framerate Example: 30
-		// {resolution} - shot rendered resolution Example: 1920:1080
-		// {output_video_file} - {OutputDir}/video/{PipelineName}/{ShotName}.{VideoFormat} Example: D:/renders/video/MyPipeline/Shot_01.mp4
-
+		// {input_image_format} - {OutputDir}/{ProjectName}/image/{QueueName}/{Sequence}.%04d.{image_format} Example: D:/renders/MyProject/image/MyQueue/MySequence_1920_1080_30.0_%04d.png
+		// {output_video_file} - {OutputDir}/{ProjectName}/video/{QueueName}/{Sequence}_{resolution}_{framerate}.{VideoFormat} Example: D:/renders/MyProject/video/MyQueue/MySequence.mp4
+		
 		const FString InputImageFormat = FString::Printf(
-			TEXT("%s/%s_%s_%s_%%04d.%s"),
+			TEXT("%s/%s/%s_%s_%.1f_%%04d.%s"),
 			*RenderingSettings->GetSubDirImage(),
-			// *QueueItem->QueueName,
+			*QueueItem->QueueName,
 			*QueueItem->SequenceName,
 			*RenderingSettings->GetResolutionAsString(TEXT("_")),
-			*FString::SanitizeFloat(RenderingSettings->Framerate.AsDecimal()),
+			RenderingSettings->Framerate.AsDecimal(),
 			*RenderingSettings->GetImageFormatAsString()
 		);
+		
+		if (!FPaths::DirectoryExists(FPaths::GetPath(InputImageFormat)))
+		{
+			PlatformFile.CreateDirectoryTree(*FPaths::GetPath(InputImageFormat));
+		}
 
 		const FString OutputVideoFile = FString::Printf(
-			TEXT("%s/%s.%s"),
+			TEXT("%s/%s/%s.%s"),
 			*RenderingSettings->GetSubDirVideo(),
-			// *QueueItem->QueueName,
+			*QueueItem->QueueName,
 			*QueueItem->SequenceName,
 			*RenderingSettings->GetVideoFormatAsString()
 		);
+		const FString Path = FPaths::GetPath(OutputVideoFile);
+		
+		if (!FPaths::DirectoryExists(FPaths::GetPath(OutputVideoFile)))
+		{
+			PlatformFile.CreateDirectoryTree(*FPaths::GetPath(OutputVideoFile));
+		}
 
-		const FString FinalCommand = FString::Printf(
-			TEXT("%s -y -i %s -r %d -vf scale=%s %s"),
+		const FString ImgToVideoCmd = FString::Printf(
+			TEXT("%s -y -i %s -c:v libx264 -x264opts nal-hrd=cbr:force-cfr=1 -pix_fmt yuv420p -r %.1f -vf scale=%s %s"),
 			*FPaths::ConvertRelativePathToFull(RenderingSettings->FFmpegExe.FilePath),
 			*InputImageFormat,
-			static_cast<int32>(RenderingSettings->Framerate.AsDecimal()),
+			RenderingSettings->Framerate.AsDecimal(),
 			*RenderingSettings->GetResolutionAsString(),
 			*OutputVideoFile
 		);
 
-		FFmpegCommands.Add(FGamedevHelperFFmpegCommand{QueueItem->QueueName, QueueItem->SequenceName, TEXT("NoAudio"), FinalCommand, TEXT("Images to video")});
+		FFmpegCommands.Add(FGamedevHelperFFmpegCommand{QueueItem->QueueName, QueueItem->SequenceName, TEXT("NoAudio"), ImgToVideoCmd, TEXT("Images to video")});
 
-		// todo:ashe23 implement audio tracks
+		const FGamedevHelperAudioTrack* AudioTrack = AudioTracks.Find(QueueItem->QueueAsset);
+		if (AudioTrack)
+		{
+			// {ffmpeg_exe_path} -y -i {input_video_file} -i {input_audio_file} -r {framerate} -map 0 -map 1:a -c:v copy -shortest {output_video_file}
+			// {input_video_file} - {OutputDir}/{ProjectName}/video/{QueueName}/{Sequence}_{resolution}_{framerate}.{VideoFormat}
+			// {output_video_file} - {OutputDir}/{ProjectName}/mixed/{QueueName}/{AudioTrackName}/{Sequence}_{resolution}_{framerate}.{VideoFormat} Example: D:/renders/MyProject/video/MyQueue/English/MySequence.mp4
+
+			const FString InputVideoFile = OutputVideoFile; // in this stage input is our last output
+			
+			const FString OutputMixedFile = FString::Printf(
+				TEXT("%s/%s/%s/%s.%s"),
+				*RenderingSettings->GetSubDirMixed(),
+				*QueueItem->QueueName,
+				*AudioTrack->Name,
+				*QueueItem->SequenceName,
+				*RenderingSettings->GetVideoFormatAsString()
+			);
+			
+			if (!FPaths::DirectoryExists(FPaths::GetPath(OutputMixedFile)))
+			{
+				PlatformFile.CreateDirectoryTree(*FPaths::GetPath(OutputMixedFile));
+			}
+
+			const FString VideoAudioMixCmd = FString::Printf(
+				TEXT("%s -y -i %s -i %s -r %.1f -map 0 -map 1:a -c:v copy -shortest %s"),
+				*FPaths::ConvertRelativePathToFull(RenderingSettings->FFmpegExe.FilePath),
+				*InputVideoFile,
+				*FPaths::ConvertRelativePathToFull(AudioTrack->Path.FilePath),
+				RenderingSettings->Framerate.AsDecimal(),
+				*OutputMixedFile
+			);
+
+			FFmpegCommands.Add(FGamedevHelperFFmpegCommand{QueueItem->QueueName, QueueItem->SequenceName, AudioTrack->Name, VideoAudioMixCmd, TEXT("Video and Audio mixing")});
+		}
 	}
 
 	ErrorMsg.Reset();

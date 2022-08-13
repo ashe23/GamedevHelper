@@ -401,6 +401,11 @@ bool UGamedevHelperRenderingSettings::IsValid() const
 	return ErrorMsg.IsEmpty();
 }
 
+FString UGamedevHelperRenderingSettings::GetSubDirProject() const
+{
+	return FString::Printf(TEXT("%s/%s"), *OutputDirectory.Path, FApp::GetProjectName());
+}
+
 FString UGamedevHelperRenderingSettings::GetErrorMsg() const
 {
 	return ErrorMsg;
@@ -468,10 +473,39 @@ FString UGamedevHelperRenderingSettings::GetFileNameFormat() const
 	return FString::Printf(TEXT("{sequence_name}_{output_resolution}_%.1f_{frame_number_rel}"), Framerate.AsDecimal());
 }
 
+FString UGamedevHelperRenderingSettings::GetJsonFilePath() const
+{
+	return FString::Printf(TEXT("%s/ffmpeg_commands.json"), *GetSubDirProject());
+}
+
 #if WITH_EDITOR
 void UGamedevHelperRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	switch (ResolutionPreset)
+	{
+		case EGamedevHelperRendererResolutionPreset::Res360P:
+			Resolution = GamedevHelperConstants::Resolution360P;
+		break;
+		case EGamedevHelperRendererResolutionPreset::Res480P:
+			Resolution = GamedevHelperConstants::Resolution480P;
+		break;
+		case EGamedevHelperRendererResolutionPreset::Res720P:
+			Resolution = GamedevHelperConstants::Resolution720P;
+		break;
+		case EGamedevHelperRendererResolutionPreset::Res1080P:
+			Resolution = GamedevHelperConstants::Resolution1080P;
+		break;
+		case EGamedevHelperRendererResolutionPreset::Res2160P:
+			Resolution = GamedevHelperConstants::Resolution2160P;
+		break;
+		case EGamedevHelperRendererResolutionPreset::ResCustom:
+			Resolution = CustomResolution;
+		break;
+		default:
+			Resolution = GamedevHelperConstants::Resolution1080P;
+	}
 
 	CheckSubFoldersIntegrity();
 

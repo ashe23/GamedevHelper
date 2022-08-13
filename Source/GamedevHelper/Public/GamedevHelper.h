@@ -56,8 +56,10 @@ namespace GamedevHelperStandardText
 	static const FString AudioTrackPathNotSpecified{TEXT("Audio track path is not specified")};
 	static const FString AudioTrackNotExist{TEXT("Audio track does not exist")};
 	static const FString AudioTrackInvalidExtension{TEXT("Invalid audio track extension, supported audio tracks are .mp3 and .wav")};
-	static const FString RenderSuccess{TEXT("Rendering finished successfully")};
-	static const FString RenderFail{TEXT("Rendering finished with errors")};
+	static const FString RenderSuccess{TEXT("Rendering images finished successfully")};
+	static const FString RenderFail{TEXT("Rendering images finished with errors")};
+	static const FString OutputDirFailedToClean{TEXT("Failed to clean output directory")};
+	static const FString OutputDirSuccessClean{TEXT("Output directory cleaned successfully")};
 }
 
 class IGamedevHelper : public IModuleInterface

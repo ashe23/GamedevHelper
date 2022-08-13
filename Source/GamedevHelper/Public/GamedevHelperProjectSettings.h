@@ -59,6 +59,7 @@ public:
 	UGamedevHelperRenderingSettings();
 
 	bool IsValid() const;
+	FString GetSubDirProject() const;
 	FString GetSubDirImage() const;
 	FString GetSubDirVideo() const;
 	FString GetSubDirMixed() const;
@@ -69,6 +70,7 @@ public:
 	FIntPoint GetResolution() const;
 	UClass* GetMoviePipelineOutputSettingImageClass() const;
 	FString GetFileNameFormat() const;
+	FString GetJsonFilePath() const;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

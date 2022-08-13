@@ -18,11 +18,8 @@
 #include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "Misc/ScopedSlowTask.h"
-#include "IPythonScriptPlugin.h"
-#include "Dom/JsonObject.h"
-#include "Misc/FileHelper.h"
-#include "Serialization/JsonWriter.h"
-#include "Serialization/JsonSerializer.h"
+
+
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -177,7 +174,8 @@ void SGamedevHelperRenderingManagerUI::Construct(const FArguments& InArgs)
 							.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#E53935"))})
 							.ContentPadding(FMargin{5})
 							.ToolTipText(FText::FromString(TEXT("Removes everything in OutputDirectory")))
-							// .OnClicked_Raw(this, &SVirtualGamesRendererUI::OnBtnCleanClicked)
+							.OnClicked_Raw(this, &SGamedevHelperRenderingManagerUI::OnBtnCleanOutputDirClicked)
+							.IsEnabled_Raw(this, &SGamedevHelperRenderingManagerUI::IsBtnCleanOutputDirEnabled)
 							[
 								SNew(STextBlock)
 								.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
@@ -387,9 +385,16 @@ FReply SGamedevHelperRenderingManagerUI::OnBtnRefreshClicked()
 	return FReply::Handled();
 }
 
-FReply SGamedevHelperRenderingManagerUI::OnBtnRenderClicked()
+FReply SGamedevHelperRenderingManagerUI::OnBtnRenderClicked() const
 {
 	if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
+	{
+		return FReply::Handled();
+	}
+
+	RenderingManagerQueueSettings->Validate();
+	
+	if (!RenderingSettings->IsValid() || !RenderingManagerQueueSettings->IsValid())
 	{
 		return FReply::Handled();
 	}
@@ -399,10 +404,7 @@ FReply SGamedevHelperRenderingManagerUI::OnBtnRenderClicked()
 	Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
 	{
 		if (!ExecutorBase) return;
-
-		ListUpdateData();
-		ListRefresh();
-
+		
 		if (!bSuccess)
 		{
 			GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(GamedevHelperStandardText::RenderFail, 3.0f);
@@ -410,18 +412,34 @@ FReply SGamedevHelperRenderingManagerUI::OnBtnRenderClicked()
 		}
 
 		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(GamedevHelperStandardText::RenderSuccess, EGamedevHelperModalStatus::Success, 3.0f);
-
-		ExportToJson();
-
-		const FString JsonFile = RenderingSettings->OutputDirectory.Path + TEXT("/ffmpeg_commands.json");
-		const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFile);
-		IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd);
+		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->RunFFmpegPythonScript();
+	});
+	Executor->OnExecutorErrored().AddLambda([](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
+	{
+		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(FString::Printf(TEXT("Renderer finished with errors: %s"),  *ErrorText.ToString()), 5.0f);
 	});
 	
 	return FReply::Handled();
 }
 
-FReply SGamedevHelperRenderingManagerUI::OnBtnOpenOutputDirClicked()
+FReply SGamedevHelperRenderingManagerUI::OnBtnCleanOutputDirClicked() const
+{
+	if (!GEditor) return FReply::Handled();
+	
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	if (!PlatformFile.DeleteDirectoryRecursively(*RenderingSettings->GetSubDirProject()))
+	{
+		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(GamedevHelperStandardText::OutputDirFailedToClean, 3.0f);
+		return FReply::Handled();
+	}
+
+	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(GamedevHelperStandardText::OutputDirSuccessClean, EGamedevHelperModalStatus::Success, 3.0f);
+	
+	return FReply::Handled();
+}
+
+FReply SGamedevHelperRenderingManagerUI::OnBtnOpenOutputDirClicked() const
 {
 	if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
 	{
@@ -446,36 +464,14 @@ bool SGamedevHelperRenderingManagerUI::IsBtnRenderEnabled() const
 	return RenderingSettings->IsValid() && RenderingManagerQueueSettings->IsValid();
 }
 
-bool SGamedevHelperRenderingManagerUI::IsBtnOpenOutputDirEnabled() const
+bool SGamedevHelperRenderingManagerUI::IsBtnCleanOutputDirEnabled() const
 {
 	return FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path);
 }
 
-void SGamedevHelperRenderingManagerUI::ExportToJson() const
+bool SGamedevHelperRenderingManagerUI::IsBtnOpenOutputDirEnabled() const
 {
-	if (RenderingManagerQueueSettings->GetFFmpegCommands().Num() == 0)
-	{
-		return;
-	}
-
-	const FString JsonFilePath = RenderingSettings->OutputDirectory.Path + TEXT("/ffmpeg_commands.json");
-	const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-	for (const auto& Command : RenderingManagerQueueSettings->GetFFmpegCommands())
-	{
-		const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
-		RootObject->SetStringField(PipelineFieldName, Command.Command);
-	}
-
-	FString JsonStr;
-	const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
-	FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-
-	if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
-	{
-		const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
-		UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
-		return;
-	}
+	return FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path);
 }
 
 #undef LOCTEXT_NAMESPACE

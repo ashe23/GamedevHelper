@@ -30,13 +30,13 @@ protected:
 	void ListRefresh() const;
 
 	FReply OnBtnRefreshClicked();
-	FReply OnBtnRenderClicked();
-	FReply OnBtnOpenOutputDirClicked();
+	FReply OnBtnRenderClicked() const;
+	FReply OnBtnCleanOutputDirClicked() const;
+	FReply OnBtnOpenOutputDirClicked() const;
 	bool IsBtnRefreshEnabled() const;
 	bool IsBtnRenderEnabled() const;
+	bool IsBtnCleanOutputDirEnabled() const;
 	bool IsBtnOpenOutputDirEnabled() const;
-
-	void ExportToJson() const;
 	
 private:
 	UGamedevHelperRenderingSettings* RenderingSettings = nullptr;
