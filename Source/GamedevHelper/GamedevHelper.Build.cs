@@ -60,7 +60,8 @@ public class GamedevHelper : ModuleRules
 				"SequencerScripting",
 				"EditorSubsystem",
 				"PythonScriptPlugin",
-				"Json"
+				"Json",
+				"DeveloperSettings"
 			}
 		);
 	}

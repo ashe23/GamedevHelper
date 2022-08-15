@@ -26,7 +26,6 @@
 #include "LevelSequenceActor.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/VolumetricCloudComponent.h"
-#include "MoviePipelineImageSequenceOutput.h"
 // Blueprint classes
 #include "EditorUtilityWidgetBlueprint.h"
 #include "Blutility/Classes/EditorUtilityBlueprint.h"
@@ -119,7 +118,9 @@
 #include "Curves/CurveVector.h"
 #include "Engine/UserDefinedEnum.h"
 #include "Engine/UserDefinedStruct.h"
-
+// MovieRender
+#include "MoviePipelineImageSequenceOutput.h"
+#include "MoviePipelineAntiAliasingSetting.h"
 
 UGamedevHelperAssetNamingConventionSettings::UGamedevHelperAssetNamingConventionSettings()
 {
@@ -370,204 +371,204 @@ FName UGamedevHelperWorldOutlinerSettings::GetFolderNameByActor(const AActor* Ac
 	return NAME_None;
 }
 
-UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
-{
-	OutputDirectory.Path = FPaths::ProjectSavedDir();
-	ResolutionPreset = EGamedevHelperRendererResolutionPreset::Res1080P;
-	Resolution = GamedevHelperConstants::Resolution1080P;
-	CustomResolution = Resolution;
-	VideoFormat = EGamedevHelperRendererVideoFormat::Mp4;
-	ImageFormat = EGamedevHelperRendererImageFormat::Png;
-	Framerate = GamedevHelperConstants::DefaultFrameRate;
-}
-
-FString UGamedevHelperRenderingSettings::GetSubDirImage() const
-{
-	return FString::Printf(TEXT("%s/%s/image"), *OutputDirectory.Path, FApp::GetProjectName());
-}
-
-FString UGamedevHelperRenderingSettings::GetSubDirVideo() const
-{
-	return FString::Printf(TEXT("%s/%s/video"), *OutputDirectory.Path, FApp::GetProjectName());
-}
-
-FString UGamedevHelperRenderingSettings::GetSubDirMixed() const
-{
-	return FString::Printf(TEXT("%s/%s/mixed"), *OutputDirectory.Path, FApp::GetProjectName());
-}
-
-bool UGamedevHelperRenderingSettings::IsValid() const
-{
-	return ErrorMsg.IsEmpty();
-}
-
-FString UGamedevHelperRenderingSettings::GetSubDirProject() const
-{
-	return FString::Printf(TEXT("%s/%s"), *OutputDirectory.Path, FApp::GetProjectName());
-}
-
-FString UGamedevHelperRenderingSettings::GetErrorMsg() const
-{
-	return ErrorMsg;
-}
-
-FIntPoint UGamedevHelperRenderingSettings::GetResolution() const
-{
-	return Resolution;
-}
-
-FString UGamedevHelperRenderingSettings::GetResolutionAsString(const FString& Separator) const
-{
-	if (Separator.IsEmpty()) return Separator;
-
-	return FString::Printf(TEXT("%d%s%d"), Resolution.X, *Separator, Resolution.Y);
-}
-
-FString UGamedevHelperRenderingSettings::GetVideoFormatAsString(const bool IncludeDot) const
-{
-	switch (VideoFormat)
-	{
-		case EGamedevHelperRendererVideoFormat::Mp4:
-			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
-		case EGamedevHelperRendererVideoFormat::Mkv:
-			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
-		case EGamedevHelperRendererVideoFormat::Avi:
-			return IncludeDot ? TEXT(".avi") : TEXT("avi");
-		default:
-			return TEXT("None");
-	}
-}
-
-FString UGamedevHelperRenderingSettings::GetImageFormatAsString(const bool IncludeDot) const
-{
-	switch (ImageFormat)
-	{
-		case EGamedevHelperRendererImageFormat::Png:
-			return IncludeDot ? TEXT(".png") : TEXT("png");
-		case EGamedevHelperRendererImageFormat::Jpg:
-			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
-		case EGamedevHelperRendererImageFormat::Bmp:
-			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
-		default:
-			return TEXT("None");
-	}
-}
-
-UClass* UGamedevHelperRenderingSettings::GetMoviePipelineOutputSettingImageClass() const
-{
-	switch (ImageFormat)
-	{
-		case EGamedevHelperRendererImageFormat::Png:
-			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
-		case EGamedevHelperRendererImageFormat::Jpg:
-			return UMoviePipelineImageSequenceOutput_JPG::StaticClass();
-		case EGamedevHelperRendererImageFormat::Bmp:
-			return UMoviePipelineImageSequenceOutput_BMP::StaticClass();
-		default:
-			return nullptr;
-	}
-}
-
-FString UGamedevHelperRenderingSettings::GetFileNameFormat() const
-{
-	return FString::Printf(TEXT("{sequence_name}_{output_resolution}_%.1f_{frame_number_rel}"), Framerate.AsDecimal());
-}
-
-FString UGamedevHelperRenderingSettings::GetJsonFilePath() const
-{
-	return FString::Printf(TEXT("%s/ffmpeg_commands.json"), *GetSubDirProject());
-}
-
-#if WITH_EDITOR
-void UGamedevHelperRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	switch (ResolutionPreset)
-	{
-		case EGamedevHelperRendererResolutionPreset::Res360P:
-			Resolution = GamedevHelperConstants::Resolution360P;
-		break;
-		case EGamedevHelperRendererResolutionPreset::Res480P:
-			Resolution = GamedevHelperConstants::Resolution480P;
-		break;
-		case EGamedevHelperRendererResolutionPreset::Res720P:
-			Resolution = GamedevHelperConstants::Resolution720P;
-		break;
-		case EGamedevHelperRendererResolutionPreset::Res1080P:
-			Resolution = GamedevHelperConstants::Resolution1080P;
-		break;
-		case EGamedevHelperRendererResolutionPreset::Res2160P:
-			Resolution = GamedevHelperConstants::Resolution2160P;
-		break;
-		case EGamedevHelperRendererResolutionPreset::ResCustom:
-			Resolution = CustomResolution;
-		break;
-		default:
-			Resolution = GamedevHelperConstants::Resolution1080P;
-	}
-
-	CheckSubFoldersIntegrity();
-
-	Validate();
-
-	if (IsValid())
-	{
-		SaveConfig();
-	}
-}
-#endif
-
-
-void UGamedevHelperRenderingSettings::CheckSubFoldersIntegrity() const
-{
-	if (OutputDirectory.Path.IsEmpty()) return;
-
-	// No matter what directory user picked we must have 3 sub directories created in it
-	// - image - Contains only rendered images
-	// - video - Contains only video files without audio
-	// - mixed - Contains video files with audio
-
-	const FString RootDir = FString::Printf(TEXT("%s/%s"), *OutputDirectory.Path, FApp::GetProjectName());
-	TArray<FString> RequiredDirectories;
-	RequiredDirectories.Add(TEXT("image"));
-	RequiredDirectories.Add(TEXT("video"));
-	RequiredDirectories.Add(TEXT("mixed"));
-	
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	for (const auto RequiredDirectory : RequiredDirectories)
-	{
-		const FString CurrentPath = FString::Printf(TEXT("%s/%s"), *RootDir, *RequiredDirectory);
-		if (!FPaths::DirectoryExists(CurrentPath))
-		{
-			if (!PlatformFile.CreateDirectoryTree(*CurrentPath))
-			{
-				UE_LOG(LogGamedevHelper, Error, TEXT("Failed to create %s directory"), *CurrentPath);
-			}
-		}
-	}
-}
-
-void UGamedevHelperRenderingSettings::Validate()
-{
-	if (FFmpegExe.FilePath.IsEmpty())
-	{
-		ErrorMsg = GamedevHelperStandardText::ErrFFmpegExePathNotSpecified;
-		return;
-	}
-
-	if (OutputDirectory.Path.IsEmpty())
-	{
-		ErrorMsg = GamedevHelperStandardText::ErrOutputDirNotSpecified;
-		return;
-	}
-
-	if (!FPaths::DirectoryExists(OutputDirectory.Path))
-	{
-		ErrorMsg = GamedevHelperStandardText::ErrOutputDirDoesNotExist;
-		return;
-	}
-
-	ErrorMsg.Reset();
-}
+// UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
+// {
+// 	OutputDirectory.Path = FPaths::ProjectSavedDir();
+// 	ResolutionPreset = EGamedevHelperRendererResolutionPreset::Res1080P;
+// 	CurrentResolution = GamedevHelperConstants::Resolution1080P;
+// 	CustomResolution = CurrentResolution;
+// 	VideoFormat = EGamedevHelperRendererVideoFormat::Mp4;
+// 	ImageFormat = EGamedevHelperRendererImageFormat::Png;
+// 	Framerate = GamedevHelperConstants::DefaultFrameRate;
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetSubDirImage() const
+// {
+// 	return FString::Printf(TEXT("%s/%s/image"), *OutputDirectory.Path, FApp::GetProjectName());
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetSubDirVideo() const
+// {
+// 	return FString::Printf(TEXT("%s/%s/video"), *OutputDirectory.Path, FApp::GetProjectName());
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetSubDirMixed() const
+// {
+// 	return FString::Printf(TEXT("%s/%s/mixed"), *OutputDirectory.Path, FApp::GetProjectName());
+// }
+//
+// bool UGamedevHelperRenderingSettings::IsValid() const
+// {
+// 	return ErrorMsg.IsEmpty();
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetSubDirProject() const
+// {
+// 	return FString::Printf(TEXT("%s/%s"), *OutputDirectory.Path, FApp::GetProjectName());
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetErrorMsg() const
+// {
+// 	return ErrorMsg;
+// }
+//
+// FIntPoint UGamedevHelperRenderingSettings::GetResolution() const
+// {
+// 	return CurrentResolution;
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetResolutionAsString(const FString& Separator) const
+// {
+// 	if (Separator.IsEmpty()) return Separator;
+//
+// 	return FString::Printf(TEXT("%d%s%d"), CurrentResolution.X, *Separator, CurrentResolution.Y);
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetVideoFormatAsString(const bool IncludeDot) const
+// {
+// 	switch (VideoFormat)
+// 	{
+// 		case EGamedevHelperRendererVideoFormat::Mp4:
+// 			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+// 		case EGamedevHelperRendererVideoFormat::Mkv:
+// 			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
+// 		case EGamedevHelperRendererVideoFormat::Avi:
+// 			return IncludeDot ? TEXT(".avi") : TEXT("avi");
+// 		default:
+// 			return TEXT("None");
+// 	}
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetImageFormatAsString(const bool IncludeDot) const
+// {
+// 	switch (ImageFormat)
+// 	{
+// 		case EGamedevHelperRendererImageFormat::Png:
+// 			return IncludeDot ? TEXT(".png") : TEXT("png");
+// 		case EGamedevHelperRendererImageFormat::Jpg:
+// 			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
+// 		case EGamedevHelperRendererImageFormat::Bmp:
+// 			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
+// 		default:
+// 			return TEXT("None");
+// 	}
+// }
+//
+// UClass* UGamedevHelperRenderingSettings::GetMoviePipelineOutputSettingImageClass() const
+// {
+// 	switch (ImageFormat)
+// 	{
+// 		case EGamedevHelperRendererImageFormat::Png:
+// 			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
+// 		case EGamedevHelperRendererImageFormat::Jpg:
+// 			return UMoviePipelineImageSequenceOutput_JPG::StaticClass();
+// 		case EGamedevHelperRendererImageFormat::Bmp:
+// 			return UMoviePipelineImageSequenceOutput_BMP::StaticClass();
+// 		default:
+// 			return nullptr;
+// 	}
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetFileNameFormat() const
+// {
+// 	return FString::Printf(TEXT("{sequence_name}_{output_resolution}_%.1f_{frame_number_rel}"), Framerate.AsDecimal());
+// }
+//
+// FString UGamedevHelperRenderingSettings::GetJsonFilePath() const
+// {
+// 	return FString::Printf(TEXT("%s/ffmpeg_commands.json"), *GetSubDirProject());
+// }
+//
+// #if WITH_EDITOR
+// void UGamedevHelperRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+// {
+// 	Super::PostEditChangeProperty(PropertyChangedEvent);
+//
+// 	switch (ResolutionPreset)
+// 	{
+// 		case EGamedevHelperRendererResolutionPreset::Res360P:
+// 			CurrentResolution = GamedevHelperConstants::Resolution360P;
+// 		break;
+// 		case EGamedevHelperRendererResolutionPreset::Res480P:
+// 			CurrentResolution = GamedevHelperConstants::Resolution480P;
+// 		break;
+// 		case EGamedevHelperRendererResolutionPreset::Res720P:
+// 			CurrentResolution = GamedevHelperConstants::Resolution720P;
+// 		break;
+// 		case EGamedevHelperRendererResolutionPreset::Res1080P:
+// 			CurrentResolution = GamedevHelperConstants::Resolution1080P;
+// 		break;
+// 		case EGamedevHelperRendererResolutionPreset::Res2160P:
+// 			CurrentResolution = GamedevHelperConstants::Resolution2160P;
+// 		break;
+// 		case EGamedevHelperRendererResolutionPreset::ResCustom:
+// 			CurrentResolution = CustomResolution;
+// 		break;
+// 		default:
+// 			CurrentResolution = GamedevHelperConstants::Resolution1080P;
+// 	}
+//
+// 	CheckSubFoldersIntegrity();
+//
+// 	Validate();
+//
+// 	if (IsValid())
+// 	{
+// 		SaveConfig();
+// 	}
+// }
+// #endif
+//
+//
+// void UGamedevHelperRenderingSettings::CheckSubFoldersIntegrity() const
+// {
+// 	if (OutputDirectory.Path.IsEmpty()) return;
+//
+// 	// No matter what directory user picked we must have 3 sub directories created in it
+// 	// - image - Contains only rendered images
+// 	// - video - Contains only video files without audio
+// 	// - mixed - Contains video files with audio
+//
+// 	const FString RootDir = FString::Printf(TEXT("%s/%s"), *OutputDirectory.Path, FApp::GetProjectName());
+// 	TArray<FString> RequiredDirectories;
+// 	RequiredDirectories.Add(TEXT("image"));
+// 	RequiredDirectories.Add(TEXT("video"));
+// 	RequiredDirectories.Add(TEXT("mixed"));
+// 	
+// 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+// 	for (const auto RequiredDirectory : RequiredDirectories)
+// 	{
+// 		const FString CurrentPath = FString::Printf(TEXT("%s/%s"), *RootDir, *RequiredDirectory);
+// 		if (!FPaths::DirectoryExists(CurrentPath))
+// 		{
+// 			if (!PlatformFile.CreateDirectoryTree(*CurrentPath))
+// 			{
+// 				UE_LOG(LogGamedevHelper, Error, TEXT("Failed to create %s directory"), *CurrentPath);
+// 			}
+// 		}
+// 	}
+// }
+//
+// void UGamedevHelperRenderingSettings::Validate()
+// {
+// 	if (FFmpegExe.FilePath.IsEmpty())
+// 	{
+// 		ErrorMsg = GamedevHelperStandardText::ErrFFmpegExePathNotSpecified;
+// 		return;
+// 	}
+//
+// 	if (OutputDirectory.Path.IsEmpty())
+// 	{
+// 		ErrorMsg = GamedevHelperStandardText::ErrOutputDirNotSpecified;
+// 		return;
+// 	}
+//
+// 	if (!FPaths::DirectoryExists(OutputDirectory.Path))
+// 	{
+// 		ErrorMsg = GamedevHelperStandardText::ErrOutputDirDoesNotExist;
+// 		return;
+// 	}
+//
+// 	ErrorMsg.Reset();
+// }
 

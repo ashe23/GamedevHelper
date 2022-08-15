@@ -83,7 +83,7 @@ enum class EGamedevHelperRenameStatus : uint8
 };
 
 UENUM(BlueprintType)
-enum class EGamedevHelperRendererVideoFormat : uint8
+enum class EGamedevHelperVideoFormat : uint8
 {
 	Mp4 UMETA(DisplayName = "mp4"),
 	Mkv UMETA(DisplayName = "mkv"),
@@ -91,7 +91,7 @@ enum class EGamedevHelperRendererVideoFormat : uint8
 };
 
 UENUM(BlueprintType)
-enum class EGamedevHelperRendererImageFormat : uint8
+enum class EGamedevHelperImageFormat : uint8
 {
 	Png UMETA(DisplayName = "png"),
 	Jpg UMETA(DisplayName = "jpg"),
@@ -108,7 +108,7 @@ enum class EGamedevHelperRendererStatus : uint8
 };
 
 UENUM(BlueprintType)
-enum class EGamedevHelperRendererResolutionPreset : uint8
+enum class EGamedevHelperResolutionPreset : uint8
 {
 	Res360P UMETA(DisplayName = "360p (480x360)", ToolTip = "360p"),
 	Res480P UMETA(DisplayName = "480p (640x480)", ToolTip = "480p"),
@@ -150,30 +150,30 @@ struct FGamedevHelperAudioTrack
 
 	void Validate()
 	{
-		if (Name.IsEmpty())
-		{
-			ErrorMsg = GamedevHelperStandardText::AudioTrackNameIsEmpty;
-			return;
-		}
-
-		if (Path.FilePath.IsEmpty())
-		{
-			ErrorMsg = GamedevHelperStandardText::AudioTrackPathNotSpecified;
-			return;
-		}
-
-		if (!FPaths::FileExists(Path.FilePath))
-		{
-			ErrorMsg = GamedevHelperStandardText::AudioTrackNotExist;
-			return;
-		}
-
-		const FString Extension = FPaths::GetExtension(Path.FilePath, false).ToLower();
-		if (!Extension.Equals("mp3") && !Extension.Equals("wav"))
-		{
-			ErrorMsg = GamedevHelperStandardText::AudioTrackInvalidExtension;
-			return;
-		}
+		// if (Name.IsEmpty())
+		// {
+		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackNameIsEmpty;
+		// 	return;
+		// }
+		//
+		// if (Path.FilePath.IsEmpty())
+		// {
+		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackPathNotSpecified;
+		// 	return;
+		// }
+		//
+		// if (!FPaths::FileExists(Path.FilePath))
+		// {
+		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackNotExist;
+		// 	return;
+		// }
+		//
+		// const FString Extension = FPaths::GetExtension(Path.FilePath, false).ToLower();
+		// if (!Extension.Equals("mp3") && !Extension.Equals("wav"))
+		// {
+		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackInvalidExtension;
+		// 	return;
+		// }
 
 		ErrorMsg.Reset();
 	}
@@ -196,7 +196,7 @@ USTRUCT()
 struct FGamedevHelperFFmpegCommand
 {
 	GENERATED_BODY()
-	
+
 	FString QueueName;
 	FString SequenceName;
 	FString AudioTrack;
@@ -207,5 +207,19 @@ struct FGamedevHelperFFmpegCommand
 	{
 		return !QueueName.IsEmpty() && !SequenceName.IsEmpty() && !Command.IsEmpty();
 	}
-	
+};
+
+USTRUCT(DisplayName="Render Item")
+struct FGamedevHelperRenderElement
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category="RenderItem", meta=(AllowedClasses="LevelSequence"))
+	FSoftObjectPath LevelSequence;
+
+	UPROPERTY(EditAnywhere, Category="RenderItem")
+	bool bUseEditorMap = true;
+
+	UPROPERTY(EditAnywhere, Category="RenderItem", meta=(AllowedClasses="World", EditCondition="!bUseEditorMap"))
+	FSoftObjectPath Map;
 };

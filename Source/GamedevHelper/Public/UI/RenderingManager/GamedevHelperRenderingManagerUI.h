@@ -42,8 +42,8 @@ private:
 	UGamedevHelperRenderingSettings* RenderingSettings = nullptr;
 	UGamedevHelperRenderingManagerQueueSettings* RenderingManagerQueueSettings = nullptr;
 	
-	TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>> Queue;
-	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>>> QueueList;
+	// TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>> Queue;
+	// TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>>> QueueList;
 };
 
 

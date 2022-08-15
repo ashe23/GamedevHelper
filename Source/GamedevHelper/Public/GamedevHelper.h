@@ -25,42 +25,42 @@ namespace GamedevHelperConstants
 	static const FFrameRate DefaultFrameRate{30, 1};
 }
 
-namespace GamedevHelperStandardText
-{
-	static const FString ConfiguringStaticMeshes{TEXT("Configuring StaticMeshes for vertex animation")};
-	static const FString ConfiguringStaticMeshesSuccess{TEXT("StaticMeshes configured successfully for vertex animation")};
-	static const FString ConfiguringStaticMeshesFail{TEXT("Failed to configure some StaticMeshes")};
-	static const FString ConfiguringTextures{TEXT("Configuring textures for vertex animation")};
-	static const FString ConfiguringTexturesSuccess{TEXT("Textures configured successfully")};
-	static const FString ConfiguringTexturesFail{TEXT("Failed to configure some textures")};
-	static const FString DisablingStaticMeshesCollision{TEXT("Disabling collisions on StaticMeshes")};
-	static const FString DisablingStaticMeshesCollisionSuccess{TEXT("Collisions disabled successfully")};
-	static const FString DisablingStaticMeshesCollisionFail{TEXT("Failed to disable collisions")};
-	static const FString ErrFFmpegExePathNotSpecified{TEXT("Error: FFmpeg exe path not specified")};
-	static const FString ErrFFmpegExePathDoestNotExist{TEXT("Error: FFmpeg exe path does not exist")};
-	static const FString ErrOutputDirNotSpecified{TEXT("Error: Output directory not specified")};
-	static const FString ErrOutputDirDoesNotExist{TEXT("Error: Output directory does not exist")};
-	static const FString ErrFailedToLoadAsset{TEXT("Error: Failed to load asset")};
-	static const FString ErrNoJobsInQueue{TEXT("Error: No jobs in queue")};
-	static const FString ErrInvalidQueue{TEXT("Error: Invalid queue asset")};
-	static const FString PreparingQueueJobs{TEXT("Error: Invalid queue asset")};
-	static const FString PreparingQueue{TEXT("Preparing render queue...")};
-	static const FString JobInvalid{TEXT("Invalid Job Settings")};
-	static const FString JobMissingLevelSequence{TEXT("Missing LevelSequence")};
-	static const FString JobMissingMap{TEXT("Missing Map")};
-	static const FString JobInvalidConfigs{TEXT("Invalid configs")};
-	static const FString JobCantLoadLevelSequence{TEXT("Could not load LevelSequence asset")};
-	static const FString JobNameNotSpecified{TEXT("Job name not specified")};
-	static const FString QueueIsEmpty{TEXT("QueueAssets is empty")};
-	static const FString AudioTrackNameIsEmpty{TEXT("Audio track name is empty")};
-	static const FString AudioTrackPathNotSpecified{TEXT("Audio track path is not specified")};
-	static const FString AudioTrackNotExist{TEXT("Audio track does not exist")};
-	static const FString AudioTrackInvalidExtension{TEXT("Invalid audio track extension, supported audio tracks are .mp3 and .wav")};
-	static const FString RenderSuccess{TEXT("Rendering images finished successfully")};
-	static const FString RenderFail{TEXT("Rendering images finished with errors")};
-	static const FString OutputDirFailedToClean{TEXT("Failed to clean output directory")};
-	static const FString OutputDirSuccessClean{TEXT("Output directory cleaned successfully")};
-}
+// namespace GamedevHelperStandardText
+// {
+// 	static const FString ConfiguringStaticMeshes{TEXT("Configuring StaticMeshes for vertex animation")};
+// 	static const FString ConfiguringStaticMeshesSuccess{TEXT("StaticMeshes configured successfully for vertex animation")};
+// 	static const FString ConfiguringStaticMeshesFail{TEXT("Failed to configure some StaticMeshes")};
+// 	static const FString ConfiguringTextures{TEXT("Configuring textures for vertex animation")};
+// 	static const FString ConfiguringTexturesSuccess{TEXT("Textures configured successfully")};
+// 	static const FString ConfiguringTexturesFail{TEXT("Failed to configure some textures")};
+// 	static const FString DisablingStaticMeshesCollision{TEXT("Disabling collisions on StaticMeshes")};
+// 	static const FString DisablingStaticMeshesCollisionSuccess{TEXT("Collisions disabled successfully")};
+// 	static const FString DisablingStaticMeshesCollisionFail{TEXT("Failed to disable collisions")};
+// 	static const FString ErrFFmpegExePathNotSpecified{TEXT("Error: FFmpeg exe path not specified")};
+// 	static const FString ErrFFmpegExePathDoestNotExist{TEXT("Error: FFmpeg exe path does not exist")};
+// 	static const FString ErrOutputDirNotSpecified{TEXT("Error: Output directory not specified")};
+// 	static const FString ErrOutputDirDoesNotExist{TEXT("Error: Output directory does not exist")};
+// 	static const FString ErrFailedToLoadAsset{TEXT("Error: Failed to load asset")};
+// 	static const FString ErrNoJobsInQueue{TEXT("Error: No jobs in queue")};
+// 	static const FString ErrInvalidQueue{TEXT("Error: Invalid queue asset")};
+// 	static const FString PreparingQueueJobs{TEXT("Error: Invalid queue asset")};
+// 	static const FString PreparingQueue{TEXT("Preparing render queue...")};
+// 	static const FString JobInvalid{TEXT("Invalid Job Settings")};
+// 	static const FString JobMissingLevelSequence{TEXT("Missing LevelSequence")};
+// 	static const FString JobMissingMap{TEXT("Missing Map")};
+// 	static const FString JobInvalidConfigs{TEXT("Invalid configs")};
+// 	static const FString JobCantLoadLevelSequence{TEXT("Could not load LevelSequence asset")};
+// 	static const FString JobNameNotSpecified{TEXT("Job name not specified")};
+// 	static const FString QueueIsEmpty{TEXT("QueueAssets is empty")};
+// 	static const FString AudioTrackNameIsEmpty{TEXT("Audio track name is empty")};
+// 	static const FString AudioTrackPathNotSpecified{TEXT("Audio track path is not specified")};
+// 	static const FString AudioTrackNotExist{TEXT("Audio track does not exist")};
+// 	static const FString AudioTrackInvalidExtension{TEXT("Invalid audio track extension, supported audio tracks are .mp3 and .wav")};
+// 	static const FString RenderSuccess{TEXT("Rendering images finished successfully")};
+// 	static const FString RenderFail{TEXT("Rendering images finished with errors")};
+// 	static const FString OutputDirFailedToClean{TEXT("Failed to clean output directory")};
+// 	static const FString OutputDirSuccessClean{TEXT("Output directory cleaned successfully")};
+// }
 
 class IGamedevHelper : public IModuleInterface
 {

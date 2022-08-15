@@ -67,7 +67,7 @@ void UGamedevHelperSubsystem::ConfigureStaticMeshesForVertexAnim(TArray<UStaticM
 
 	bool bResult = true;
 
-	GWarn->BeginSlowTask(FText::FromString(GamedevHelperStandardText::ConfiguringStaticMeshes), true);
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Configuring StaticMeshes for vertex animation")), true);
 
 	for (const auto& StaticMesh : StaticMeshes)
 	{
@@ -86,11 +86,11 @@ void UGamedevHelperSubsystem::ConfigureStaticMeshesForVertexAnim(TArray<UStaticM
 
 	if (bResult)
 	{
-		ShowModal(GamedevHelperStandardText::ConfiguringStaticMeshesSuccess, EGamedevHelperModalStatus::Success, 3.0f);
+		ShowModal(TEXT("StaticMeshes configured successfully for vertex animation"), EGamedevHelperModalStatus::Success, 3.0f);
 	}
 	else
 	{
-		ShowModalWithOutputLog(GamedevHelperStandardText::ConfiguringStaticMeshesFail);
+		ShowModalWithOutputLog(TEXT("Failed to configure some StaticMeshes"));
 	}
 }
 
@@ -121,7 +121,7 @@ void UGamedevHelperSubsystem::ConfigureTexturesForVertexAnim(TArray<UTexture2D*>
 
 	bool bResult = true;
 
-	GWarn->BeginSlowTask(FText::FromString(GamedevHelperStandardText::ConfiguringTextures), true);
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Configuring textures for vertex animation")), true);
 
 	for (const auto& Texture : Textures)
 	{
@@ -140,11 +140,11 @@ void UGamedevHelperSubsystem::ConfigureTexturesForVertexAnim(TArray<UTexture2D*>
 
 	if (bResult)
 	{
-		ShowModal(GamedevHelperStandardText::ConfiguringTexturesSuccess, EGamedevHelperModalStatus::Success, 3.0f);
+		ShowModal(TEXT("Textures configured successfully"), EGamedevHelperModalStatus::Success, 3.0f);
 	}
 	else
 	{
-		ShowModalWithOutputLog(GamedevHelperStandardText::ConfiguringTexturesFail);
+		ShowModalWithOutputLog(TEXT("Failed to configure some textures"));
 	}
 }
 
@@ -188,7 +188,7 @@ void UGamedevHelperSubsystem::DisableCollisions(TArray<UStaticMesh*> StaticMeshe
 
 	bool bResult = true;
 
-	GWarn->BeginSlowTask(FText::FromString(GamedevHelperStandardText::DisablingStaticMeshesCollision), true);
+	GWarn->BeginSlowTask(FText::FromString(TEXT("Disabling collisions on StaticMeshes")), true);
 
 	for (const auto& StaticMesh : StaticMeshes)
 	{
@@ -207,11 +207,11 @@ void UGamedevHelperSubsystem::DisableCollisions(TArray<UStaticMesh*> StaticMeshe
 
 	if (bResult)
 	{
-		ShowModal(GamedevHelperStandardText::DisablingStaticMeshesCollisionSuccess, EGamedevHelperModalStatus::Success, 3.0f);
+		ShowModal(TEXT("Collisions disabled successfully"), EGamedevHelperModalStatus::Success, 3.0f);
 	}
 	else
 	{
-		ShowModalWithOutputLog(GamedevHelperStandardText::DisablingStaticMeshesCollisionFail);
+		ShowModalWithOutputLog(TEXT("Failed to disable collisions"));
 	}
 }
 
@@ -247,41 +247,46 @@ void UGamedevHelperSubsystem::ShowModalWithHyperLink(const FString& Msg, const F
 	FSlateNotificationManager::Get().AddNotification(Info);
 }
 
+void UGamedevHelperSubsystem::RenderMovieRenderQueue(const TSoftObjectPtr<UMoviePipelineQueue> QueueAsset)
+{
+	UE_LOG(LogGamedevHelper, Warning, TEXT("AAA"));
+}
+
 void UGamedevHelperSubsystem::RunFFmpegPythonScript()
 {
-	// exporting ffmpeg commands to json first
-	const auto RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
-	const auto RenderingQueueSettings = GetDefault<UGamedevHelperRenderingManagerQueueSettings>();
-	
-	if (RenderingQueueSettings->GetFFmpegCommands().Num() == 0)
-	{
-		return;
-	}
-
-	const FString JsonFilePath = RenderingSettings->GetJsonFilePath();
-	const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-	for (const auto& Command : RenderingQueueSettings->GetFFmpegCommands())
-	{
-		const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
-		RootObject->SetStringField(PipelineFieldName, Command.Command);
-	}
-
-	FString JsonStr;
-	const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
-	FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-
-	if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
-	{
-		const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
-		UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
-		return;
-	}
-	
-	const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFilePath);
-	if (!IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd))
-	{
-		ShowModalWithOutputLog(TEXT("Python Script Failed to Run"), 5.0f);
-	}
+	// // exporting ffmpeg commands to json first
+	// const auto RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
+	// const auto RenderingQueueSettings = GetDefault<UGamedevHelperRenderingManagerQueueSettings>();
+	//
+	// if (RenderingQueueSettings->GetFFmpegCommands().Num() == 0)
+	// {
+	// 	return;
+	// }
+	//
+	// const FString JsonFilePath = RenderingSettings->GetJsonFilePath();
+	// const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+	// for (const auto& Command : RenderingQueueSettings->GetFFmpegCommands())
+	// {
+	// 	const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
+	// 	RootObject->SetStringField(PipelineFieldName, Command.Command);
+	// }
+	//
+	// FString JsonStr;
+	// const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
+	// FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+	//
+	// if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
+	// {
+	// 	const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
+	// 	UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
+	// 	return;
+	// }
+	//
+	// const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFilePath);
+	// if (!IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd))
+	// {
+	// 	ShowModalWithOutputLog(TEXT("Python Script Failed to Run"), 5.0f);
+	// }
 }
 
 void UGamedevHelperSubsystem::RegisterContextMenuActions() const

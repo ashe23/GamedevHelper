@@ -107,6 +107,9 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|NotificationLibrary")
 	static void ShowModalWithHyperLink(const FString& Msg, const FString& Link, const float Duration = 2.0f);
+
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|RendererLibrary")
+	static void RenderMovieRenderQueue(const TSoftObjectPtr<UMoviePipelineQueue> QueueAsset);
 	
 	static void RunFFmpegPythonScript();
 
