@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GamedevHelperTypes.h"
-#include "GamedevHelperRenderingManagerQueueItemUI.generated.h"
+#include "GamedevHelperRenderingManagerListItem.generated.h"
 
 UCLASS(Transient)
-class UGamedevHelperRenderingManagerQueueItem : public UObject
+class UGamedevHelperRenderingManagerListItem : public UObject
 {
 	GENERATED_BODY()
 public:
@@ -37,20 +37,23 @@ public:
 
 	UPROPERTY()
 	FSoftObjectPath QueueAsset;
+
+	UPROPERTY()
+	FSoftObjectPath LevelSequence;
 };
 
-class SGamedevHelperRenderingManagerQueueItemUI : public SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>>
+class SGamedevHelperRenderingManagerListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>>
 {
 public:
-	SLATE_BEGIN_ARGS(SGamedevHelperRenderingManagerQueueItemUI){}
-		SLATE_ARGUMENT(TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>, QueueItem)
+	SLATE_BEGIN_ARGS(SGamedevHelperRenderingManagerListItem){}
+		SLATE_ARGUMENT(TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>, QueueItem)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView);
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& InColumnName) override;
 
 private:
-	TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem> QueueItem;
+	TWeakObjectPtr<UGamedevHelperRenderingManagerListItem> ListItem;
 };
 
 

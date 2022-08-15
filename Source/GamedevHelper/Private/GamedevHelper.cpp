@@ -6,7 +6,7 @@
 #include "UI/GamedevHelperEditorCommands.h"
 #include "UI/AssetNamingManager/GamedevHelperAssetNamingManagerWindow.h"
 #include "UI/WorldOutlinerManager/GamedevHelperWorldOutlinerManagerWindow.h"
-#include "UI/RenderingManager/GamedevHelperRenderingManagerUI.h"
+#include "UI/RenderingManager/GamedevHelperRenderingManagerWindow.h"
 // #include "UI/Renderer/GamedevHelperRendererUI.h"
 // Engine Headers
 #include "LevelEditor.h"
@@ -135,11 +135,6 @@ void FGamedevHelper::RegisterProjectSettings() const
 		                                 FText::FromString("World outliner settings"),
 		                                 GetMutableDefault<UGamedevHelperWorldOutlinerSettings>()
 		);
-		// SettingsModule->RegisterSettings("Project", "GamedevHelper", "RenderingSettings",
-		//                                  FText::FromString("Rendering Settings"),
-		//                                  FText::FromString("FFmpeg rendering settings"),
-		//                                  GetMutableDefault<UGamedevHelperRenderingSettings>()
-		// );
 	}
 }
 
@@ -178,7 +173,7 @@ void FGamedevHelper::StartupModule()
 		                        GamedevHelperConstants::TabRenderingManager,
 		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
 		                        {
-			                        return SNew(SDockTab).TabRole(MajorTab)[SNew(SGamedevHelperRenderingManagerUI)];
+			                        return SNew(SDockTab).TabRole(MajorTab)[SNew(SGamedevHelperRenderingManagerWindow)];
 		                        })
 	                        )
 	                        .SetDisplayName(LOCTEXT("FGamedevHelperTabRenderingManager", "FFmpeg Rendering Manager"))

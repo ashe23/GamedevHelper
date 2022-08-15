@@ -109,7 +109,10 @@ public:
 	static void ShowModalWithHyperLink(const FString& Msg, const FString& Link, const float Duration = 2.0f);
 
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|RendererLibrary")
-	static void RenderMovieRenderQueue(const TSoftObjectPtr<UMoviePipelineQueue> QueueAsset);
+	static void RenderMovieRenderQueue(const TArray<TSoftObjectPtr<UMoviePipelineQueue>> QueueAssets);
+
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|RendererLibrary")
+	static void GetLevelSequencePlaybackInfo(const TSoftObjectPtr<ULevelSequence> LevelSequence, FGamedevHelperSequencePlaybackInfo& PlaybackInfo);
 	
 	static void RunFFmpegPythonScript();
 

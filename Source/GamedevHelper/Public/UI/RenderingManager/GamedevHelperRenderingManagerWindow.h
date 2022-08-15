@@ -9,12 +9,12 @@
 class UGamedevHelperRenderingSettings;
 // class UGamedevHelperRenderingManagerSettings;
 class UGamedevHelperRenderingManagerQueueSettings;
-class UGamedevHelperRenderingManagerQueueItem;
+class UGamedevHelperRenderingManagerListItem;
 
-class SGamedevHelperRenderingManagerUI : public SCompoundWidget
+class SGamedevHelperRenderingManagerWindow : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SGamedevHelperRenderingManagerUI) {}
+	SLATE_BEGIN_ARGS(SGamedevHelperRenderingManagerWindow) {}
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
@@ -22,12 +22,13 @@ protected:
 	FText GetConsoleBoxText() const;
 	EVisibility GetConsoleBoxVisibility() const;
 	TSharedRef<ITableRow> OnGenerateRow(
-		TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem> InItem,
+		TWeakObjectPtr<UGamedevHelperRenderingManagerListItem> InItem,
 		const TSharedRef<STableViewBase>& OwnerTable
 	) const;
 
 	void ListUpdateData();
 	void ListRefresh() const;
+	bool IsMovieRenderWorking() const;
 
 	FReply OnBtnRefreshClicked();
 	FReply OnBtnRenderClicked() const;
@@ -42,8 +43,8 @@ private:
 	UGamedevHelperRenderingSettings* RenderingSettings = nullptr;
 	UGamedevHelperRenderingManagerQueueSettings* RenderingManagerQueueSettings = nullptr;
 	
-	// TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>> Queue;
-	// TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerQueueItem>>> QueueList;
+	TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>> ListItems;
+	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>>> ListView;
 };
 
 

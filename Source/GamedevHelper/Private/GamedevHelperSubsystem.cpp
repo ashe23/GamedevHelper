@@ -11,10 +11,16 @@
 #include "EditorAssetLibrary.h"
 #include "IContentBrowserSingleton.h"
 #include "Misc/FeedbackContext.h"
+#include "MovieSceneTimeHelpers.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "IPythonScriptPlugin.h"
+#include "MoviePipelineDeferredPasses.h"
+#include "MoviePipelineOutputSetting.h"
+#include "MoviePipelinePIEExecutor.h"
+#include "MoviePipelineQueueSubsystem.h"
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
+#include "ProjectSettings/GamedevHelperRenderingSettings.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -247,9 +253,106 @@ void UGamedevHelperSubsystem::ShowModalWithHyperLink(const FString& Msg, const F
 	FSlateNotificationManager::Get().AddNotification(Info);
 }
 
-void UGamedevHelperSubsystem::RenderMovieRenderQueue(const TSoftObjectPtr<UMoviePipelineQueue> QueueAsset)
+void UGamedevHelperSubsystem::RenderMovieRenderQueue(const TArray<TSoftObjectPtr<UMoviePipelineQueue>> QueueAssets)
 {
-	UE_LOG(LogGamedevHelper, Warning, TEXT("AAA"));
+	if (QueueAssets.Num() == 0) return;
+	if (!GEditor) return;
+	
+	const TSoftObjectPtr<UGamedevHelperRenderingSettings> RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
+	if (!RenderingSettings) return;
+
+	// creating custom queue
+	const TSoftObjectPtr<UMoviePipelineQueue> CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	if (!CustomQueue) return;
+
+	CustomQueue->DeleteAllJobs();
+
+	for (const auto& QueueAsset : QueueAssets)
+	{
+		if (!QueueAsset.IsValid()) return;
+
+		for (const auto& OldJob : QueueAsset->GetJobs())
+		{
+			TSoftObjectPtr<UMoviePipelineExecutorJob> Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+
+			Job->Sequence = OldJob->Sequence;
+			Job->Map = OldJob->Map;
+			Job->Author = OldJob->Author;
+			Job->JobName = OldJob->JobName;
+			Job->ShotInfo = OldJob->ShotInfo;
+
+			TSoftObjectPtr<UMoviePipelineMasterConfig> Config = Job->GetConfiguration();
+			Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
+			Config->FindOrAddSettingByClass(RenderingSettings->GetImageClass());
+
+			const TSoftObjectPtr<ULevelSequence> Seq = Cast<ULevelSequence>(Job->Sequence.TryLoad());
+			FGamedevHelperSequencePlaybackInfo PlaybackInfo;
+			GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->GetLevelSequencePlaybackInfo(Seq, PlaybackInfo);
+
+			const TSoftObjectPtr<UMoviePipelineOutputSetting> OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
+
+			const FString OutputDirectoryPath = RenderingSettings->GetImageOutputDirectory(QueueAsset.Get(), Seq);
+
+			if (!FPaths::DirectoryExists(OutputDirectoryPath))
+			{
+				IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+				if (!PlatformFile.CreateDirectoryTree(*OutputDirectoryPath))
+				{
+					return;
+				}
+			}
+
+			OutputSetting->OutputDirectory.Path = OutputDirectoryPath;
+			OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
+			OutputSetting->OutputResolution = RenderingSettings->GetResolution();
+			OutputSetting->bUseCustomFrameRate = true;
+			OutputSetting->OutputFrameRate = RenderingSettings->Framerate;
+			OutputSetting->bOverrideExistingOutput = true;
+			OutputSetting->ZeroPadFrameNumbers = 4;
+			OutputSetting->FrameNumberOffset = 0;
+			OutputSetting->HandleFrameCount = 0;
+			OutputSetting->OutputFrameStep = 1;
+			OutputSetting->bUseCustomPlaybackRange = true;
+			OutputSetting->CustomStartFrame = PlaybackInfo.FrameStart;
+			OutputSetting->CustomEndFrame = PlaybackInfo.FrameEnd;
+		}
+	}
+
+	const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
+	Executor->OnExecutorFinished().AddLambda([](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
+	{
+		if (!bSuccess)
+		{
+			ShowModalWithOutputLog(TEXT("Error occured when rendering images"));
+			return;
+		}
+
+		ShowModal(TEXT("Rendering images finished successfully"), EGamedevHelperModalStatus::Success);
+	});
+}
+
+void UGamedevHelperSubsystem::GetLevelSequencePlaybackInfo(const TSoftObjectPtr<ULevelSequence> LevelSequence, FGamedevHelperSequencePlaybackInfo& PlaybackInfo)
+{
+	if (!LevelSequence) return;
+	if (!LevelSequence->MovieScene) return;
+
+	const auto RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
+	if (!RenderingSettings) return;
+
+	PlaybackInfo.DisplayRate = LevelSequence->MovieScene->GetDisplayRate();
+	PlaybackInfo.FrameStart = ConvertFrameTime(
+		UE::MovieScene::DiscreteInclusiveLower(LevelSequence->MovieScene->GetPlaybackRange()),
+		LevelSequence->MovieScene->GetTickResolution(),
+		LevelSequence->MovieScene->GetDisplayRate()
+	).FloorToFrame().Value;
+	PlaybackInfo.FrameEnd = ConvertFrameTime(
+		UE::MovieScene::DiscreteExclusiveUpper(LevelSequence->MovieScene->GetPlaybackRange()),
+		LevelSequence->MovieScene->GetTickResolution(),
+		LevelSequence->MovieScene->GetDisplayRate()
+	).FloorToFrame().Value;
+
+	PlaybackInfo.DurationInFrames = PlaybackInfo.FrameEnd - PlaybackInfo.FrameStart;
+	PlaybackInfo.DurationInSeconds = PlaybackInfo.DurationInFrames / RenderingSettings->Framerate.AsDecimal();
 }
 
 void UGamedevHelperSubsystem::RunFFmpegPythonScript()

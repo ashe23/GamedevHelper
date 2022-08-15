@@ -138,58 +138,24 @@ struct FGamedevHelperAssetNameFormat
 };
 
 USTRUCT(BlueprintType)
-struct FGamedevHelperAudioTrack
+struct FGamedevHelperSequencePlaybackInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|AudioTrack", meta = (ToolTip = "Audio track name"))
-	FString Name;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|SequencePlaybackInfo")
+	FFrameRate DisplayRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|AudioTrack", meta = (ToolTip = "Audio track path. Supported formats is .mp3 and .wav"))
-	FFilePath Path;
-
-	void Validate()
-	{
-		// if (Name.IsEmpty())
-		// {
-		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackNameIsEmpty;
-		// 	return;
-		// }
-		//
-		// if (Path.FilePath.IsEmpty())
-		// {
-		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackPathNotSpecified;
-		// 	return;
-		// }
-		//
-		// if (!FPaths::FileExists(Path.FilePath))
-		// {
-		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackNotExist;
-		// 	return;
-		// }
-		//
-		// const FString Extension = FPaths::GetExtension(Path.FilePath, false).ToLower();
-		// if (!Extension.Equals("mp3") && !Extension.Equals("wav"))
-		// {
-		// 	ErrorMsg = GamedevHelperStandardText::AudioTrackInvalidExtension;
-		// 	return;
-		// }
-
-		ErrorMsg.Reset();
-	}
-
-	bool IsValid() const
-	{
-		return ErrorMsg.IsEmpty();
-	}
-
-	FString GetErrorMsg() const
-	{
-		return ErrorMsg;
-	}
-
-private:
-	FString ErrorMsg;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|SequencePlaybackInfo")
+	int32 FrameStart;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|SequencePlaybackInfo")
+	int32 FrameEnd;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|SequencePlaybackInfo")
+	int32 DurationInFrames;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GamedevHelper|SequencePlaybackInfo")
+	double DurationInSeconds;
 };
 
 USTRUCT()
@@ -207,19 +173,4 @@ struct FGamedevHelperFFmpegCommand
 	{
 		return !QueueName.IsEmpty() && !SequenceName.IsEmpty() && !Command.IsEmpty();
 	}
-};
-
-USTRUCT(DisplayName="Render Item")
-struct FGamedevHelperRenderElement
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category="RenderItem", meta=(AllowedClasses="LevelSequence"))
-	FSoftObjectPath LevelSequence;
-
-	UPROPERTY(EditAnywhere, Category="RenderItem")
-	bool bUseEditorMap = true;
-
-	UPROPERTY(EditAnywhere, Category="RenderItem", meta=(AllowedClasses="World", EditCondition="!bUseEditorMap"))
-	FSoftObjectPath Map;
 };

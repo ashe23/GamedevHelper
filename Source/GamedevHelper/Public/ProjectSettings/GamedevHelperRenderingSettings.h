@@ -21,6 +21,27 @@ public:
 	virtual FName GetCategoryName() const override;
 	virtual FName GetSectionName() const override;
 	virtual FString GetDesc() override;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FString GetErrorMsg() const;
+	
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	void Validate();
+	
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	bool IsValid() const;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	UClass* GetImageClass() const;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FIntPoint GetResolution() const;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FString GetResolutionFolderName() const;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FString GetImageOutputDirectory(TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue, TSoftObjectPtr<ULevelSequence> LevelSequence) const;
 	
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category="General")
 	FDirectoryPath OutputDirectory;
@@ -141,8 +162,9 @@ public:
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category = "Camera Settings", meta = (EditCondition="bSettingsCameraEnabled"))
 	EMoviePipelineShutterTiming ShutterTiming = EMoviePipelineShutterTiming::FrameCenter;
 
-	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category = "Camera Settings", meta = (EditCondition="bSettingsCameraEnabled",UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1"))
+	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category = "Camera Settings", meta = (EditCondition="bSettingsCameraEnabled",UIMin=0, UIMax=1, ClampMin=0, ClampMax=1))
 	float OverscanPercentage = 0.0f;
 private:
 	FIntPoint CurrentResolution = GamedevHelperConstants::Resolution1080P;
+	FString ErrorMsg;
 };
