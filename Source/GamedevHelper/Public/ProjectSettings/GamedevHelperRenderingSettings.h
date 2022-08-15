@@ -42,7 +42,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
 	FString GetImageOutputDirectory(TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue, TSoftObjectPtr<ULevelSequence> LevelSequence) const;
-	
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FString GetImageExtension(const bool IncludeDot = false) const;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FString GetVideoExtension(const bool IncludeDot = false) const;
+
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category="General")
 	FDirectoryPath OutputDirectory;
 
@@ -165,6 +171,8 @@ public:
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category = "Camera Settings", meta = (EditCondition="bSettingsCameraEnabled",UIMin=0, UIMax=1, ClampMin=0, ClampMax=1))
 	float OverscanPercentage = 0.0f;
 private:
+	bool IsValidJobSetting(TSoftObjectPtr<UMoviePipelineSetting> Setting);
+
 	FIntPoint CurrentResolution = GamedevHelperConstants::Resolution1080P;
 	FString ErrorMsg;
 };

@@ -12,9 +12,8 @@ UCLASS(Config=EditorPerProjectUserSettings, DisplayName="Queue Settings")
 class UGamedevHelperRenderingManagerQueueSettings : public UObject
 {
 	GENERATED_BODY()
+	
 public:
-	UGamedevHelperRenderingManagerQueueSettings();
-
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
@@ -27,7 +26,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="QueueSettings")
 	bool IsValid() const;
-	
+
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category="QueueSettings", meta=(AllowedClasses="MoviePipelineQueue"))
 	TArray<FSoftObjectPath> QueueAssets;
 

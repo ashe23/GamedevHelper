@@ -15,7 +15,10 @@
 #include "Widgets/Input/SHyperlink.h"
 #include "AssetRegistryModule.h"
 #include "GamedevHelperSubsystem.h"
+#include "MoviePipelineAntiAliasingSetting.h"
+#include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineGameOverrideSetting.h"
+#include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "Misc/ScopedSlowTask.h"
@@ -354,31 +357,31 @@ TSharedRef<ITableRow> SGamedevHelperRenderingManagerWindow::OnGenerateRow(TWeakO
 
 void SGamedevHelperRenderingManagerWindow::ListUpdateData()
 {
-	if (!GEditor) return;
-	
 	ListItems.Reset();
 	ListItems.Reserve(RenderingManagerQueueSettings->QueueAssets.Num());
 
 	for (const auto& QueueAsset : RenderingManagerQueueSettings->QueueAssets)
 	{
-		const TObjectPtr<UMoviePipelineQueue> QueueAssetData = Cast<UMoviePipelineQueue>(QueueAsset.TryLoad());
+		const TSoftObjectPtr<UMoviePipelineQueue> QueueAssetData = QueueAsset.TryLoad();
 		if (!QueueAssetData) continue;
-
+		
 		const TArray<UMoviePipelineExecutorJob*> QueueJobs = QueueAssetData->GetJobs();
+		
 		ListItems.Reserve(ListItems.Num() + QueueJobs.Num());
 		
 		for (const auto& Job : QueueJobs)
 		{
-			const TObjectPtr<UGamedevHelperRenderingManagerListItem> NewListItem = NewObject<UGamedevHelperRenderingManagerListItem>();
+			const TSoftObjectPtr<UGamedevHelperRenderingManagerListItem> NewListItem = NewObject<UGamedevHelperRenderingManagerListItem>();
 			NewListItem->Status = EGamedevHelperRendererStatus::OK;
 			NewListItem->QueueName = QueueAsset.GetAssetName();
 			NewListItem->QueueAsset = QueueAsset;
-			
+
+			// errors
 			if (!Job)
 			{
 				NewListItem->Status = EGamedevHelperRendererStatus::Error;
 				NewListItem->Note = TEXT("Contains Invalid Job");
-				ListItems.Add(NewListItem);
+				ListItems.Add(NewListItem.Get());
 				continue;
 			}
 
@@ -387,7 +390,7 @@ void SGamedevHelperRenderingManagerWindow::ListUpdateData()
 			{
 				NewListItem->Status = EGamedevHelperRendererStatus::Error;
 				NewListItem->Note = TEXT("Contains invalid LevelSequence");
-				ListItems.Add(NewListItem);
+				ListItems.Add(NewListItem.Get());
 				continue;
 			}
 
@@ -395,24 +398,37 @@ void SGamedevHelperRenderingManagerWindow::ListUpdateData()
 			{
 				NewListItem->Status = EGamedevHelperRendererStatus::Error;
 				NewListItem->Note = TEXT("Map not specified");
-				ListItems.Add(NewListItem);
+				ListItems.Add(NewListItem.Get());
 				continue;
 			}
 
 			NewListItem->LevelSequence = LevelSequence.Get();
-			NewListItem->SequenceName = LevelSequence->GetName();
-
+			NewListItem->SequenceName = LevelSequence.GetAssetName();
+			
 			FGamedevHelperSequencePlaybackInfo PlaybackInfo;
 			GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->GetLevelSequencePlaybackInfo(LevelSequence, PlaybackInfo);
 			
 			NewListItem->SequenceDuration = FString::Printf(TEXT("%d frames (%.2f seconds)"), PlaybackInfo.DurationInFrames, PlaybackInfo.DurationInSeconds);
 			NewListItem->SequenceDurationInFrames = PlaybackInfo.DurationInFrames;
 			NewListItem->SequenceStartFrame = PlaybackInfo.FrameStart;
-			NewListItem->SequenceRenderedFrames = 0; // todo:ashe23 implement later
 
-			// todo:ashe23 add check if we need re render
+			bool bIsSequential = false;
+			NewListItem->SequenceRenderedFrames = GetRenderedFramesNum(QueueAssetData, LevelSequence,bIsSequential);
 
-			ListItems.Add(NewListItem);
+			// warnings
+			if (!bIsSequential)
+			{
+				NewListItem->Status = EGamedevHelperRendererStatus::Warning;
+				NewListItem->Note = TEXT("Missing some rendered frames");
+			}
+
+			if (Job->JobName.IsEmpty())
+			{
+				NewListItem->Status = EGamedevHelperRendererStatus::Warning;
+				NewListItem->Note.Append(TEXT(" Job name is empty"));
+			}
+
+			ListItems.Add(NewListItem.Get());
 		}
 	}
 }
@@ -432,6 +448,87 @@ bool SGamedevHelperRenderingManagerWindow::IsMovieRenderWorking() const
 	return GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering();
 }
 
+void SGamedevHelperRenderingManagerWindow::OnMovieRenderFinished(UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
+{
+	ListUpdateData();
+	ListRefresh();
+		
+	if (!bSuccess)
+	{
+		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(TEXT("Error occured when rendering images"));
+		return;
+	}
+	
+	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(TEXT("Rendering images finished successfully"), EGamedevHelperModalStatus::Success);
+}
+
+void SGamedevHelperRenderingManagerWindow::OnMovieRenderError(UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
+{
+	ListUpdateData();
+	ListRefresh();
+		
+	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(FString::Printf(TEXT("Renderer finished with errors: %s"),  *ErrorText.ToString()), 5.0f);
+}
+
+int32 SGamedevHelperRenderingManagerWindow::GetRenderedFramesNum(TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue, TSoftObjectPtr<ULevelSequence> LevelSequence, bool& IsSequential) const
+{
+	if (!MoviePipelineQueue || !LevelSequence) return 0;
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	const FString Path = RenderingSettings->GetImageOutputDirectory(MoviePipelineQueue, LevelSequence);
+
+	FGamedevHelperSequencePlaybackInfo PlaybackInfo;
+	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->GetLevelSequencePlaybackInfo(LevelSequence, PlaybackInfo);
+
+	struct DirectoryVisitor : IPlatformFile::FDirectoryVisitor
+	{
+		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
+		{
+			if (bIsDirectory) return false;
+	
+			const FString BaseName = FPaths::GetBaseFilename(FilenameOrDirectory);
+			const FString Extension = FPaths::GetExtension(FilenameOrDirectory);
+			if (BaseName.StartsWith(RequiredBaseName) && Extension.Equals(GetDefault<UGamedevHelperRenderingSettings>()->GetImageExtension()))
+			{
+				TArray<FString> Parts;
+				BaseName.ParseIntoArray(Parts, TEXT("_"));
+				Frames.Add(FCString::Atoi(*Parts.Last()));
+			}
+			
+			return true;
+		}
+	
+		FString RequiredBaseName;
+		TArray<int32> Frames;
+	};
+
+	DirectoryVisitor Visitor;
+	Visitor.RequiredBaseName = LevelSequence.GetAssetName();
+	if (!PlatformFile.IterateDirectory(*Path, Visitor))
+	{
+		return 0;
+	}
+
+	if (Visitor.Frames.Num() == 0)
+	{
+		return 0;
+	}
+
+	Visitor.Frames.Sort();
+	for (int32 i = 0; i < Visitor.Frames.Num(); ++i)
+	{
+		if (Visitor.Frames[i] != i)
+		{
+			IsSequential = false;
+		}
+	}
+
+	IsSequential = true;
+
+	return Visitor.Frames.Num();
+}
+
 FReply SGamedevHelperRenderingManagerWindow::OnBtnRefreshClicked()
 {
 	if (IsMovieRenderWorking()) return FReply::Handled();
@@ -442,55 +539,84 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRefreshClicked()
 	return FReply::Handled();
 }
 
-FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked() const
+FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked()
 {
 	if (IsMovieRenderWorking()) return FReply::Handled();
-	
-	if (GEditor)
+	if (!GEditor) return FReply::Handled();
+
+	const TSoftObjectPtr<UMoviePipelineQueue> Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	if (!Queue) return FReply::Handled();
+
+	Queue->DeleteAllJobs();
+
+	for (const auto& QueueAsset : RenderingManagerQueueSettings->QueueAssets)
 	{
-		TArray<TSoftObjectPtr<UMoviePipelineQueue>> Queue;
-		Queue.Reserve(RenderingManagerQueueSettings->QueueAssets.Num());
-
-		for (const auto& QueueElem : RenderingManagerQueueSettings->QueueAssets)
-		{
-			Queue.Add(QueueElem.TryLoad());
-		}
+		const TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue = QueueAsset.TryLoad();
+		if (!MoviePipelineQueue) continue;
 		
-		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->RenderMovieRenderQueue(Queue);
+		for (const auto& QueueJob : MoviePipelineQueue->GetJobs())
+		{
+			TSoftObjectPtr<UMoviePipelineExecutorJob> Job = Queue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+			if (!Job) return FReply::Handled();
+
+			Job->Sequence = QueueJob->Sequence;
+			Job->Map = QueueJob->Map;
+			Job->JobName = QueueJob->JobName;
+			Job->Author = QueueJob->Author;
+			Job->ShotInfo = QueueJob->ShotInfo;
+
+			const TSoftObjectPtr<ULevelSequence> LevelSequence = Job->Sequence.TryLoad();
+			if (!LevelSequence) continue;
+
+			const TSoftObjectPtr<UMoviePipelineMasterConfig> Config = Job->GetConfiguration();
+			Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
+			Config->FindOrAddSettingByClass(RenderingSettings->GetImageClass());
+				
+			if (RenderingSettings->bSettingsAAEnabled)
+			{
+				const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
+				AntiAliasingSetting->SpatialSampleCount = RenderingSettings->SpatialSampleCount;
+				AntiAliasingSetting->TemporalSampleCount = RenderingSettings->TemporalSampleCount;
+				AntiAliasingSetting->bOverrideAntiAliasing = RenderingSettings->bOverrideAntiAliasing;
+				AntiAliasingSetting->AntiAliasingMethod = RenderingSettings->AntiAliasingMethod;
+				AntiAliasingSetting->RenderWarmUpCount = RenderingSettings->RenderWarmUpCount;
+				AntiAliasingSetting->bUseCameraCutForWarmUp = RenderingSettings->bUseCameraCutForWarmUp;
+				AntiAliasingSetting->EngineWarmUpCount = RenderingSettings->EngineWarmUpCount;
+				AntiAliasingSetting->bRenderWarmUpFrames = RenderingSettings->bRenderWarmUpFrames;
+			}
+
+			const TSoftObjectPtr<UMoviePipelineOutputSetting> OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
+			if (!OutputSetting) continue;
+
+			FGamedevHelperSequencePlaybackInfo PlaybackInfo;
+			GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->GetLevelSequencePlaybackInfo(LevelSequence, PlaybackInfo);
+			
+			OutputSetting->OutputDirectory.Path = RenderingSettings->GetImageOutputDirectory(MoviePipelineQueue, LevelSequence);
+			OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
+			OutputSetting->OutputResolution = RenderingSettings->GetResolution();
+			OutputSetting->bUseCustomFrameRate = true;
+			OutputSetting->OutputFrameRate = RenderingSettings->Framerate;
+			OutputSetting->bOverrideExistingOutput = true;
+			OutputSetting->ZeroPadFrameNumbers = 4;
+			OutputSetting->FrameNumberOffset = 0;
+			OutputSetting->HandleFrameCount = 0;
+			OutputSetting->OutputFrameStep = 1;
+			OutputSetting->bUseCustomPlaybackRange = true;
+			OutputSetting->CustomStartFrame = PlaybackInfo.FrameStart;
+			OutputSetting->CustomEndFrame = PlaybackInfo.FrameEnd;
+		}
 	}
-
 	
-	// RenderingManagerQueueSettings->Validate();
-	//
-	// if (!RenderingSettings->IsValid() || !RenderingManagerQueueSettings->IsValid())
-	// {
-	// 	return FReply::Handled();
-	// }
-
-	// GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue()->CopyFrom(RenderingManagerQueueSettings->GetCustomPipeline());
-	// const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
-	// Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
-	// {
-	// 	if (!ExecutorBase) return;
-	// 	
-	// 	if (!bSuccess)
-	// 	{
-	// 		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(GamedevHelperStandardText::RenderFail, 3.0f);
-	// 		return;
-	// 	}
-	//
-	// 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(GamedevHelperStandardText::RenderSuccess, EGamedevHelperModalStatus::Success, 3.0f);
-	// 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->RunFFmpegPythonScript();
-	// });
-	// Executor->OnExecutorErrored().AddLambda([](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
-	// {
-	// 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(FString::Printf(TEXT("Renderer finished with errors: %s"),  *ErrorText.ToString()), 5.0f);
-	// });
+	GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
+	
+	const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
+	Executor->OnExecutorFinished().AddRaw(this, &SGamedevHelperRenderingManagerWindow::OnMovieRenderFinished);
+	Executor->OnExecutorErrored().AddRaw(this, &SGamedevHelperRenderingManagerWindow::OnMovieRenderError);
 	
 	return FReply::Handled();
 }
 
-FReply SGamedevHelperRenderingManagerWindow::OnBtnCleanOutputDirClicked() const
+FReply SGamedevHelperRenderingManagerWindow::OnBtnCleanOutputDirClicked()
 {
 	if (IsMovieRenderWorking()) return FReply::Handled();
 	if (!GEditor) return FReply::Handled();
@@ -518,6 +644,9 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnCleanOutputDirClicked() const
 	}
 
 	PlatformFile.CreateDirectoryTree(*RenderingSettings->OutputDirectory.Path);
+
+	ListUpdateData();
+	ListRefresh();
 	
 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(TEXT("OutputDirectory cleaned successfully"), EGamedevHelperModalStatus::Success, 3.0f);
 	

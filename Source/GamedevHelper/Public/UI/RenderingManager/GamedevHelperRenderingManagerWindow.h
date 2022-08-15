@@ -6,8 +6,11 @@
 
 #include "Widgets/SCompoundWidget.h"
 
+class ULevelSequence;
+class UMoviePipelineQueue;
+class UMoviePipeline;
+class UMoviePipelineExecutorBase;
 class UGamedevHelperRenderingSettings;
-// class UGamedevHelperRenderingManagerSettings;
 class UGamedevHelperRenderingManagerQueueSettings;
 class UGamedevHelperRenderingManagerListItem;
 
@@ -29,10 +32,13 @@ protected:
 	void ListUpdateData();
 	void ListRefresh() const;
 	bool IsMovieRenderWorking() const;
+	void OnMovieRenderFinished(UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess);
+	void OnMovieRenderError(UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText);
+	int32 GetRenderedFramesNum(TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue, TSoftObjectPtr<ULevelSequence> LevelSequence, bool& IsSequential) const;
 
 	FReply OnBtnRefreshClicked();
-	FReply OnBtnRenderClicked() const;
-	FReply OnBtnCleanOutputDirClicked() const;
+	FReply OnBtnRenderClicked();
+	FReply OnBtnCleanOutputDirClicked();
 	FReply OnBtnOpenOutputDirClicked() const;
 	bool IsBtnRefreshEnabled() const;
 	bool IsBtnRenderEnabled() const;

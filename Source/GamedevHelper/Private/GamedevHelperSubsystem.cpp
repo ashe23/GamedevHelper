@@ -14,6 +14,7 @@
 #include "MovieSceneTimeHelpers.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "IPythonScriptPlugin.h"
+#include "MoviePipelineAntiAliasingSetting.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
@@ -315,6 +316,24 @@ void UGamedevHelperSubsystem::RenderMovieRenderQueue(const TArray<TSoftObjectPtr
 			OutputSetting->bUseCustomPlaybackRange = true;
 			OutputSetting->CustomStartFrame = PlaybackInfo.FrameStart;
 			OutputSetting->CustomEndFrame = PlaybackInfo.FrameEnd;
+
+			if (RenderingSettings->bSettingsAAEnabled)
+			{
+				const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasConfigs = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
+				AntiAliasConfigs->SpatialSampleCount = RenderingSettings->SpatialSampleCount;
+				AntiAliasConfigs->TemporalSampleCount = RenderingSettings->TemporalSampleCount;
+				AntiAliasConfigs->bOverrideAntiAliasing = RenderingSettings->bOverrideAntiAliasing;
+				AntiAliasConfigs->AntiAliasingMethod = RenderingSettings->AntiAliasingMethod;
+				AntiAliasConfigs->RenderWarmUpCount = RenderingSettings->RenderWarmUpCount;
+				AntiAliasConfigs->bUseCameraCutForWarmUp = RenderingSettings->bUseCameraCutForWarmUp;
+				AntiAliasConfigs->EngineWarmUpCount = RenderingSettings->EngineWarmUpCount;
+				AntiAliasConfigs->bRenderWarmUpFrames = RenderingSettings->bRenderWarmUpFrames;
+				AntiAliasConfigs->ValidateState();
+				if (AntiAliasConfigs->GetValidationState() == EMoviePipelineValidationState::Errors)
+				{
+					return;					
+				}
+			}
 		}
 	}
 

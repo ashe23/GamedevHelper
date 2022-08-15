@@ -2,7 +2,10 @@
 
 #include "ProjectSettings/GamedevHelperRenderingSettings.h"
 #include "GamedevHelper.h"
+#include "MoviePipelineAntiAliasingSetting.h"
+#include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineImageSequenceOutput.h"
+#include "MoviePipelineQueueSubsystem.h"
 
 UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
 {
@@ -79,6 +82,34 @@ void UGamedevHelperRenderingSettings::Validate()
 		ErrorMsg = TEXT("Error: Output directory does not exist");
 		return;
 	}
+	
+	const TSoftObjectPtr<UMoviePipelineQueue> BaseQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	if (BaseQueue)
+	{
+		BaseQueue->DeleteAllJobs();
+		const TSoftObjectPtr<UMoviePipelineExecutorJob> BaseJob = BaseQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+		const TSoftObjectPtr<UMoviePipelineMasterConfig> Config = BaseJob->GetConfiguration();
+		Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
+		Config->FindOrAddSettingByClass(GetImageClass());
+		
+		if (bSettingsAAEnabled)
+		{
+			const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
+			AntiAliasingSetting->SpatialSampleCount = SpatialSampleCount;
+			AntiAliasingSetting->TemporalSampleCount = TemporalSampleCount;
+			AntiAliasingSetting->bOverrideAntiAliasing = bOverrideAntiAliasing;
+			AntiAliasingSetting->AntiAliasingMethod = AntiAliasingMethod;
+			AntiAliasingSetting->RenderWarmUpCount = RenderWarmUpCount;
+			AntiAliasingSetting->bUseCameraCutForWarmUp = bUseCameraCutForWarmUp;
+			AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
+			AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
+
+			if (!IsValidJobSetting(AntiAliasingSetting))
+			{
+				return;
+			}
+		}
+	}
 
 	ErrorMsg.Reset();
 }
@@ -144,4 +175,56 @@ FString UGamedevHelperRenderingSettings::GetImageOutputDirectory(TSoftObjectPtr<
 			*LevelSequence.GetAssetName()
 		)
 	);
+}
+
+FString UGamedevHelperRenderingSettings::GetImageExtension(const bool IncludeDot) const
+{
+	switch (ImageFormat)
+	{
+		case EGamedevHelperImageFormat::Png:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+		case EGamedevHelperImageFormat::Jpg:
+			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
+		case EGamedevHelperImageFormat::Bmp:
+			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
+		default:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+	}
+}
+
+FString UGamedevHelperRenderingSettings::GetVideoExtension(const bool IncludeDot) const
+{
+	switch (VideoFormat)
+	{
+		case EGamedevHelperVideoFormat::Mp4:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+		case EGamedevHelperVideoFormat::Mkv:
+			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
+		case EGamedevHelperVideoFormat::Avi:
+			return IncludeDot ? TEXT(".avi") : TEXT("avi");
+		default:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+	}
+}
+
+bool UGamedevHelperRenderingSettings::IsValidJobSetting(TSoftObjectPtr<UMoviePipelineSetting> Setting)
+{
+	if (!Setting) return false;
+	
+	Setting->ValidateState();
+
+	if (Setting->GetValidationState() == EMoviePipelineValidationState::Errors || Setting->GetValidationState() == EMoviePipelineValidationState::Warnings)
+	{
+		const TArray<FText> ValidationResults = Setting->GetValidationResults();
+
+		ErrorMsg.Reset();
+		for (const auto& ValidationResult : ValidationResults)
+		{
+			ErrorMsg.Append(ValidationResult.ToString() + TEXT("\n"));
+		}
+
+		return false;
+	}
+
+	return true;
 }
