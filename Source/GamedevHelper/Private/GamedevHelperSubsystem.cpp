@@ -374,41 +374,41 @@ void UGamedevHelperSubsystem::GetLevelSequencePlaybackInfo(const TSoftObjectPtr<
 	PlaybackInfo.DurationInSeconds = PlaybackInfo.DurationInFrames / RenderingSettings->Framerate.AsDecimal();
 }
 
-void UGamedevHelperSubsystem::RunFFmpegPythonScript()
+void UGamedevHelperSubsystem::RunFFmpegPythonScript(const TArray<FGamedevHelperFFmpegCommand>& FFmpegCommands)
 {
 	// // exporting ffmpeg commands to json first
-	// const auto RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
+	const auto RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
 	// const auto RenderingQueueSettings = GetDefault<UGamedevHelperRenderingManagerQueueSettings>();
-	//
-	// if (RenderingQueueSettings->GetFFmpegCommands().Num() == 0)
-	// {
-	// 	return;
-	// }
-	//
-	// const FString JsonFilePath = RenderingSettings->GetJsonFilePath();
-	// const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-	// for (const auto& Command : RenderingQueueSettings->GetFFmpegCommands())
-	// {
-	// 	const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
-	// 	RootObject->SetStringField(PipelineFieldName, Command.Command);
-	// }
-	//
-	// FString JsonStr;
-	// const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
-	// FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-	//
-	// if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
-	// {
-	// 	const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
-	// 	UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
-	// 	return;
-	// }
-	//
-	// const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFilePath);
-	// if (!IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd))
-	// {
-	// 	ShowModalWithOutputLog(TEXT("Python Script Failed to Run"), 5.0f);
-	// }
+	
+	if (FFmpegCommands.Num() == 0)
+	{
+		return;
+	}
+	
+	const FString JsonFilePath = RenderingSettings->OutputDirectory.Path + TEXT("/ffmpeg_commands.json");
+	const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+	for (const auto& Command : FFmpegCommands)
+	{
+		const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *Command.CommandTitle, *Command.QueueName, *Command.SequenceName, *Command.AudioTrack);
+		RootObject->SetStringField(PipelineFieldName, Command.Command);
+	}
+	
+	FString JsonStr;
+	const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
+	FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+	
+	if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
+		UE_LOG(LogGamedevHelper, Warning, TEXT("%s"), *ErrMsg);
+		return;
+	}
+	
+	const FString PythonCmd = FString::Printf(TEXT("ffmpeg_cli.py -queue %s"), *JsonFilePath);
+	if (!IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd))
+	{
+		ShowModalWithOutputLog(TEXT("Python Script Failed to Run"), 5.0f);
+	}
 }
 
 void UGamedevHelperSubsystem::RegisterContextMenuActions() const

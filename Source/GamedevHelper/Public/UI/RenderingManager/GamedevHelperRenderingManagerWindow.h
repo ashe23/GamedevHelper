@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
+#include "GamedevHelperTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
 class ULevelSequence;
@@ -48,7 +48,9 @@ protected:
 private:
 	UGamedevHelperRenderingSettings* RenderingSettings = nullptr;
 	UGamedevHelperRenderingManagerQueueSettings* RenderingManagerQueueSettings = nullptr;
-	
+	float RenderStartTime = 0.0f;
+
+	TArray<FGamedevHelperFFmpegCommand> FFmpegCommands;
 	TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>> ListItems;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>>> ListView;
 };

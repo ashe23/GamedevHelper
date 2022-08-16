@@ -16,6 +16,8 @@
 #include "AssetRegistryModule.h"
 #include "GamedevHelperSubsystem.h"
 #include "MoviePipelineAntiAliasingSetting.h"
+#include "MoviePipelineCommandLineEncoder.h"
+#include "MoviePipelineCommandLineEncoderSettings.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineGameOverrideSetting.h"
 #include "MoviePipelineOutputSetting.h"
@@ -357,6 +359,8 @@ TSharedRef<ITableRow> SGamedevHelperRenderingManagerWindow::OnGenerateRow(TWeakO
 
 void SGamedevHelperRenderingManagerWindow::ListUpdateData()
 {
+	if (!RenderingSettings || !RenderingManagerQueueSettings) return;
+	
 	ListItems.Reset();
 	ListItems.Reserve(RenderingManagerQueueSettings->QueueAssets.Num());
 
@@ -458,15 +462,19 @@ void SGamedevHelperRenderingManagerWindow::OnMovieRenderFinished(UMoviePipelineE
 		GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(TEXT("Error occured when rendering images"));
 		return;
 	}
-	
-	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(TEXT("Rendering images finished successfully"), EGamedevHelperModalStatus::Success);
+
+	const float ElapsedTime = FPlatformTime::Seconds() - RenderStartTime;
+	const FString Text = FString::Printf(TEXT("Rendering images finished successfully in %.1f seconds"), ElapsedTime);
+	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(Text, EGamedevHelperModalStatus::Success);
+
+	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->RunFFmpegPythonScript(FFmpegCommands);
 }
 
 void SGamedevHelperRenderingManagerWindow::OnMovieRenderError(UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
 {
 	ListUpdateData();
 	ListRefresh();
-		
+
 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(FString::Printf(TEXT("Renderer finished with errors: %s"),  *ErrorText.ToString()), 5.0f);
 }
 
@@ -548,7 +556,8 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked()
 	if (!Queue) return FReply::Handled();
 
 	Queue->DeleteAllJobs();
-
+	FFmpegCommands.Reset();
+	
 	for (const auto& QueueAsset : RenderingManagerQueueSettings->QueueAssets)
 	{
 		const TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue = QueueAsset.TryLoad();
@@ -557,6 +566,8 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked()
 		for (const auto& QueueJob : MoviePipelineQueue->GetJobs())
 		{
 			TSoftObjectPtr<UMoviePipelineExecutorJob> Job = Queue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+			Job->SetConfiguration(RenderingSettings->GetMasterConfig());
+			
 			if (!Job) return FReply::Handled();
 
 			Job->Sequence = QueueJob->Sequence;
@@ -569,22 +580,7 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked()
 			if (!LevelSequence) continue;
 
 			const TSoftObjectPtr<UMoviePipelineMasterConfig> Config = Job->GetConfiguration();
-			Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
-			Config->FindOrAddSettingByClass(RenderingSettings->GetImageClass());
-				
-			if (RenderingSettings->bSettingsAAEnabled)
-			{
-				const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
-				AntiAliasingSetting->SpatialSampleCount = RenderingSettings->SpatialSampleCount;
-				AntiAliasingSetting->TemporalSampleCount = RenderingSettings->TemporalSampleCount;
-				AntiAliasingSetting->bOverrideAntiAliasing = RenderingSettings->bOverrideAntiAliasing;
-				AntiAliasingSetting->AntiAliasingMethod = RenderingSettings->AntiAliasingMethod;
-				AntiAliasingSetting->RenderWarmUpCount = RenderingSettings->RenderWarmUpCount;
-				AntiAliasingSetting->bUseCameraCutForWarmUp = RenderingSettings->bUseCameraCutForWarmUp;
-				AntiAliasingSetting->EngineWarmUpCount = RenderingSettings->EngineWarmUpCount;
-				AntiAliasingSetting->bRenderWarmUpFrames = RenderingSettings->bRenderWarmUpFrames;
-			}
-
+			if (!Config) continue;
 			const TSoftObjectPtr<UMoviePipelineOutputSetting> OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
 			if (!OutputSetting) continue;
 
@@ -604,12 +600,34 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked()
 			OutputSetting->bUseCustomPlaybackRange = true;
 			OutputSetting->CustomStartFrame = PlaybackInfo.FrameStart;
 			OutputSetting->CustomEndFrame = PlaybackInfo.FrameEnd;
+			
+			const FString VideoOutputDirectory = RenderingSettings->GetVideoOutputDirectory(MoviePipelineQueue);
+			
+			if (!FPaths::DirectoryExists(VideoOutputDirectory))
+			{
+				IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+				PlatformFile.CreateDirectoryTree(*VideoOutputDirectory);
+			}
+
+			const FString Cmd = FString::Printf(
+				TEXT("%s -y -i %s/%s_%%04d.%s -vcodec libx264 -crf 10 -pix_fmt yuv420p %s/%s.%s"),
+				*GetDefault<UMoviePipelineCommandLineEncoderSettings>()->ExecutablePath,
+				*RenderingSettings->GetImageOutputDirectory(MoviePipelineQueue, LevelSequence),
+				*LevelSequence.GetAssetName(),
+				*RenderingSettings->GetImageExtension(),
+				*VideoOutputDirectory,
+				*LevelSequence.GetAssetName(),
+				*RenderingSettings->GetVideoExtension()
+			);
+			FFmpegCommands.Add(FGamedevHelperFFmpegCommand{QueueAsset.GetAssetName(), LevelSequence.GetAssetName(), TEXT("NoAudio"), Cmd, TEXT("Encoding videos")});
 		}
 	}
-	
-	GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
+
+	RenderStartTime = FPlatformTime::Seconds();
 	
 	const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
+	if (!Executor) return FReply::Handled();
+	
 	Executor->OnExecutorFinished().AddRaw(this, &SGamedevHelperRenderingManagerWindow::OnMovieRenderFinished);
 	Executor->OnExecutorErrored().AddRaw(this, &SGamedevHelperRenderingManagerWindow::OnMovieRenderError);
 	

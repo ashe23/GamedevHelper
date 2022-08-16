@@ -114,7 +114,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|RendererLibrary")
 	static void GetLevelSequencePlaybackInfo(const TSoftObjectPtr<ULevelSequence> LevelSequence, FGamedevHelperSequencePlaybackInfo& PlaybackInfo);
 	
-	static void RunFFmpegPythonScript();
+	static void RunFFmpegPythonScript(const TArray<FGamedevHelperFFmpegCommand>& FFmpegCommands);
 
 private:
 	void RegisterContextMenuActions() const;

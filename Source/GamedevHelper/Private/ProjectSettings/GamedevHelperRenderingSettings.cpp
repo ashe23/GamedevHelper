@@ -3,9 +3,14 @@
 #include "ProjectSettings/GamedevHelperRenderingSettings.h"
 #include "GamedevHelper.h"
 #include "MoviePipelineAntiAliasingSetting.h"
+#include "MoviePipelineCameraSetting.h"
+#include "MoviePipelineCommandLineEncoder.h"
+#include "MoviePipelineCommandLineEncoderSettings.h"
+#include "MoviePipelineConsoleVariableSetting.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineImageSequenceOutput.h"
 #include "MoviePipelineQueueSubsystem.h"
+#include "MoviePipelineWidgetRenderSetting.h"
 
 UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
 {
@@ -82,36 +87,21 @@ void UGamedevHelperRenderingSettings::Validate()
 		ErrorMsg = TEXT("Error: Output directory does not exist");
 		return;
 	}
-	
-	const TSoftObjectPtr<UMoviePipelineQueue> BaseQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
-	if (BaseQueue)
-	{
-		BaseQueue->DeleteAllJobs();
-		const TSoftObjectPtr<UMoviePipelineExecutorJob> BaseJob = BaseQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-		const TSoftObjectPtr<UMoviePipelineMasterConfig> Config = BaseJob->GetConfiguration();
-		Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
-		Config->FindOrAddSettingByClass(GetImageClass());
-		
-		if (bSettingsAAEnabled)
-		{
-			const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
-			AntiAliasingSetting->SpatialSampleCount = SpatialSampleCount;
-			AntiAliasingSetting->TemporalSampleCount = TemporalSampleCount;
-			AntiAliasingSetting->bOverrideAntiAliasing = bOverrideAntiAliasing;
-			AntiAliasingSetting->AntiAliasingMethod = AntiAliasingMethod;
-			AntiAliasingSetting->RenderWarmUpCount = RenderWarmUpCount;
-			AntiAliasingSetting->bUseCameraCutForWarmUp = bUseCameraCutForWarmUp;
-			AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
-			AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
 
-			if (!IsValidJobSetting(AntiAliasingSetting))
-			{
-				return;
-			}
+	bool bSettingsValid = true;
+	const TSoftObjectPtr<UMoviePipelineMasterConfig> Config = GetMasterConfig();
+	for (const auto& Setting : Config->GetAllSettings())
+	{
+		if (!IsValidateJobSetting(Setting))
+		{
+			bSettingsValid = false;
 		}
 	}
 
-	ErrorMsg.Reset();
+	if (bSettingsValid)
+	{
+		ErrorMsg.Reset();
+	}
 }
 
 bool UGamedevHelperRenderingSettings::IsValid() const
@@ -177,6 +167,22 @@ FString UGamedevHelperRenderingSettings::GetImageOutputDirectory(TSoftObjectPtr<
 	);
 }
 
+FString UGamedevHelperRenderingSettings::GetVideoOutputDirectory(TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue) const
+{
+	if (!MoviePipelineQueue) return TEXT("");
+
+	// {output_directory}/video/{resolution_folder}/{queue_name}/
+
+	return FPaths::ConvertRelativePathToFull(
+		FString::Printf(
+			TEXT("%s/video/%s/%s"),
+			*OutputDirectory.Path,
+			*GetResolutionFolderName(),
+			*MoviePipelineQueue.GetAssetName()
+		)
+	);
+}
+
 FString UGamedevHelperRenderingSettings::GetImageExtension(const bool IncludeDot) const
 {
 	switch (ImageFormat)
@@ -207,7 +213,98 @@ FString UGamedevHelperRenderingSettings::GetVideoExtension(const bool IncludeDot
 	}
 }
 
-bool UGamedevHelperRenderingSettings::IsValidJobSetting(TSoftObjectPtr<UMoviePipelineSetting> Setting)
+UMoviePipelineMasterConfig* UGamedevHelperRenderingSettings::GetMasterConfig()
+{
+	UMoviePipelineMasterConfig* Config = NewObject<UMoviePipelineMasterConfig>();
+	if (!Config) return nullptr;
+	
+	Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
+	Config->FindOrAddSettingByClass(GetImageClass());
+	
+	UMoviePipelineCommandLineEncoderSettings* EncoderSettings = GetMutableDefault<UMoviePipelineCommandLineEncoderSettings>();
+	EncoderSettings->OutputFileExtension = GetVideoExtension();
+	EncoderSettings->PostEditChange();
+	
+	if (bSettingsAAEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
+		if (AntiAliasingSetting)
+		{
+			AntiAliasingSetting->SpatialSampleCount = SpatialSampleCount;
+			AntiAliasingSetting->TemporalSampleCount = TemporalSampleCount;
+			AntiAliasingSetting->bOverrideAntiAliasing = bOverrideAntiAliasing;
+			AntiAliasingSetting->AntiAliasingMethod = AntiAliasingMethod;
+			AntiAliasingSetting->RenderWarmUpCount = RenderWarmUpCount;
+			AntiAliasingSetting->bUseCameraCutForWarmUp = bUseCameraCutForWarmUp;
+			AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
+			AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
+		}
+
+	}
+
+	if (bSettingsConsoleVariablesEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineConsoleVariableSetting> ConsoleVariableSetting = Config->FindOrAddSettingByClass(UMoviePipelineConsoleVariableSetting::StaticClass());
+		if (ConsoleVariableSetting)
+		{
+			ConsoleVariableSetting->ConsoleVariables = ConsoleVariables;
+			ConsoleVariableSetting->StartConsoleCommands = StartConsoleCommands;
+			ConsoleVariableSetting->EndConsoleCommands = EndConsoleCommands;
+		}
+	}
+
+	if (bSettingsGameOverrideEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineGameOverrideSetting> GameOverrideSetting = Config->FindOrAddSettingByClass(UMoviePipelineGameOverrideSetting::StaticClass());
+		if (GameOverrideSetting)
+		{
+			GameOverrideSetting->GameModeOverride = GameModeOverride;
+			GameOverrideSetting->bCinematicQualitySettings = bCinematicQualitySettings;
+			GameOverrideSetting->TextureStreaming = TextureStreaming;
+			GameOverrideSetting->bUseLODZero = bUseLODZero;
+			GameOverrideSetting->bDisableHLODs = bDisableHLODs;
+			GameOverrideSetting->bUseHighQualityShadows = bUseHighQualityShadows;
+			GameOverrideSetting->ShadowDistanceScale = ShadowDistanceScale;
+			GameOverrideSetting->ShadowRadiusThreshold = ShadowRadiusThreshold;
+			GameOverrideSetting->bOverrideViewDistanceScale = bOverrideViewDistanceScale;
+			GameOverrideSetting->ViewDistanceScale = ViewDistanceScale;
+			GameOverrideSetting->bFlushGrassStreaming = bFlushGrassStreaming;
+		}
+	}
+
+	if (bSettingsUIEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineWidgetRenderer> WidgetRenderer = Config->FindOrAddSettingByClass(UMoviePipelineWidgetRenderer::StaticClass());
+		if (WidgetRenderer)
+		{
+			WidgetRenderer->bCompositeOntoFinalImage = bCompositeOntoFinalImage;
+		}
+	}
+
+	if (bSettingsBurnInEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineBurnInSetting> BurnInSetting = Config->FindOrAddSettingByClass(UMoviePipelineBurnInSetting::StaticClass());
+		if (BurnInSetting)
+		{
+			BurnInSetting->BurnInClass = BurnInClass;
+			BurnInSetting->bCompositeOntoFinalImage = bBurnInCompositeOntoFinalImage;
+		}
+	}
+
+	if (bSettingsCameraEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineCameraSetting> CameraSetting = Config->FindOrAddSettingByClass(UMoviePipelineCameraSetting::StaticClass());
+		if (CameraSetting)
+		{
+			CameraSetting->OverscanPercentage = OverscanPercentage;
+			CameraSetting->ShutterTiming = ShutterTiming;
+		}
+	}
+	
+	return Config;
+}
+
+bool UGamedevHelperRenderingSettings::IsValidateJobSetting(TSoftObjectPtr<UMoviePipelineSetting> Setting)
 {
 	if (!Setting) return false;
 	
