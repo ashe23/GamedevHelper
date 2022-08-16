@@ -116,11 +116,10 @@ public:
 	
 	static void RunFFmpegPythonScript(const TArray<FGamedevHelperFFmpegCommand>& FFmpegCommands);
 
-private:
-	void RegisterContextMenuActions() const;
-	
 	template <class ClassType>
 	static void GetSelectedAssets(TArray<ClassType*>& Assets);
+private:
+	void RegisterContextMenuActions() const;
 	
 	static SNotificationItem::ECompletionState GetCompletionStateFromModalStatus(const EGamedevHelperModalStatus ModalStatus);
 };

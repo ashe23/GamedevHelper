@@ -5,8 +5,6 @@
 #include "UI/RenderingManager/GamedevHelperRenderingManagerQueueSettings.h"
 #include "UI/RenderingManager/GamedevHelperRenderingManagerListItem.h"
 #include "UI/GamedevHelperEditorStyle.h"
-// #include "GamedevHelperTypes.h"
-// #include "GamedevHelperProjectSettings.h"
 // Engine Headers
 #include "MoviePipelineQueue.h"
 #include "MoviePipelineQueueSubsystem.h"
@@ -14,9 +12,9 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Input/SHyperlink.h"
 #include "AssetRegistryModule.h"
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
 #include "GamedevHelperSubsystem.h"
-#include "MoviePipelineAntiAliasingSetting.h"
-#include "MoviePipelineCommandLineEncoder.h"
 #include "MoviePipelineCommandLineEncoderSettings.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineGameOverrideSetting.h"
@@ -25,6 +23,7 @@
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/ScopedSlowTask.h"
+#include "UI/GamedevHelperEditorCommands.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
 
@@ -36,8 +35,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 	RenderingSettings->OnSettingChanged().AddLambda([&](const UObject* Object, const FPropertyChangedEvent& PropertyChangedEvent)
 	{
-		ListUpdateData();
-		ListRefresh();
+		UpdateUI();
 	});
 
 	RenderingManagerQueueSettings = GetMutableDefault<UGamedevHelperRenderingManagerQueueSettings>();
@@ -45,8 +43,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 	RenderingManagerQueueSettings->QueueSettingsDelegate.BindLambda([&]()
 	{
-		ListUpdateData();
-		ListRefresh();
+		UpdateUI();
 	});
 
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
@@ -57,12 +54,37 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 		{
 			if (QueueAsset.GetAssetPathString().Equals(AssetData.ObjectPath.ToString()))
 			{
-				ListUpdateData();
-				ListRefresh();
+				UpdateUI();
 				break;
 			}
 		}
 	});
+
+	PluginCommands = MakeShareable(new FUICommandList);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenImagesFolder,
+		FUIAction(
+			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::OpenImagesFolderForListItem)
+		)
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenVideoFolder,
+		FUIAction(
+			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::OpenVideoFolderForListItem)
+		)
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedImages,
+		FUIAction(
+			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::RemoveRenderedImagesForListItem)
+		)
+	);
+	PluginCommands->MapAction(
+		FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedVideo,
+		FUIAction(
+			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::RemoveRenderedVideoForListItem)
+		)
+	);
 
 	FDetailsViewArgs DetailsViewArgs;
 	DetailsViewArgs.bUpdatesFromSelection = false;
@@ -82,9 +104,8 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 	
 	const TSharedPtr<IDetailsView> RenderingManagerQueueProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
 	RenderingManagerQueueProperty->SetObject(RenderingManagerQueueSettings);
-
-	ListUpdateData();
-	ListRefresh();
+	
+	UpdateUI();
 
 	RenderingSettings->Validate();
 	RenderingManagerQueueSettings->Validate();
@@ -216,6 +237,24 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 								.Text(FText::FromString(TEXT("Open Output Directory")))
 							]
 						]
+						+ SHorizontalBox::Slot()
+						.Padding(FMargin{0.0f, 0.0f, 5.0f , 0.0f})
+						.AutoWidth()
+						[
+							SNew(SButton)
+							.HAlign(HAlign_Center)
+							.VAlign(VAlign_Center)
+							.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#BDBDBD"))})
+							.ContentPadding(FMargin{5})
+							.ToolTipText(FText::FromString(TEXT("Clears list selection")))
+							.OnClicked_Raw(this, &SGamedevHelperRenderingManagerWindow::OnBtnClearListSelectionClicked)
+							.IsEnabled_Raw(this, &SGamedevHelperRenderingManagerWindow::IsBtnClearListSelectionEnabled)
+							[
+								SNew(STextBlock)
+								.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
+								.Text(FText::FromString(TEXT("Clear Selection")))
+							]
+						]
 					]
 					+ SVerticalBox::Slot()
 					.AutoHeight()
@@ -235,8 +274,10 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 							[
 								SAssignNew(ListView, SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>>)
 								.ListItemsSource(&ListItems)
-								.SelectionMode(ESelectionMode::None)
+								.SelectionMode(ESelectionMode::Multi)
+								.OnContextMenuOpening(this, &SGamedevHelperRenderingManagerWindow::ListCreateContextMenu)
 								.OnGenerateRow(this, &SGamedevHelperRenderingManagerWindow::OnGenerateRow)
+								.OnMouseButtonDoubleClick(this, &SGamedevHelperRenderingManagerWindow::OnListDblClick)
 								.HeaderRow
 								(
 									SNew(SHeaderRow)
@@ -394,6 +435,12 @@ FText SGamedevHelperRenderingManagerWindow::GetFFmpegCommandPreview() const
 	return FText::FromString(Preview);
 }
 
+void SGamedevHelperRenderingManagerWindow::UpdateUI()
+{
+	ListUpdateData();
+	ListRefresh();
+}
+
 void SGamedevHelperRenderingManagerWindow::ListUpdateData()
 {
 	if (!RenderingSettings || !RenderingManagerQueueSettings) return;
@@ -482,6 +529,119 @@ void SGamedevHelperRenderingManagerWindow::ListRefresh() const
 	}
 }
 
+TSharedPtr<SWidget> SGamedevHelperRenderingManagerWindow::ListCreateContextMenu() const
+{
+	FMenuBuilder MenuBuilder{true, PluginCommands};
+	MenuBuilder.BeginSection(TEXT("Actions"),LOCTEXT("GHDActionsLabel", "Actions"));
+	{
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenImagesFolder);
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenVideoFolder);
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedImages);
+		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedVideo);
+	}
+	MenuBuilder.EndSection();
+
+	return MenuBuilder.MakeWidget();
+}
+
+void SGamedevHelperRenderingManagerWindow::OnListDblClick(TWeakObjectPtr<UGamedevHelperRenderingManagerListItem> Item) const
+{
+	if (!Item.IsValid()) return;
+
+	TArray<FAssetData> Assets;
+	Assets.Add(Item.Get()->LevelSequence.TryLoad());
+
+	const FContentBrowserModule& CBModule = FModuleManager::Get().LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+	CBModule.Get().SyncBrowserToAssets(Assets);
+}
+
+void SGamedevHelperRenderingManagerWindow::OpenImagesFolderForListItem()
+{
+	if (!ListView.IsValid()) return;
+
+	const auto SelectedItems = ListView->GetSelectedItems();
+
+	for (const auto& SelectedItem : SelectedItems)
+	{
+		const FString Path = RenderingSettings->GetImageOutputDirectory(SelectedItem.Get()->QueueAsset.TryLoad(), SelectedItem.Get()->LevelSequence.TryLoad());
+
+		if (FPaths::DirectoryExists(*Path))
+		{
+			FPlatformProcess::ExploreFolder(*Path);			
+		}
+	}
+
+	UpdateUI();
+}
+
+void SGamedevHelperRenderingManagerWindow::OpenVideoFolderForListItem()
+{
+	if (!ListView.IsValid()) return;
+
+	const auto SelectedItems = ListView->GetSelectedItems();
+
+	for (const auto& SelectedItem : SelectedItems)
+	{
+		const FString Path = RenderingSettings->GetVideoOutputDirectory(SelectedItem.Get()->QueueAsset.TryLoad());
+
+		if (FPaths::DirectoryExists(*Path))
+		{
+			FPlatformProcess::ExploreFolder(*Path);			
+		}
+	}
+
+	UpdateUI();
+}
+
+void SGamedevHelperRenderingManagerWindow::RemoveRenderedImagesForListItem()
+{
+	if (!ListView.IsValid()) return;
+
+	const auto SelectedItems = ListView->GetSelectedItems();
+
+	for (const auto& SelectedItem : SelectedItems)
+	{
+		const FString Path = RenderingSettings->GetImageOutputDirectory(SelectedItem.Get()->QueueAsset.TryLoad(), SelectedItem.Get()->LevelSequence.TryLoad());
+
+		if (FPaths::DirectoryExists(*Path))
+		{
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+			if (PlatformFile.DeleteDirectoryRecursively(*Path))
+			{
+				PlatformFile.CreateDirectoryTree(*Path);
+			}
+		}
+	}
+
+	UpdateUI();
+}
+
+void SGamedevHelperRenderingManagerWindow::RemoveRenderedVideoForListItem()
+{
+	if (!ListView.IsValid()) return;
+
+	const auto SelectedItems = ListView->GetSelectedItems();
+
+	for (const auto& SelectedItem : SelectedItems)
+	{
+		const FString Path = FString::Printf(
+			TEXT("%s/%s.%s"),
+			*RenderingSettings->GetVideoOutputDirectory(SelectedItem.Get()->QueueAsset.TryLoad()),
+			*SelectedItem.Get()->LevelSequence.GetAssetName(),
+			*RenderingSettings->GetVideoExtension()
+		); 
+
+		if (FPaths::FileExists(*Path))
+		{
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+			PlatformFile.DeleteFile(*Path);
+		}
+	}
+
+	UpdateUI();
+}
+
 bool SGamedevHelperRenderingManagerWindow::IsMovieRenderWorking() const
 {
 	if (!GEditor) return false;
@@ -491,8 +651,7 @@ bool SGamedevHelperRenderingManagerWindow::IsMovieRenderWorking() const
 
 void SGamedevHelperRenderingManagerWindow::OnMovieRenderFinished(UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
 {
-	ListUpdateData();
-	ListRefresh();
+	UpdateUI();
 		
 	if (!bSuccess)
 	{
@@ -509,8 +668,7 @@ void SGamedevHelperRenderingManagerWindow::OnMovieRenderFinished(UMoviePipelineE
 
 void SGamedevHelperRenderingManagerWindow::OnMovieRenderError(UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
 {
-	ListUpdateData();
-	ListRefresh();
+	UpdateUI();
 
 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModalWithOutputLog(FString::Printf(TEXT("Renderer finished with errors: %s"),  *ErrorText.ToString()), 5.0f);
 }
@@ -578,8 +736,7 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRefreshClicked()
 {
 	if (IsMovieRenderWorking()) return FReply::Handled();
 
-	ListUpdateData();
-	ListRefresh();
+	UpdateUI();
 
 	return FReply::Handled();
 }
@@ -701,8 +858,7 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnCleanOutputDirClicked()
 
 	PlatformFile.CreateDirectoryTree(*RenderingSettings->OutputDirectory.Path);
 
-	ListUpdateData();
-	ListRefresh();
+	UpdateUI();
 	
 	GEditor->GetEditorSubsystem<UGamedevHelperSubsystem>()->ShowModal(TEXT("OutputDirectory cleaned successfully"), EGamedevHelperModalStatus::Success, 3.0f);
 	
@@ -715,6 +871,15 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnOpenOutputDirClicked() const
 	
 	FPlatformProcess::ExploreFolder(*RenderingSettings->OutputDirectory.Path);
 	
+	return FReply::Handled();
+}
+
+FReply SGamedevHelperRenderingManagerWindow::OnBtnClearListSelectionClicked() const
+{
+	if (!ListView.IsValid()) return FReply::Handled();
+
+	ListView->ClearSelection();
+
 	return FReply::Handled();
 }
 
@@ -736,6 +901,11 @@ bool SGamedevHelperRenderingManagerWindow::IsBtnCleanOutputDirEnabled() const
 bool SGamedevHelperRenderingManagerWindow::IsBtnOpenOutputDirEnabled() const
 {
 	return !IsMovieRenderWorking() && FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path);
+}
+
+bool SGamedevHelperRenderingManagerWindow::IsBtnClearListSelectionEnabled() const
+{
+	return ListView.IsValid() && ListView->GetSelectedItems().Num() > 0;
 }
 
 #undef LOCTEXT_NAMESPACE

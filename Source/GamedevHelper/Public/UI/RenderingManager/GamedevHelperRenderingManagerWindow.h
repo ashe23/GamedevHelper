@@ -30,8 +30,15 @@ protected:
 	) const;
 	FText GetFFmpegCommandPreview() const;
 
+	void UpdateUI();
 	void ListUpdateData();
 	void ListRefresh() const;
+	TSharedPtr<SWidget> ListCreateContextMenu() const;
+	void OnListDblClick(TWeakObjectPtr<UGamedevHelperRenderingManagerListItem> Item) const;
+	void OpenImagesFolderForListItem();
+	void OpenVideoFolderForListItem();
+	void RemoveRenderedImagesForListItem();
+	void RemoveRenderedVideoForListItem();
 	bool IsMovieRenderWorking() const;
 	void OnMovieRenderFinished(UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess);
 	void OnMovieRenderError(UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText);
@@ -41,16 +48,19 @@ protected:
 	FReply OnBtnRenderClicked();
 	FReply OnBtnCleanOutputDirClicked();
 	FReply OnBtnOpenOutputDirClicked() const;
+	FReply OnBtnClearListSelectionClicked() const;
 	bool IsBtnRefreshEnabled() const;
 	bool IsBtnRenderEnabled() const;
 	bool IsBtnCleanOutputDirEnabled() const;
 	bool IsBtnOpenOutputDirEnabled() const;
+	bool IsBtnClearListSelectionEnabled() const;
 	
 private:
 	UGamedevHelperRenderingSettings* RenderingSettings = nullptr;
 	UGamedevHelperRenderingManagerQueueSettings* RenderingManagerQueueSettings = nullptr;
 	float RenderStartTime = 0.0f;
 
+	TSharedPtr<FUICommandList> PluginCommands;
 	TArray<FGamedevHelperFFmpegCommand> FFmpegCommands;
 	TArray<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>> ListItems;
 	TSharedPtr<SListView<TWeakObjectPtr<UGamedevHelperRenderingManagerListItem>>> ListView;
