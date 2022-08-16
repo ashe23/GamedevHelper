@@ -42,7 +42,6 @@ TSharedRef<SWidget> SGamedevHelperAssetNamingListItem::GenerateWidgetForColumn(c
 			SNew(SBox)
 			.Padding(FMargin{5.0f, 0.0f})
 			[
-
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
 				  .AutoWidth()

@@ -27,8 +27,6 @@ public:
 	// context menu
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
 	TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerOpenAsset;
-	TSharedPtr<FUICommandInfo> Cmd_RenderingManageOpenImagesFolder;
-	TSharedPtr<FUICommandInfo> Cmd_RenderingManageOpenVideoFolder;
 	TSharedPtr<FUICommandInfo> Cmd_RenderingManagerRemoveRenderedImages;
 	TSharedPtr<FUICommandInfo> Cmd_RenderingManagerRemoveRenderedVideo;
 };

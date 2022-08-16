@@ -4,7 +4,6 @@
 #include "GamedevHelper.h"
 #include "GamedevHelperProjectSettings.h"
 #include "UI/GamedevHelperEditorStyle.h"
-#include "UI/RenderingManager/GamedevHelperRenderingManagerQueueSettings.h"
 // Engine Headers
 #include "ToolMenus.h"
 #include "ContentBrowserModule.h"

@@ -4,6 +4,7 @@
 #include "UI/GamedevHelperEditorStyle.h"
 // Engine Headers
 #include "MoviePipelineQueueSubsystem.h"
+#include "ProjectSettings/GamedevHelperRenderingSettings.h"
 #include "Widgets/Input/SHyperlink.h"
 
 void SGamedevHelperRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
@@ -19,6 +20,9 @@ void SGamedevHelperRenderingManagerListItem::Construct(const FArguments& InArgs,
 
 TSharedRef<SWidget> SGamedevHelperRenderingManagerListItem::GenerateWidgetForColumn(const FName& InColumnName)
 {
+
+	const TSoftObjectPtr<UGamedevHelperRenderingSettings> RenderingSettings = GetDefault<UGamedevHelperRenderingSettings>();
+	
 	if (InColumnName == TEXT("State"))
 	{
 		const FString Icon = FGamedevHelperEditorStyle::GetIconByStatus(ListItem->Status);
@@ -55,6 +59,71 @@ TSharedRef<SWidget> SGamedevHelperRenderingManagerListItem::GenerateWidgetForCol
 	if (InColumnName == TEXT("SequenceRenderedFrames"))
 	{
 		return SNew(STextBlock).Text(FText::FromString(FString::FromInt(ListItem->SequenceRenderedFrames)));
+	}
+
+	if (InColumnName == TEXT("SequenceRenderedImagesDir"))
+	{
+		const FString Path = RenderingSettings->GetImageOutputDirectory(ListItem->QueueAsset.TryLoad(), ListItem->LevelSequence.TryLoad());
+
+		if (!FPaths::DirectoryExists(Path))
+		{
+			return
+			SNew(STextBlock)
+			.ToolTipText(FText::FromString(TEXT("Render sequences in order this to be available")))
+			.ColorAndOpacity(FLinearColor::Red)
+			.Text(FText::FromString(TEXT("Not found")));
+		}
+		
+		return SNew(SBox)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SHyperlink)
+			.Text(FText::FromString(Path))
+			.OnNavigate_Lambda([=]()
+			{
+				// ignore if we currently rendering sequences
+				if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
+				{
+					return;
+				}
+				
+				FPlatformProcess::ExploreFolder(*Path);
+			})
+		];
+	}
+
+	if (InColumnName == TEXT("SequenceRenderedVideoFile"))
+	{
+		const FString Path = RenderingSettings->GetVideoOutputDirectory(ListItem->QueueAsset.TryLoad());
+		const FString FilePath = FString::Printf(TEXT("%s/%s.%s"), *Path, *ListItem->LevelSequence.GetAssetName(), *RenderingSettings->GetVideoExtension());
+
+		if (!FPaths::FileExists(FilePath))
+		{
+			return
+			SNew(STextBlock)
+			.ToolTipText(FText::FromString(TEXT("Render sequences in order this to be available")))
+			.ColorAndOpacity(FLinearColor::Red)
+			.Text(FText::FromString(TEXT("Not found")));
+		}
+		
+		return SNew(SBox)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SHyperlink)
+			.Text(FText::FromString(FilePath))
+			.OnNavigate_Lambda([=]()
+			{
+				// ignore if we currently rendering sequences
+				if (GEditor && GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering())
+				{
+					return;
+				}
+				
+				FPlatformProcess::LaunchFileInDefaultExternalApplication(*FilePath);
+			})
+		];
 	}
 
 	if (InColumnName == TEXT("Note"))

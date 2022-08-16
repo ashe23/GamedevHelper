@@ -131,12 +131,15 @@ TSharedRef<FSlateStyleSet> FGamedevHelperEditorStyle::Create()
 	Style->Set("GamedevHelper.Cmd_AssetNamingManagerRenameSelected.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 	Style->Set("GamedevHelper.Cmd_RenderingManagerWindow", new IMAGE_BRUSH(TEXT("IconRenderer128"), Icon40x40));
 	Style->Set("GamedevHelper.Cmd_RenderingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRenderer128"), Icon20x20));
-
+	Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedImages", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon40x40));
+	Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedImages.Small", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon20x20));
+	Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedVideo", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon40x40));
+	Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedVideo.Small", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon20x20));
+	
 	// colors
 	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#C62828"))}});
 	Style->Set("GamedevHelper.Color.Green", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#2E7D32"))}});
 	Style->Set("GamedevHelper.Color.Grey", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#616161"))}});
-
 
 	return Style;
 }

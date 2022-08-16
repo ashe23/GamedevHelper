@@ -62,18 +62,6 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 	PluginCommands = MakeShareable(new FUICommandList);
 	PluginCommands->MapAction(
-		FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenImagesFolder,
-		FUIAction(
-			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::OpenImagesFolderForListItem)
-		)
-	);
-	PluginCommands->MapAction(
-		FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenVideoFolder,
-		FUIAction(
-			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::OpenVideoFolderForListItem)
-		)
-	);
-	PluginCommands->MapAction(
 		FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedImages,
 		FUIAction(
 			FExecuteAction::CreateRaw(this, &SGamedevHelperRenderingManagerWindow::RemoveRenderedImagesForListItem)
@@ -122,7 +110,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 			.Orientation(Orient_Horizontal)
 			.PhysicalSplitterHandleSize(5.0f)
 			+ SSplitter::Slot()
-			.Value(0.4f)
+			.Value(0.3f)
 			[
 				SNew(SScrollBox)
 				.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
@@ -296,7 +284,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									// .FixedWidth(250.0f)
+									.FillSized(150.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("QueueNameColumn", "Queue"))
@@ -306,7 +294,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									// .FixedWidth(250.0f)
+									.FillSized(150.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceNameColumn", "Level Sequence"))
@@ -316,7 +304,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									// .FixedWidth(200.0f)
+									.FillSized(200.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceDurationColumn", "Duration"))
@@ -326,7 +314,7 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									.FixedWidth(100.0f)
+									.FillSized(100.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceFrameStartColumn", "Start Frame"))
@@ -336,10 +324,30 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 									.VAlignCell(VAlign_Center)
 									.HAlignHeader(HAlign_Center)
 									.HeaderContentPadding(FMargin(10.0f))
-									.FixedWidth(130.0f)
+									.FillSized(130.0f)
 									[
 										SNew(STextBlock)
 										.Text(LOCTEXT("SequenceRenderedFramesColumn", "Rendered Frames"))
+									]
+									+ SHeaderRow::Column(FName("SequenceRenderedImagesDir"))
+									.HAlignCell(HAlign_Center)
+									.VAlignCell(VAlign_Center)
+									.HAlignHeader(HAlign_Center)
+									.HeaderContentPadding(FMargin(10.0f))
+									.FillSized(500.0f)
+									[
+										SNew(STextBlock)
+										.Text(LOCTEXT("SequenceRenderedImagesDirColumn", "Rendered Images Folder"))
+									]
+									+ SHeaderRow::Column(FName("SequenceRenderedVideoFile"))
+									.HAlignCell(HAlign_Center)
+									.VAlignCell(VAlign_Center)
+									.HAlignHeader(HAlign_Center)
+									.HeaderContentPadding(FMargin(10.0f))
+									.FillSized(500.0f)
+									[
+										SNew(STextBlock)
+										.Text(LOCTEXT("SequenceRenderedVideoFileColumn", "Rendered Video File"))
 									]
 									+ SHeaderRow::Column(FName("Note"))
 									.HAlignCell(HAlign_Center)
@@ -363,37 +371,47 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Center)
 		[
-			SNew(SBorder)
-			.BorderImage(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.BG.16")))
-			.BorderBackgroundColor(FLinearColor{FColor::FromHex(TEXT("#0277BD"))})
+			SNew(SVerticalBox)
+			.ToolTipText(FText::FromString(TEXT("Final ffmpeg command that will be used for encoding videos")))
+			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Fill)
-				[
-					SNew(STextBlock)
-					.Justification(ETextJustify::Left)
-					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light15"))
-					.Text_Raw(this, &SGamedevHelperRenderingManagerWindow::GetFFmpegCommandPreview)
-				]
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("FFmpeg Command Preview")))
+				.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light15"))
+				.Justification(ETextJustify::Left)
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Justification(ETextJustify::Left)
+				.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
+				.Text_Raw(this, &SGamedevHelperRenderingManagerWindow::GetFFmpegCommandPreview)
 			]
 		]
 		+ SVerticalBox::Slot()
 		.Padding(FMargin{10.0f,5.0f})
 		.FillHeight(0.05f)
 		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Center)
+		.VAlign(VAlign_Fill)
 		[
-			SNew(SBorder)
-			.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
-			.Visibility_Raw(this, &SGamedevHelperRenderingManagerWindow::GetConsoleBoxVisibility)
+			SNew(SScrollBox)
+			.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+			.AnimateWheelScrolling(true)
+			.AllowOverscroll(EAllowOverscroll::No)
+			+ SScrollBox::Slot()
 			[
-				SNew(STextBlock)
-				.Justification(ETextJustify::Left)
-				.Text_Raw(this, &SGamedevHelperRenderingManagerWindow::GetConsoleBoxText)
-				.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
-				.ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#E53935"))})
+				SNew(SBorder)
+				.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+				.Visibility_Raw(this, &SGamedevHelperRenderingManagerWindow::GetConsoleBoxVisibility)
+				[
+					SNew(STextBlock)
+					.Justification(ETextJustify::Left)
+					.Text_Raw(this, &SGamedevHelperRenderingManagerWindow::GetConsoleBoxText)
+					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light15"))
+					.ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#E53935"))})
+				]
 			]
 		]
 	];
@@ -504,10 +522,18 @@ void SGamedevHelperRenderingManagerWindow::ListUpdateData()
 			NewListItem->SequenceRenderedFrames = GetRenderedFramesNum(QueueAssetData, LevelSequence,bIsSequential);
 
 			// warnings
-			if (!bIsSequential)
+			if (NewListItem->SequenceRenderedFrames != 0)
+			{
+				if (!bIsSequential)
+				{
+					NewListItem->Status = EGamedevHelperRendererStatus::Warning;
+					NewListItem->Note = TEXT("Missing some rendered frames");
+				}
+			}
+			else
 			{
 				NewListItem->Status = EGamedevHelperRendererStatus::Warning;
-				NewListItem->Note = TEXT("Missing some rendered frames");
+				NewListItem->Note = TEXT("Missing rendered frames");
 			}
 
 			if (Job->JobName.IsEmpty())
@@ -532,10 +558,8 @@ void SGamedevHelperRenderingManagerWindow::ListRefresh() const
 TSharedPtr<SWidget> SGamedevHelperRenderingManagerWindow::ListCreateContextMenu() const
 {
 	FMenuBuilder MenuBuilder{true, PluginCommands};
-	MenuBuilder.BeginSection(TEXT("Actions"),LOCTEXT("GHDActionsLabel", "Actions"));
+	MenuBuilder.BeginSection(TEXT("ActionsRemove"),LOCTEXT("GHDActionsRemoveLabel", "Remove"));
 	{
-		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenImagesFolder);
-		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManageOpenVideoFolder);
 		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedImages);
 		MenuBuilder.AddMenuEntry(FGamedevHelperEditorCommands::Get().Cmd_RenderingManagerRemoveRenderedVideo);
 	}
