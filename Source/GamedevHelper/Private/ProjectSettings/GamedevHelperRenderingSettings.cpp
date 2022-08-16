@@ -14,6 +14,10 @@
 
 UGamedevHelperRenderingSettings::UGamedevHelperRenderingSettings()
 {
+	FFmpegExtraCommands.Add(TEXT("-vcodec libx264"));
+	FFmpegExtraCommands.Add(TEXT("-crf 10"));
+	FFmpegExtraCommands.Add(TEXT("-pix_fmt yuv420p"));
+	
 	OnSettingChanged().AddLambda([&](const UObject* Object, const FPropertyChangedEvent& PropertyChangedEvent)
 	{
 		if (!PropertyChangedEvent.MemberProperty) return;
@@ -85,6 +89,12 @@ void UGamedevHelperRenderingSettings::Validate()
 	if (!FPaths::DirectoryExists(OutputDirectory.Path))
 	{
 		ErrorMsg = TEXT("Error: Output directory does not exist");
+		return;
+	}
+
+	if (CurrentResolution.X % 2 != 0 || CurrentResolution.Y % 2 != 0)
+	{
+		ErrorMsg = TEXT("Error: Resolution must be divisible by 2");
 		return;
 	}
 

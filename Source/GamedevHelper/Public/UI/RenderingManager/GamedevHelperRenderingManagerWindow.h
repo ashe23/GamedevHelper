@@ -28,6 +28,7 @@ protected:
 		TWeakObjectPtr<UGamedevHelperRenderingManagerListItem> InItem,
 		const TSharedRef<STableViewBase>& OwnerTable
 	) const;
+	FText GetFFmpegCommandPreview() const;
 
 	void ListUpdateData();
 	void ListRefresh() const;

@@ -58,6 +58,9 @@ public:
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category="General")
 	FDirectoryPath OutputDirectory;
 
+	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category="General")
+	TArray<FString> FFmpegExtraCommands;
+
 	UPROPERTY(EditAnywhere, Config, BlueprintReadWrite, Category = "Format", DisplayName = "Resolution", meta = (ToolTip = "Rendering resolution presets. By Default is 1080p"))
 	EGamedevHelperResolutionPreset ResolutionPreset = EGamedevHelperResolutionPreset::Res1080P;
 	

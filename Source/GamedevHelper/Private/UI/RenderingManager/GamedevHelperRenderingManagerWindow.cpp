@@ -23,6 +23,7 @@
 #include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineWidgetRenderSetting.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Misc/ScopedSlowTask.h"
 
 #define LOCTEXT_NAMESPACE "FGamedevHelper"
@@ -84,6 +85,9 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 	ListUpdateData();
 	ListRefresh();
+
+	RenderingSettings->Validate();
+	RenderingManagerQueueSettings->Validate();
 	
 	ChildSlot
 	[
@@ -319,13 +323,35 @@ void SGamedevHelperRenderingManagerWindow::Construct(const FArguments& InArgs)
 		.VAlign(VAlign_Center)
 		[
 			SNew(SBorder)
+			.BorderImage(FGamedevHelperEditorStyle::GetIcon(TEXT("GamedevHelper.Icon.BG.16")))
+			.BorderBackgroundColor(FLinearColor{FColor::FromHex(TEXT("#0277BD"))})
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(STextBlock)
+					.Justification(ETextJustify::Left)
+					.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light15"))
+					.Text_Raw(this, &SGamedevHelperRenderingManagerWindow::GetFFmpegCommandPreview)
+				]
+			]
+		]
+		+ SVerticalBox::Slot()
+		.Padding(FMargin{10.0f,5.0f})
+		.FillHeight(0.05f)
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SBorder)
 			.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
 			.Visibility_Raw(this, &SGamedevHelperRenderingManagerWindow::GetConsoleBoxVisibility)
 			[
 				SNew(STextBlock)
 				.Justification(ETextJustify::Left)
 				.Text_Raw(this, &SGamedevHelperRenderingManagerWindow::GetConsoleBoxText)
-				.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("VirtualGames.Font.Light15"))
+				.Font(FGamedevHelperEditorStyle::Get().GetFontStyle("GamedevHelper.Font.Light10"))
 				.ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#E53935"))})
 			]
 		]
@@ -355,6 +381,17 @@ EVisibility SGamedevHelperRenderingManagerWindow::GetConsoleBoxVisibility() cons
 TSharedRef<ITableRow> SGamedevHelperRenderingManagerWindow::OnGenerateRow(TWeakObjectPtr<UGamedevHelperRenderingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const
 {
 	return SNew(SGamedevHelperRenderingManagerListItem, OwnerTable).QueueItem(InItem);
+}
+
+FText SGamedevHelperRenderingManagerWindow::GetFFmpegCommandPreview() const
+{
+	const FString Preview = FString::Printf(
+		TEXT("%s -y -i {image_input} %s {output_video_file}"),
+		*GetDefault<UMoviePipelineCommandLineEncoderSettings>()->ExecutablePath,
+		*UKismetStringLibrary::JoinStringArray(RenderingSettings->FFmpegExtraCommands, TEXT(" "))
+	);
+
+	return FText::FromString(Preview);
 }
 
 void SGamedevHelperRenderingManagerWindow::ListUpdateData()
@@ -610,16 +647,17 @@ FReply SGamedevHelperRenderingManagerWindow::OnBtnRenderClicked()
 			}
 
 			const FString Cmd = FString::Printf(
-				TEXT("%s -y -i %s/%s_%%04d.%s -vcodec libx264 -crf 10 -pix_fmt yuv420p %s/%s.%s"),
+				TEXT("%s -y -i %s/%s_%%04d.%s %s %s/%s.%s"),
 				*GetDefault<UMoviePipelineCommandLineEncoderSettings>()->ExecutablePath,
 				*RenderingSettings->GetImageOutputDirectory(MoviePipelineQueue, LevelSequence),
 				*LevelSequence.GetAssetName(),
 				*RenderingSettings->GetImageExtension(),
+				*UKismetStringLibrary::JoinStringArray(RenderingSettings->FFmpegExtraCommands, TEXT(" ")),
 				*VideoOutputDirectory,
 				*LevelSequence.GetAssetName(),
 				*RenderingSettings->GetVideoExtension()
 			);
-			FFmpegCommands.Add(FGamedevHelperFFmpegCommand{QueueAsset.GetAssetName(), LevelSequence.GetAssetName(), TEXT("NoAudio"), Cmd, TEXT("Encoding videos")});
+			FFmpegCommands.Add(FGamedevHelperFFmpegCommand{QueueAsset.GetAssetName(), LevelSequence.GetAssetName(), TEXT("NoAudio"), Cmd, TEXT("Encoding video")});
 		}
 	}
 
