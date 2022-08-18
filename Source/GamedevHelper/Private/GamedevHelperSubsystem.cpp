@@ -4,6 +4,7 @@
 #include "GamedevHelper.h"
 #include "GamedevHelperProjectSettings.h"
 #include "UI/GamedevHelperEditorStyle.h"
+#include "Settings/GamedevHelperRenderingSettings.h"
 // Engine Headers
 #include "ToolMenus.h"
 #include "ContentBrowserModule.h"
@@ -20,7 +21,6 @@
 #include "MoviePipelineQueueSubsystem.h"
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
-#include "ProjectSettings/GamedevHelperRenderingSettings.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 

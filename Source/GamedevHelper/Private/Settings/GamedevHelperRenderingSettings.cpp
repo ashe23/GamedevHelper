@@ -1,6 +1,6 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "ProjectSettings/GamedevHelperRenderingSettings.h"
+#include "Settings/GamedevHelperRenderingSettings.h"
 #include "GamedevHelper.h"
 #include "MoviePipelineAntiAliasingSetting.h"
 #include "MoviePipelineCameraSetting.h"
@@ -102,7 +102,7 @@ void UGamedevHelperRenderingSettings::Validate()
 	const TSoftObjectPtr<UMoviePipelineMasterConfig> Config = GetMasterConfig();
 	for (const auto& Setting : Config->GetAllSettings())
 	{
-		if (!IsValidateJobSetting(Setting))
+		if (!IsValidJobSetting(Setting))
 		{
 			bSettingsValid = false;
 		}
@@ -314,7 +314,7 @@ UMoviePipelineMasterConfig* UGamedevHelperRenderingSettings::GetMasterConfig()
 	return Config;
 }
 
-bool UGamedevHelperRenderingSettings::IsValidateJobSetting(TSoftObjectPtr<UMoviePipelineSetting> Setting)
+bool UGamedevHelperRenderingSettings::IsValidJobSetting(TSoftObjectPtr<UMoviePipelineSetting> Setting)
 {
 	if (!Setting) return false;
 	

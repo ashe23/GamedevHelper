@@ -2,9 +2,9 @@
 
 #include "UI/RenderingManager/GamedevHelperRenderingManagerListItem.h"
 #include "UI/GamedevHelperEditorStyle.h"
+#include "Settings/GamedevHelperRenderingSettings.h"
 // Engine Headers
 #include "MoviePipelineQueueSubsystem.h"
-#include "ProjectSettings/GamedevHelperRenderingSettings.h"
 #include "Widgets/Input/SHyperlink.h"
 
 void SGamedevHelperRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)

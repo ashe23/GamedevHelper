@@ -4,6 +4,7 @@
 #include "UI/RenderingManager/GamedevHelperRenderingManagerListItem.h"
 #include "GamedevHelperProjectSettings.h"
 #include "GamedevHelper.h"
+#include "Settings/GamedevHelperRenderingSettings.h"
 // Engine Headers
 #include "GamedevHelperSubsystem.h"
 #include "MoviePipelineDeferredPasses.h"
@@ -14,7 +15,6 @@
 #include "MoviePipelineExecutor.h"
 #include "MoviePipelineQueueSubsystem.h"
 #include "MovieSceneTimeHelpers.h"
-#include "ProjectSettings/GamedevHelperRenderingSettings.h"
 
 
 #if WITH_EDITOR

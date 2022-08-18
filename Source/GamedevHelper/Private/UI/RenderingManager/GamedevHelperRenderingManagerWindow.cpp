@@ -1,7 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/RenderingManager/GamedevHelperRenderingManagerWindow.h"
-#include "ProjectSettings/GamedevHelperRenderingSettings.h"
+#include "Settings/GamedevHelperRenderingSettings.h"
 #include "UI/RenderingManager/GamedevHelperRenderingManagerQueueSettings.h"
 #include "UI/RenderingManager/GamedevHelperRenderingManagerListItem.h"
 #include "UI/GamedevHelperEditorStyle.h"
