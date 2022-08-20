@@ -176,14 +176,14 @@ UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig() const
 {
 	UMoviePipelineMasterConfig* Config = NewObject<UMoviePipelineMasterConfig>();
 	if (!Config) return nullptr;
-	
+
 	Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
 	Config->FindOrAddSettingByClass(GetImageClass());
-	
+
 	UMoviePipelineCommandLineEncoderSettings* EncoderSettings = GetMutableDefault<UMoviePipelineCommandLineEncoderSettings>();
 	EncoderSettings->OutputFileExtension = GetVideoExtension();
 	EncoderSettings->PostEditChange();
-	
+
 	if (bSettingsAAEnabled)
 	{
 		const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
@@ -198,7 +198,6 @@ UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig() const
 			AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
 			AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
 		}
-
 	}
 
 	if (bSettingsConsoleVariablesEnabled)
@@ -272,7 +271,7 @@ UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig() const
 			HighResSetting->BurleySampleCount = BurleySampleCount;
 		}
 	}
-	
+
 	return Config;
 }
 
@@ -340,7 +339,7 @@ bool UGdhRenderingSettings::ValidateMovieRenderSettings()
 	{
 		if (!IsValidJobSetting(Setting))
 		{
-			return false;			
+			return false;
 		}
 	}
 
@@ -350,21 +349,21 @@ bool UGdhRenderingSettings::ValidateMovieRenderSettings()
 bool UGdhRenderingSettings::IsValidJobSetting(UMoviePipelineSetting* Setting)
 {
 	if (!Setting) return false;
-	
+
 	Setting->ValidateState();
 
 	if (Setting->GetValidationState() == EMoviePipelineValidationState::Errors || Setting->GetValidationState() == EMoviePipelineValidationState::Warnings)
 	{
 		const TArray<FText> ValidationResults = Setting->GetValidationResults();
 
-		FString ErrorMsg;
-		
+		FString ValidateErrorText;
+
 		for (const auto& ValidationResult : ValidationResults)
 		{
-			ErrorMsg.Append(ValidationResult.ToString() + TEXT("\n"));
+			ValidateErrorText.Append(ValidationResult.ToString() + TEXT("\n"));
 		}
 
-		SetErrorMsg(ErrorMsg);		
+		SetErrorMsg(ValidateErrorText);
 		bIsValid = false;
 		return false;
 	}

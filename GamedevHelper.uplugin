@@ -25,6 +25,14 @@
       ]
     },
     {
+      "Name": "GdhEditor",
+      "Type": "Editor",
+      "LoadingPhase": "PostEngineInit",
+      "WhitelistPlatforms": [
+        "Win64"
+      ]
+    },
+    {
       "Name": "GdhRenderingManager",
       "Type": "Editor",
       "LoadingPhase": "PostEngineInit",
