@@ -12,6 +12,7 @@
 #include "MoviePipelineMasterConfig.h"
 #include "MoviePipelineHighResSetting.h"
 #include "MoviePipelineWidgetRenderSetting.h"
+#include "MovieSceneTimeHelpers.h"
 
 UGdhRenderingSettings::UGdhRenderingSettings()
 {
@@ -68,6 +69,8 @@ void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& Proper
 		default:
 			CurrentResolution = GdhRenderingManagerConstants::Resolution1080P;
 	}
+
+	Validate();
 
 	SaveConfig();
 }
@@ -275,6 +278,61 @@ UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig() const
 	return Config;
 }
 
+UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+{
+	if (!LevelSequence) return nullptr;
+	if (!LevelSequence->MovieScene) return nullptr;
+
+	UMoviePipelineMasterConfig* Config = GetMasterConfig();
+	if (!Config) return nullptr;
+
+	const TSoftObjectPtr<UMoviePipelineOutputSetting> OutputSetting = Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass());
+	if (!OutputSetting) return nullptr;
+
+	const int32 FrameStart = ConvertFrameTime(
+		UE::MovieScene::DiscreteInclusiveLower(LevelSequence->MovieScene->GetPlaybackRange()),
+		LevelSequence->MovieScene->GetTickResolution(),
+		LevelSequence->MovieScene->GetDisplayRate()
+	).FloorToFrame().Value;
+	const int32 FrameEnd = ConvertFrameTime(
+		UE::MovieScene::DiscreteExclusiveUpper(LevelSequence->MovieScene->GetPlaybackRange()),
+		LevelSequence->MovieScene->GetTickResolution(),
+		LevelSequence->MovieScene->GetDisplayRate()
+	).FloorToFrame().Value;
+
+	OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
+	OutputSetting->OutputResolution = CurrentResolution;
+	OutputSetting->bUseCustomFrameRate = true;
+	OutputSetting->OutputFrameRate = Framerate;
+	OutputSetting->bOverrideExistingOutput = true;
+	OutputSetting->ZeroPadFrameNumbers = 4;
+	OutputSetting->FrameNumberOffset = 0;
+	OutputSetting->HandleFrameCount = 0;
+	OutputSetting->OutputFrameStep = 1;
+	OutputSetting->bUseCustomPlaybackRange = true;
+	OutputSetting->CustomStartFrame = FrameStart;
+	OutputSetting->CustomEndFrame = FrameEnd;
+
+	
+	const FString ImageOutputDir =  FString::Printf(
+		TEXT("%s/image/%s/%s/%s"),
+		*OutputDirectory.Path,
+		*GetResolutionFolderName(),
+		MoviePipelineQueue ? *MoviePipelineQueue->GetName() : TEXT("sequences"),
+		*LevelSequence->GetName()
+	);
+
+	if (!FPaths::DirectoryExists(ImageOutputDir))
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		PlatformFile.CreateDirectoryTree(*ImageOutputDir);
+	}
+
+	OutputSetting->OutputDirectory.Path = ImageOutputDir;
+
+	return Config;
+}
+
 bool UGdhRenderingSettings::ValidateOutputDirectory()
 {
 	if (OutputDirectory.Path.IsEmpty())
@@ -343,7 +401,7 @@ bool UGdhRenderingSettings::ValidateMovieRenderSettings()
 		}
 	}
 
-	return false;
+	return true;
 }
 
 bool UGdhRenderingSettings::IsValidJobSetting(UMoviePipelineSetting* Setting)

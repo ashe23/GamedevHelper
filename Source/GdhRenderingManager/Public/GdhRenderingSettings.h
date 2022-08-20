@@ -11,6 +11,8 @@
 #include "GdhRenderingManager.h"
 #include "GdhRenderingSettings.generated.h"
 
+class UMoviePipelineQueue;
+
 UCLASS(BlueprintType, Config = EditorPerProjectUserSettings, meta=(DisplayName="Rendering Settings"))
 class GDHRENDERINGMANAGER_API UGdhRenderingSettings : public UGdhDeveloperSettings
 {
@@ -43,6 +45,7 @@ public:
 	FString GetVideoExtension(const bool IncludeDot = false) const;
 
 	UMoviePipelineMasterConfig* GetMasterConfig() const;
+	UMoviePipelineMasterConfig* GetMasterConfig(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="General", meta=(ToolTip="Output directory for rendered images and videos"))

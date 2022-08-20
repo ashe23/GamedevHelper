@@ -24,9 +24,15 @@ public class GdhEditor : ModuleRules
 				"SlateCore",
 				"Projects",
 				"UnrealEd",
+				"LevelSequence",
+				"LevelEditor",
+				"EditorSubsystem",
+				// MovieRender
+				"MovieRenderPipelineCore",
+				"MovieRenderPipelineEditor",
 				// our modules,
 				"GdhCore",
-				"GdhRenderingManager",
+				"GdhRenderingManager", 
 			}
 		);
 	}
