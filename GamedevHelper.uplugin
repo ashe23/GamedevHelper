@@ -17,9 +17,9 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "GamedevHelper",
+      "Name": "GdhRenderingManager",
       "Type": "Editor",
-      "LoadingPhase": "PostDefault",
+      "LoadingPhase": "PostEngineInit",
       "WhitelistPlatforms": [
         "Win64"
       ]
