@@ -25,3 +25,4 @@ bool FGdhRenderingManager::IsGameModule() const
 }
 
 IMPLEMENT_MODULE(FGdhRenderingManager, GdhRenderingManager);
+DEFINE_LOG_CATEGORY(LogGdhRenderingManager);

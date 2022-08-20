@@ -31,3 +31,5 @@ public:
 	virtual bool SupportsDynamicReloading() override;
 	virtual bool IsGameModule() const override;
 };
+
+DECLARE_LOG_CATEGORY_EXTERN(LogGdhRenderingManager, Log, All);
