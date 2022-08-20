@@ -8,6 +8,7 @@
 namespace GdhEditorConstants
 {
 	static const FName ModuleName{TEXT("GdhEditor")};
+	static const FName TabRenderingManager{TEXT("TabRenderingManagerWindow")};
 }
 
 class FGdhEditor : public IModuleInterface
@@ -21,9 +22,10 @@ private:
 	static void RegisterStyles();
 	void RegisterCommands();
 	void RegisterMainMenu();
+	static void RegisterTabs();
 	static void UnregisterStyles();
 	static void UnregisterCommands();
-	// static void UnregisterMainMenu();
+	static void UnregisterTabs();
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;

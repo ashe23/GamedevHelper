@@ -25,7 +25,8 @@ public class GdhEditor : ModuleRules
 				"Projects",
 				"UnrealEd",
 				// our modules,
-				// "GdhCore"
+				"GdhCore",
+				"GdhRenderingManager",
 			}
 		);
 	}

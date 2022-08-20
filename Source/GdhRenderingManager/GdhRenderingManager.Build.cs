@@ -24,6 +24,8 @@ public class GdhRenderingManager : ModuleRules
 				"SlateCore",
 				"PythonScriptPlugin",
 				"DeveloperSettings",
+				"PropertyEditor",
+				"EditorStyle",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",

@@ -22,7 +22,7 @@ public:
 	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
 	// TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManagerWindow;
 	// TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinerManagerWindow;
-	// TSharedPtr<FUICommandInfo> Cmd_OpenRenderingManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_OpenRenderingManagerWindow;
 
 	// context menu
 	// TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
