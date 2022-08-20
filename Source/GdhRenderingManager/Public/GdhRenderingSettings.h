@@ -9,7 +9,6 @@
 #include "GdhRenderingManagerTypes.h"
 #include "GdhCoreDeveloperSettings.h"
 #include "GdhRenderingManager.h"
-#include "MoviePipelineBurnInSetting.h"
 #include "GdhRenderingSettings.generated.h"
 
 UCLASS(BlueprintType, Config = EditorPerProjectUserSettings, meta=(DisplayName="Rendering Settings"))
@@ -39,6 +38,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
 	FString GetImageExtension(const bool IncludeDot = false) const;
+
+	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
+	FString GetVideoExtension(const bool IncludeDot = false) const;
+
+	UMoviePipelineMasterConfig* GetMasterConfig() const;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="General", meta=(ToolTip="Output directory for rendered images and videos"))
@@ -191,6 +195,8 @@ private:
 	bool ValidateOutputDirectory();
 	bool ValidateFFmpegExe();
 	bool ValidateResolution();
+	bool ValidateMovieRenderSettings();
+	bool IsValidJobSetting(UMoviePipelineSetting* Setting);
 
 	FIntPoint CurrentResolution;
 };

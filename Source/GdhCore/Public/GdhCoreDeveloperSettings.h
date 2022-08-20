@@ -17,10 +17,6 @@ public:
 
 	virtual void Validate()
 	{
-		if (IsValid())
-		{
-			ClearErrorMsg();
-		}
 	};
 
 	virtual void LoadDefaultSettings()

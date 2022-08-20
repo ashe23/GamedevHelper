@@ -4,6 +4,14 @@
 #include "GdhRenderingManager.h"
 // Engine Headers
 #include "MoviePipelineImageSequenceOutput.h"
+#include "MoviePipelineAntiAliasingSetting.h"
+#include "MoviePipelineCameraSetting.h"
+#include "MoviePipelineCommandLineEncoderSettings.h"
+#include "MoviePipelineConsoleVariableSetting.h"
+#include "MoviePipelineDeferredPasses.h"
+#include "MoviePipelineMasterConfig.h"
+#include "MoviePipelineHighResSetting.h"
+#include "MoviePipelineWidgetRenderSetting.h"
 
 UGdhRenderingSettings::UGdhRenderingSettings()
 {
@@ -82,8 +90,13 @@ void UGdhRenderingSettings::Validate()
 		return;
 	}
 
+	if (!ValidateMovieRenderSettings())
+	{
+		return;
+	}
+
 	bIsValid = true;
-	Super::Validate();
+	ClearErrorMsg();
 }
 
 FIntPoint UGdhRenderingSettings::GetResolution() const
@@ -144,6 +157,125 @@ FString UGdhRenderingSettings::GetImageExtension(const bool IncludeDot) const
 	}
 }
 
+FString UGdhRenderingSettings::GetVideoExtension(const bool IncludeDot) const
+{
+	switch (VideoFormat)
+	{
+		case EGdhVideoFormat::Mp4:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+		case EGdhVideoFormat::Mkv:
+			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
+		case EGdhVideoFormat::Avi:
+			return IncludeDot ? TEXT(".avi") : TEXT("avi");
+		default:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+	}
+}
+
+UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig() const
+{
+	UMoviePipelineMasterConfig* Config = NewObject<UMoviePipelineMasterConfig>();
+	if (!Config) return nullptr;
+	
+	Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
+	Config->FindOrAddSettingByClass(GetImageClass());
+	
+	UMoviePipelineCommandLineEncoderSettings* EncoderSettings = GetMutableDefault<UMoviePipelineCommandLineEncoderSettings>();
+	EncoderSettings->OutputFileExtension = GetVideoExtension();
+	EncoderSettings->PostEditChange();
+	
+	if (bSettingsAAEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass());
+		if (AntiAliasingSetting)
+		{
+			AntiAliasingSetting->SpatialSampleCount = SpatialSampleCount;
+			AntiAliasingSetting->TemporalSampleCount = TemporalSampleCount;
+			AntiAliasingSetting->bOverrideAntiAliasing = bOverrideAntiAliasing;
+			AntiAliasingSetting->AntiAliasingMethod = AntiAliasingMethod;
+			AntiAliasingSetting->RenderWarmUpCount = RenderWarmUpCount;
+			AntiAliasingSetting->bUseCameraCutForWarmUp = bUseCameraCutForWarmUp;
+			AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
+			AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
+		}
+
+	}
+
+	if (bSettingsConsoleVariablesEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineConsoleVariableSetting> ConsoleVariableSetting = Config->FindOrAddSettingByClass(UMoviePipelineConsoleVariableSetting::StaticClass());
+		if (ConsoleVariableSetting)
+		{
+			ConsoleVariableSetting->ConsoleVariables = ConsoleVariables;
+			ConsoleVariableSetting->StartConsoleCommands = StartConsoleCommands;
+			ConsoleVariableSetting->EndConsoleCommands = EndConsoleCommands;
+		}
+	}
+
+	if (bSettingsGameOverrideEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineGameOverrideSetting> GameOverrideSetting = Config->FindOrAddSettingByClass(UMoviePipelineGameOverrideSetting::StaticClass());
+		if (GameOverrideSetting)
+		{
+			GameOverrideSetting->GameModeOverride = GameModeOverride;
+			GameOverrideSetting->bCinematicQualitySettings = bCinematicQualitySettings;
+			GameOverrideSetting->TextureStreaming = TextureStreaming;
+			GameOverrideSetting->bUseLODZero = bUseLODZero;
+			GameOverrideSetting->bDisableHLODs = bDisableHLODs;
+			GameOverrideSetting->bUseHighQualityShadows = bUseHighQualityShadows;
+			GameOverrideSetting->ShadowDistanceScale = ShadowDistanceScale;
+			GameOverrideSetting->ShadowRadiusThreshold = ShadowRadiusThreshold;
+			GameOverrideSetting->bOverrideViewDistanceScale = bOverrideViewDistanceScale;
+			GameOverrideSetting->ViewDistanceScale = ViewDistanceScale;
+			GameOverrideSetting->bFlushGrassStreaming = bFlushGrassStreaming;
+		}
+	}
+
+	if (bSettingsUIEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineWidgetRenderer> WidgetRenderer = Config->FindOrAddSettingByClass(UMoviePipelineWidgetRenderer::StaticClass());
+		if (WidgetRenderer)
+		{
+			WidgetRenderer->bCompositeOntoFinalImage = bCompositeOntoFinalImage;
+		}
+	}
+
+	if (bSettingsBurnInEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineBurnInSetting> BurnInSetting = Config->FindOrAddSettingByClass(UMoviePipelineBurnInSetting::StaticClass());
+		if (BurnInSetting)
+		{
+			BurnInSetting->BurnInClass = BurnInClass;
+			BurnInSetting->bCompositeOntoFinalImage = bBurnInCompositeOntoFinalImage;
+		}
+	}
+
+	if (bSettingsCameraEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineCameraSetting> CameraSetting = Config->FindOrAddSettingByClass(UMoviePipelineCameraSetting::StaticClass());
+		if (CameraSetting)
+		{
+			CameraSetting->OverscanPercentage = OverscanPercentage;
+			CameraSetting->ShutterTiming = ShutterTiming;
+		}
+	}
+
+	if (bSettingsHighResEnabled)
+	{
+		const TSoftObjectPtr<UMoviePipelineHighResSetting> HighResSetting = Config->FindOrAddSettingByClass(UMoviePipelineHighResSetting::StaticClass());
+		if (HighResSetting)
+		{
+			HighResSetting->TileCount = TileCount;
+			HighResSetting->TextureSharpnessBias = TextureSharpnessBias;
+			HighResSetting->OverlapRatio = OverlapRatio;
+			HighResSetting->bOverrideSubSurfaceScattering = bOverrideSubSurfaceScattering;
+			HighResSetting->BurleySampleCount = BurleySampleCount;
+		}
+	}
+	
+	return Config;
+}
+
 bool UGdhRenderingSettings::ValidateOutputDirectory()
 {
 	if (OutputDirectory.Path.IsEmpty())
@@ -196,5 +328,46 @@ bool UGdhRenderingSettings::ValidateResolution()
 		return false;
 	}
 
+	return true;
+}
+
+bool UGdhRenderingSettings::ValidateMovieRenderSettings()
+{
+	const UMoviePipelineMasterConfig* Config = GetMasterConfig();
+	if (!Config) return false;
+
+	for (const auto& Setting : Config->GetAllSettings())
+	{
+		if (!IsValidJobSetting(Setting))
+		{
+			return false;			
+		}
+	}
+
 	return false;
+}
+
+bool UGdhRenderingSettings::IsValidJobSetting(UMoviePipelineSetting* Setting)
+{
+	if (!Setting) return false;
+	
+	Setting->ValidateState();
+
+	if (Setting->GetValidationState() == EMoviePipelineValidationState::Errors || Setting->GetValidationState() == EMoviePipelineValidationState::Warnings)
+	{
+		const TArray<FText> ValidationResults = Setting->GetValidationResults();
+
+		FString ErrorMsg;
+		
+		for (const auto& ValidationResult : ValidationResults)
+		{
+			ErrorMsg.Append(ValidationResult.ToString() + TEXT("\n"));
+		}
+
+		SetErrorMsg(ErrorMsg);		
+		bIsValid = false;
+		return false;
+	}
+
+	return true;
 }
