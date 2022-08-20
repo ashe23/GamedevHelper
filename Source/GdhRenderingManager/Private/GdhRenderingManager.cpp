@@ -14,6 +14,11 @@ void FGdhRenderingManager::ShutdownModule()
 	
 }
 
+bool FGdhRenderingManager::SupportsDynamicReloading()
+{
+	return false;
+}
+
 bool FGdhRenderingManager::IsGameModule() const
 {
 	return false;
