@@ -2,12 +2,16 @@
 
 #include "GdhRenderingManagerWindow.h"
 #include "GdhRenderingSettings.h"
+#include "GdhRenderingQueueSettings.h"
 
 void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 {
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	RenderingSettings = GetMutableDefault<UGdhRenderingSettings>();
+	RenderingQueueSettings = GetMutableDefault<UGdhRenderingQueueSettings>();
+	
 	check(RenderingSettings);
+	check(RenderingQueueSettings);
 
 	RenderingSettings->Validate();
 
@@ -24,6 +28,10 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 	const TSharedPtr<IDetailsView> RenderingSettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
 	RenderingSettingsProperty->SetObject(RenderingSettings);
+	
+	DetailsViewArgs.ViewIdentifier = "GdhRenderingQueueSettings";
+	const TSharedPtr<IDetailsView> RenderingQueueSettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
+	RenderingQueueSettingsProperty->SetObject(RenderingQueueSettings);
 
 	ChildSlot
 	[
@@ -45,6 +53,13 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 				.VAlign(VAlign_Fill)
 				[
 					RenderingSettingsProperty.ToSharedRef()
+				]
+				+ SVerticalBox::Slot()
+				.Padding(FMargin{10.0f})
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					RenderingQueueSettingsProperty.ToSharedRef()
 				]
 			]
 		]

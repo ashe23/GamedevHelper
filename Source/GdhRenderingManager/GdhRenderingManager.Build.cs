@@ -27,6 +27,7 @@ public class GdhRenderingManager : ModuleRules
 				"PropertyEditor",
 				"EditorStyle",
 				"MovieScene",
+				"LevelSequence",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",

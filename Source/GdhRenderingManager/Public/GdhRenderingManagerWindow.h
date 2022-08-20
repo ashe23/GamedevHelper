@@ -6,6 +6,7 @@
 #include "Widgets/SCompoundWidget.h"
 
 class UGdhRenderingSettings;
+class UGdhRenderingQueueSettings;
 
 class GDHRENDERINGMANAGER_API SGdhRenderingManagerWindow : public SCompoundWidget
 {
@@ -16,4 +17,5 @@ public:
 	void Construct(const FArguments& InArgs);
 private:
 	UGdhRenderingSettings* RenderingSettings = nullptr;
+	UGdhRenderingQueueSettings* RenderingQueueSettings = nullptr;
 };
