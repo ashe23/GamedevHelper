@@ -27,6 +27,7 @@ public class GdhRenderingManager : ModuleRules
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",
+				"MovieRenderPipelineSettings",
 				// Our modules
 				"GdhCore", 
 			}
