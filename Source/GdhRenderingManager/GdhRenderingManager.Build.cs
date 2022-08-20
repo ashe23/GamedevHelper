@@ -14,8 +14,7 @@ public class GdhRenderingManager : ModuleRules
 				"Core",
 			}
 		);
-
-
+		
 		PrivateDependencyModuleNames.AddRange(
 			new []
 			{
@@ -23,7 +22,13 @@ public class GdhRenderingManager : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"PythonScriptPlugin"
+				"PythonScriptPlugin",
+				"DeveloperSettings",
+				// MovieRender
+				"MovieRenderPipelineCore",
+				"MovieRenderPipelineRenderPasses",
+				// Our modules
+				"GdhCore", 
 			}
 		);
 	}

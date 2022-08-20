@@ -17,7 +17,15 @@ public:
 
 	virtual void Validate()
 	{
+		if (IsValid())
+		{
+			ClearErrorMsg();
+		}
 	};
+
+	virtual void LoadDefaultSettings()
+	{
+	}
 
 	bool IsValid() const
 	{
@@ -36,7 +44,14 @@ public:
 		ErrorMsg = Msg;
 	}
 
-private:
+	void ClearErrorMsg()
+	{
+		ErrorMsg.Reset();
+	}
+
+protected:
 	bool bIsValid;
+
+private:
 	FString ErrorMsg;
 };
