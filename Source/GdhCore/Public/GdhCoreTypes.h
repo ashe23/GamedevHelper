@@ -12,3 +12,12 @@ enum class EGdhGenericStatus : uint8
 	Warning UMETA(DisplayName = "Warning"),
 	Error UMETA(DisplayName = "Error"),
 };
+
+UENUM(BlueprintType)
+enum class EGdhModalStatus : uint8
+{
+	None UMETA(DisplayName = "None"),
+	OK UMETA(DisplayName = "OK"),
+	Pending UMETA(DisplayName = "Pending"),
+	Error UMETA(DisplayName = "Error"),
+};
