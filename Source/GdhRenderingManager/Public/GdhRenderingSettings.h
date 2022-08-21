@@ -204,5 +204,5 @@ private:
 	bool ValidateMovieRenderSettings();
 	bool IsValidJobSetting(UMoviePipelineSetting* Setting);
 
-	FIntPoint CurrentResolution;
+	FIntPoint CurrentResolution = GdhRenderingManagerConstants::DefaultResolution;
 };
