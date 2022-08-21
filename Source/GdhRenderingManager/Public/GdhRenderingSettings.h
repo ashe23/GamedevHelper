@@ -38,6 +38,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
 	UClass* GetImageClass() const;
 
+	FString GetOutputDirectory() const;
+
 	UFUNCTION(BlueprintCallable, Category="Rendering Settings")
 	FString GetImageExtension(const bool IncludeDot = false) const;
 

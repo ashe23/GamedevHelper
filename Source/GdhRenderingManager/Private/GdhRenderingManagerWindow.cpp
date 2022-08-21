@@ -7,10 +7,8 @@
 #include "GdhRenderingQueueSettings.h"
 #include "GdhRenderingManagerWindowListItem.h"
 // Engine Headers
-#include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineQueue.h"
 #include "MoviePipelineQueueSubsystem.h"
-#include "Subsystems/UnrealEditorSubsystem.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Views/SListView.h"
@@ -112,7 +110,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 				+ SScrollBox::Slot()
 				[
 					SAssignNew(ListJobWidgetSwitcher, SWidgetSwitcher)
-					.WidgetIndex(0)
+					.WidgetIndex(WidgetSwitcherNoJobsIndex)
 					+ SWidgetSwitcher::Slot()
 					[
 						SNew(SVerticalBox)
@@ -142,10 +140,10 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 								SNew(SButton)
 								.HAlign(HAlign_Center)
 								.VAlign(VAlign_Center)
-								.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
+								// .ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
 								.ContentPadding(FMargin{5})
-								// .OnClicked_Raw(this, &SGamedevHelperRenderingManagerWindow::OnBtnRefreshClicked)
-								// .IsEnabled_Raw(this, &SGamedevHelperRenderingManagerWindow::IsBtnRefreshEnabled)
+								.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRefreshClicked)
+								.IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
 								.ToolTipText(FText::FromString(TEXT("Refresh list")))
 								[
 									SNew(STextBlock)
@@ -160,10 +158,10 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 								SNew(SButton)
 								.HAlign(HAlign_Center)
 								.VAlign(VAlign_Center)
-								.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
+								.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#FF5722"))})
 								.ContentPadding(FMargin{5})
 								.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRenderClicked)
-								// .IsEnabled_Raw(this, &SGamedevHelperRenderingManagerWindow::IsBtnRefreshEnabled)
+								.IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
 								.ToolTipText(FText::FromString(TEXT("Render everything in list")))
 								[
 									SNew(STextBlock)
@@ -313,100 +311,60 @@ EVisibility SGdhRenderingManagerWindow::GetConsoleBoxVisibility() const
 	return RenderingSettings->IsValid() && RenderingQueueSettings->IsValid() ? EVisibility::Hidden : EVisibility::Visible;
 }
 
-bool SGdhRenderingManagerWindow::IsMovieRenderWorking() const
+bool SGdhRenderingManagerWindow::IsMovieRenderWorking()
 {
 	if (!GEditor) return false;
-	
+
 	return GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering();
 }
 
-FReply SGdhRenderingManagerWindow::OnBtnRenderClicked()
+FReply SGdhRenderingManagerWindow::OnBtnRenderClicked() const
 {
 	if (IsMovieRenderWorking()) return FReply::Handled();
 
-	RenderingSettings->Validate();
-	RenderingQueueSettings->Validate();
-
-	if (!RenderingSettings->IsValid() || !RenderingQueueSettings->IsValid()) return FReply::Handled();
-
-	if (!GEditor) return FReply::Handled();
-	
-	const UWorld* MapAsset = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld();
-	if (!MapAsset) return FReply::Handled();
-
-	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
-	if (!CustomQueue) FReply::Handled();
-
-	CustomQueue->DeleteAllJobs();
-
-	for (const auto& LevelSequence : RenderingQueueSettings->LevelSequences)
+	if (GdhDelegateRenderRequested.IsBound())
 	{
-		UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-		if (!Job) return FReply::Handled();
-
-		Job->SetConfiguration(RenderingSettings->GetMasterConfig(LevelSequence.Get()));
-		Job->Map = MapAsset;
-		Job->JobName = LevelSequence->GetName();
-		Job->SetSequence(LevelSequence.Get());
+		GdhDelegateRenderRequested.Execute();
 	}
 
-	for (const auto& MoviePipelineQueue : RenderingQueueSettings->MoviePipelineQueues)
-	{
-		for (const auto& QueueJob : MoviePipelineQueue->GetJobs())
-		{
-			UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-			if (!Job) return FReply::Handled();
-			
-			const ULevelSequence* Sequence = Cast<ULevelSequence>(QueueJob->Sequence.TryLoad());
-			if (!Sequence) return FReply::Handled();
-			
-			Job->SetConfiguration(RenderingSettings->GetMasterConfig(Sequence, MoviePipelineQueue.Get()));
-			Job->Map = QueueJob->Map;
-			Job->JobName = QueueJob->JobName;
-			Job->SetSequence(QueueJob->Sequence);
-		}
-	}
-
-	UMoviePipelineExecutorBase* Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
-	if (!Executor) return FReply::Handled();
-	Executor->OnExecutorFinished().AddLambda([](const UMoviePipelineExecutorBase* ExecutorBase, const bool bSuccess)
-	{
-		if (!bSuccess)
-		{
-			UE_LOG(LogGdhRenderingManager, Error, TEXT("Error occured when rendering images"));
-			// GEditor->GetEditorSubsystem<UGdhSubsystem>()->ShowModalWithOutputLog(TEXT("GamedevHelper: Rendering Manager"), TEXT("Error Occured when rendering images"), EGdhModalStatus::Error, 5.0f);
-			return;
-		}
-
-		UE_LOG(LogGdhRenderingManager, Error, TEXT("Rendering images finished successfully"));
-		// GEditor->GetEditorSubsystem<UGdhSubsystem>()->ShowModal(TEXT("GamedevHelper: Rendering Manager"), TEXT("Rendering images finished successfully"), EGdhModalStatus::OK, 5.0f);
-	});
-	Executor->OnExecutorErrored().AddLambda([](const UMoviePipelineExecutorBase* PipelineExecutor, const UMoviePipeline* PipelineWithError, const bool bIsFatal, const FText ErrorText)
-	{
-		const FString ErrorMsg = FString::Printf(TEXT("Error occured with msg: %s"), *ErrorText.ToString());
-		UE_LOG(LogGdhRenderingManager, Error, TEXT("%s"), *ErrorMsg);
-		// GEditor->GetEditorSubsystem<UGdhSubsystem>()->ShowModalWithOutputLog(TEXT("GamedevHelper: Rendering Manager"), ErrorMsg, EGdhModalStatus::Error, 5.0f);
-	});
-	
 	return FReply::Handled();
+}
+
+FReply SGdhRenderingManagerWindow::OnBtnRefreshClicked()
+{
+	ListUpdate();
+
+	return FReply::Handled();
+}
+
+bool SGdhRenderingManagerWindow::IsBtnRenderEnabled() const
+{
+	return RenderingSettings->IsValid() && RenderingQueueSettings->IsValid();
+}
+
+bool SGdhRenderingManagerWindow::IsBtnRefreshEnabled() const
+{
+	return RenderingSettings->IsValid() && RenderingQueueSettings->IsValid();
 }
 
 void SGdhRenderingManagerWindow::ListUpdate()
 {
-	if (!ListJobWidgetSwitcher) return;
+	if (ListJobWidgetSwitcher)
+	{
+		const int32 WidgetIndex = RenderingQueueSettings->LevelSequences.Num() > 0 || RenderingQueueSettings->MoviePipelineQueues.Num() > 0 ? WidgetSwitcherListIndex : WidgetSwitcherNoJobsIndex;
+		ListJobWidgetSwitcher->SetActiveWidgetIndex(WidgetIndex);
+	}
+
+	ListItems.Reset();
 
 	RenderingSettings->Validate();
 	RenderingQueueSettings->Validate();
 
 	if (!RenderingSettings->IsValid() || !RenderingQueueSettings->IsValid())
 	{
-		ListJobWidgetSwitcher->SetActiveWidgetIndex(0);
 		return;
 	}
 
-	ListJobWidgetSwitcher->SetActiveWidgetIndex(1);
-
-	ListItems.Reset();
 	ListItems.Reserve(RenderingQueueSettings->LevelSequences.Num());
 
 	for (const auto& LevelSequence : RenderingQueueSettings->LevelSequences)

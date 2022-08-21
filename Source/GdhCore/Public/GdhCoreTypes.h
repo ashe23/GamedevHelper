@@ -21,3 +21,12 @@ enum class EGdhModalStatus : uint8
 	Pending UMETA(DisplayName = "Pending"),
 	Error UMETA(DisplayName = "Error"),
 };
+
+struct FGdhFFmpegCommand
+{
+	FString QueueName;
+	FString SequenceName;
+	FString AudioTrack;
+	FString Command;
+	FString CommandTitle;
+};

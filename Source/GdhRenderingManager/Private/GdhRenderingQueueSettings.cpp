@@ -2,6 +2,7 @@
 
 #include "GdhRenderingQueueSettings.h"
 // Engine Headers
+#include "GdhRenderingSettings.h"
 #include "MoviePipelineQueue.h"
 // #include "LevelSequence.h"
 
@@ -96,4 +97,59 @@ void UGdhRenderingQueueSettings::Validate()
 
 	ErrorMsg.Reset();
 	bIsValid = true;
+}
+
+void UGdhRenderingQueueSettings::GetFFmpegCommands(TArray<FGdhFFmpegCommand>& FFmpegCommands)
+{
+	FFmpegCommands.Reset();
+	FFmpegCommands.Reserve(LevelSequences.Num());
+
+	const UGdhRenderingSettings* RenderingSettings = GetDefault<UGdhRenderingSettings>();
+	if (!RenderingSettings) return;
+
+	for (const auto& LevelSequence : LevelSequences)
+	{
+		const FString VideoOutputDir = RenderingSettings->GetVideoOutputDir(LevelSequence.Get());
+		if (!FPaths::DirectoryExists(VideoOutputDir))
+		{
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+			PlatformFile.CreateDirectoryTree(*VideoOutputDir);
+		}
+		
+		FFmpegCommands.Add(
+			FGdhFFmpegCommand{
+				TEXT("NoQueue"),
+				LevelSequence->GetName(),
+				TEXT("NoAudio"),
+				RenderingSettings->GetEncodeCommand(LevelSequence.Get()),
+				TEXT("Encoding video")
+			});
+	}
+
+	for (const auto& MoviePipelineQueue : MoviePipelineQueues)
+	{
+		FFmpegCommands.Reserve(FFmpegCommands.Num() + MoviePipelineQueue->GetJobs().Num());
+
+		for (const auto& QueueJob : MoviePipelineQueue->GetJobs())
+		{
+			const ULevelSequence* Sequence = Cast<ULevelSequence>(QueueJob->Sequence.TryLoad());
+			if (!Sequence) return;
+
+			const FString VideoOutputDir = RenderingSettings->GetVideoOutputDir(Sequence, MoviePipelineQueue.Get());
+			if (!FPaths::DirectoryExists(VideoOutputDir))
+			{
+				IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+				PlatformFile.CreateDirectoryTree(*VideoOutputDir);
+			}
+
+			FFmpegCommands.Add(
+				FGdhFFmpegCommand{
+					TEXT("NoQueue"),
+					Sequence->GetName(),
+					TEXT("NoAudio"),
+					RenderingSettings->GetEncodeCommand(Sequence, MoviePipelineQueue.Get()),
+					TEXT("Encoding video")
+				});
+		}
+	}
 }

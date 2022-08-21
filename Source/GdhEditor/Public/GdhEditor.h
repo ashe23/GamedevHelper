@@ -9,7 +9,11 @@ namespace GdhEditorConstants
 {
 	static const FName ModuleName{TEXT("GdhEditor")};
 	static const FName TabRenderingManager{TEXT("TabRenderingManagerWindow")};
+	static const FString FFmpegJsonFile{TEXT("ffmpeg_commands.json")};
+	static const FString FFmpegPythonScript{TEXT("ffmpeg_cli.py")};
 }
+
+class SGdhRenderingManagerWindow;
 
 class FGdhEditor : public IModuleInterface
 {
@@ -26,6 +30,9 @@ private:
 	static void UnregisterStyles();
 	static void UnregisterCommands();
 	static void UnregisterTabs();
+
+private:
+	static void OnRenderRequested();
 
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;

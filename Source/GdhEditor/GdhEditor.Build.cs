@@ -27,12 +27,15 @@ public class GdhEditor : ModuleRules
 				"LevelSequence",
 				"LevelEditor",
 				"EditorSubsystem",
+				"PythonScriptPlugin",
+				"Json",
+				"JsonUtilities",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineEditor",
 				// our modules,
 				"GdhCore",
-				"GdhRenderingManager",
+				"GdhRenderingManager", 
 			}
 		);
 	}

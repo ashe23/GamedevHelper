@@ -48,7 +48,7 @@ def parse_queue(json_file):
 
     return data
 
-gdh_subsystem = unreal.get_editor_subsystem(unreal.GamedevHelperSubsystem)
+gdh_subsystem = unreal.get_editor_subsystem(unreal.GdhSubsystem)
 
 parser = argparse.ArgumentParser(description="GamedevHelper Rendering pipeline ffmpeg runner")
 parser.add_argument("-queue", type=parse_queue, dest="queue", help = "FFmpeg render commands")
@@ -85,5 +85,4 @@ with unreal.ScopedSlowTask(steps, "Encoding...") as slow_task:
 
 elapsed_time = time.time() - start_time
 msg = "Encoded {} of {} videos in {}".format(rendered, steps, display_time(elapsed_time))
-unreal.log_warning(msg)
-gdh_subsystem.show_modal(msg, unreal.GamedevHelperModalStatus.SUCCESS, 10.0)
+gdh_subsystem.show_modal("GamedevHelper: Rendering Manager", msg, unreal.GdhModalStatus.OK, 10.0)

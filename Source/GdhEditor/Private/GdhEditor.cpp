@@ -5,6 +5,7 @@
 #include "GdhEditorCommands.h"
 #include "GdhRenderingManagerWindow.h"
 // Engine Headers
+#include "GdhEditorSubsystem.h"
 #include "UnrealEdMisc.h"
 #include "LevelEditor.h"
 #include "ToolMenus.h"
@@ -102,16 +103,20 @@ void FGdhEditor::RegisterMainMenu()
 
 void FGdhEditor::RegisterTabs()
 {
+	
 	FGlobalTabmanager::Get()
 		->RegisterNomadTabSpawner(
 			GdhEditorConstants::TabRenderingManager,
 			FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
 			{
+				const auto RenderingManagerWindow = SNew(SGdhRenderingManagerWindow);
+				RenderingManagerWindow.Get().GdhDelegateRenderRequested.BindStatic(&FGdhEditor::OnRenderRequested);
+				
 				return
 					SNew(SDockTab)
 					.TabRole(MajorTab)
 					[
-						SNew(SGdhRenderingManagerWindow)
+						RenderingManagerWindow
 					];
 			})
 		)
@@ -133,6 +138,13 @@ void FGdhEditor::UnregisterCommands()
 void FGdhEditor::UnregisterTabs()
 {
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhEditorConstants::TabRenderingManager);
+}
+
+void FGdhEditor::OnRenderRequested()
+{
+	if (!GEditor) return;
+
+	GEditor->GetEditorSubsystem<UGdhSubsystem>()->RenderingManagerStartRender();
 }
 
 IMPLEMENT_MODULE(FGdhEditor, GdhEditor);

@@ -2,14 +2,19 @@
 
 #include "GdhEditorSubsystem.h"
 #include "GdhEditor.h"
-// Engine Headers
+#include "GdhRenderingQueueSettings.h"
 #include "GdhRenderingSettings.h"
-#include "LevelEditorSubsystem.h"
+// Engine Headers
 #include "LevelSequence.h"
 #include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineQueueSubsystem.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Subsystems/UnrealEditorSubsystem.h"
+#include "IPythonScriptPlugin.h"
+#include "Dom/JsonObject.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 void UGdhSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -23,19 +28,22 @@ void UGdhSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UGdhSubsystem::RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> LevelSequence, const TSoftObjectPtr<UWorld> Map, const bool bCreateVideo)
+void UGdhSubsystem::RenderingManagerStartRender()
 {
+	UGdhRenderingSettings* RenderingSettings = GetMutableDefault<UGdhRenderingSettings>();
+	UGdhRenderingQueueSettings* RenderingQueueSettings = GetMutableDefault<UGdhRenderingQueueSettings>();
+
+	check(RenderingSettings);
+	check(RenderingQueueSettings);
+
+	RenderingSettings->Validate();
+	RenderingQueueSettings->Validate();
+
+	if (!RenderingSettings->IsValid() || !RenderingQueueSettings->IsValid()) return;
 	if (!GEditor) return;
 
-	const ULevelSequence* Sequence = LevelSequence.LoadSynchronous();
-	if (!Sequence) return;
 
-	const UWorld* MapAsset = Map.LoadSynchronous();
-	if (!MapAsset)
-	{
-		MapAsset = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld();
-	}
-
+	const UWorld* MapAsset = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld();
 	if (!MapAsset) return;
 
 	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
@@ -43,23 +51,33 @@ void UGdhSubsystem::RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> Lev
 
 	CustomQueue->DeleteAllJobs();
 
-	UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-	if (!Job) return;
-
-	UGdhRenderingSettings* RenderingSettings = GetMutableDefault<UGdhRenderingSettings>();
-	if (!RenderingSettings) return;
-
-	RenderingSettings->Validate();
-	if (!RenderingSettings->IsValid())
+	for (const auto& LevelSequence : RenderingQueueSettings->LevelSequences)
 	{
-		UE_LOG(LogGdhEditor, Error, TEXT("Invalid settings: %s"), *RenderingSettings->GetErrorMsg());
-		return;
+		UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+		if (!Job) return;
+
+		Job->SetConfiguration(RenderingSettings->GetMasterConfig(LevelSequence.Get()));
+		Job->Map = MapAsset;
+		Job->JobName = LevelSequence->GetName();
+		Job->SetSequence(LevelSequence.Get());
 	}
 
-	Job->SetConfiguration(RenderingSettings->GetMasterConfig(Sequence));
-	Job->Map = MapAsset;
-	Job->JobName = Sequence->GetName();
-	Job->SetSequence(Sequence);
+	for (const auto& MoviePipelineQueue : RenderingQueueSettings->MoviePipelineQueues)
+	{
+		for (const auto& QueueJob : MoviePipelineQueue->GetJobs())
+		{
+			UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+			if (!Job) return;
+
+			const ULevelSequence* Sequence = Cast<ULevelSequence>(QueueJob->Sequence.TryLoad());
+			if (!Sequence) return;
+
+			Job->SetConfiguration(RenderingSettings->GetMasterConfig(Sequence, MoviePipelineQueue.Get()));
+			Job->Map = QueueJob->Map;
+			Job->JobName = QueueJob->JobName;
+			Job->SetSequence(QueueJob->Sequence);
+		}
+	}
 
 	UMoviePipelineExecutorBase* Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
 	if (!Executor) return;
@@ -68,26 +86,54 @@ void UGdhSubsystem::RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> Lev
 	{
 		if (!bSuccess)
 		{
-			UE_LOG(LogGdhEditor, Error, TEXT("Error occured when rendering images"));
 			ShowModalWithOutputLog(TEXT("GamedevHelper: Rendering Manager"), TEXT("Error Occured when rendering images"), EGdhModalStatus::Error, 5.0f);
 			return;
 		}
 
 		ShowModal(TEXT("GamedevHelper: Rendering Manager"), TEXT("Rendering images finished successfully"), EGdhModalStatus::OK, 5.0f);
+
+		TArray<FGdhFFmpegCommand> FFmpegCommands;
+		GetMutableDefault<UGdhRenderingQueueSettings>()->GetFFmpegCommands(FFmpegCommands);
+		
+		RenderingManagerStartEncode(FFmpegCommands);
+	});
+	Executor->OnExecutorErrored().AddLambda([](const UMoviePipelineExecutorBase* PipelineExecutor, const UMoviePipeline* PipelineWithError, const bool bIsFatal, const FText ErrorText)
+	{
+		const FString ErrorMsg = FString::Printf(TEXT("Error occured with msg: %s"), *ErrorText.ToString());
+		ShowModalWithOutputLog(TEXT("GamedevHelper: Rendering Manager"), ErrorMsg, EGdhModalStatus::Error, 5.0f);
 	});
 }
 
-void UGdhSubsystem::EncodeLevelSequence(const TSoftObjectPtr<ULevelSequence> LevelSequence)
+void UGdhSubsystem::RenderingManagerStartEncode(const TArray<FGdhFFmpegCommand>& FFmpegCommands)
 {
-	const ULevelSequence* Sequence = LevelSequence.LoadSynchronous();
-	if (!Sequence) return;
+	if (FFmpegCommands.Num() == 0) return;
 
 	const UGdhRenderingSettings* RenderingSettings = GetDefault<UGdhRenderingSettings>();
-	if (!RenderingSettings) return;
+	check(RenderingSettings);
 
-	// todo:ashe23 check if sequence images already rendered? 
+	const FString JsonFilePath = RenderingSettings->GetOutputDirectory() + TEXT("/") + GdhEditorConstants::FFmpegJsonFile;
 
-	UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *RenderingSettings->GetEncodeCommand(Sequence));
+	const TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+	for (const auto& FFmpegCommand : FFmpegCommands)
+	{
+		const FString PipelineFieldName = FString::Printf(TEXT("%s:%s:%s:%s"), *FFmpegCommand.CommandTitle, *FFmpegCommand.QueueName, *FFmpegCommand.SequenceName, *FFmpegCommand.AudioTrack);
+		RootObject->SetStringField(PipelineFieldName, FFmpegCommand.Command);
+	}
+
+	FString JsonStr;
+	const TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonStr);
+	FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+
+	if (!FFileHelper::SaveStringToFile(JsonStr, *JsonFilePath))
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed to export %s file"), *JsonFilePath);
+		ShowModal(TEXT("GamedevHelper: Rendering Manager"), ErrMsg, EGdhModalStatus::Error, 5.0f);
+		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg);
+		return;
+	}
+
+	const FString PythonCmd = FString::Printf(TEXT("%s -queue %s"), *GdhEditorConstants::FFmpegPythonScript, *JsonFilePath);
+	IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCmd);
 }
 
 void UGdhSubsystem::ShowModal(const FString& Msg, const FString& SubMsg, const EGdhModalStatus Status, const float Duration)
@@ -95,7 +141,7 @@ void UGdhSubsystem::ShowModal(const FString& Msg, const FString& SubMsg, const E
 	FNotificationInfo Info{FText::FromString(Msg)};
 	Info.ExpireDuration = Duration;
 	Info.SubText = FText::FromString(SubMsg);
-	
+
 	const auto Notification = FSlateNotificationManager::Get().AddNotification(Info);
 	if (Notification.IsValid())
 	{
@@ -113,7 +159,7 @@ void UGdhSubsystem::ShowModalWithOutputLog(const FString& Msg, const FString& Su
 		FGlobalTabmanager::Get()->TryInvokeTab(FName{TEXT("OutputLog")});
 	});
 	Info.HyperlinkText = FText::FromString(TEXT("Show Output Log..."));
-	
+
 	const auto Notification = FSlateNotificationManager::Get().AddNotification(Info);
 	if (Notification.IsValid())
 	{
@@ -128,7 +174,7 @@ void UGdhSubsystem::ShowModalWithOpenDirLink(const FString& Directory, const FSt
 		UE_LOG(LogGdhEditor, Error, TEXT("Directory %s does not exist"), *Directory);
 		return;
 	}
-	
+
 	FNotificationInfo Info{FText::FromString(Msg)};
 	Info.ExpireDuration = Duration;
 	Info.SubText = FText::FromString(SubMsg);
@@ -137,7 +183,7 @@ void UGdhSubsystem::ShowModalWithOpenDirLink(const FString& Directory, const FSt
 		FPlatformProcess::ExploreFolder(*FPaths::ConvertRelativePathToFull(Dir));
 	}, Directory);
 	Info.HyperlinkText = FText::FromString(DirectoryLinkText);
-	
+
 	const auto Notification = FSlateNotificationManager::Get().AddNotification(Info);
 	if (Notification.IsValid())
 	{
@@ -152,7 +198,7 @@ void UGdhSubsystem::ShowModalWithOpenFileLink(const FString& File, const FString
 		UE_LOG(LogGdhEditor, Error, TEXT("File %s does not exist"), *File);
 		return;
 	}
-	
+
 	FNotificationInfo Info{FText::FromString(Msg)};
 	Info.ExpireDuration = Duration;
 	Info.SubText = FText::FromString(SubMsg);
@@ -161,7 +207,7 @@ void UGdhSubsystem::ShowModalWithOpenFileLink(const FString& File, const FString
 		FPlatformProcess::LaunchFileInDefaultExternalApplication(*FPaths::ConvertRelativePathToFull(FilePath));
 	}, File);
 	Info.HyperlinkText = FText::FromString(File);
-	
+
 	const auto Notification = FSlateNotificationManager::Get().AddNotification(Info);
 	if (Notification.IsValid())
 	{

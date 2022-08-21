@@ -146,6 +146,11 @@ UClass* UGdhRenderingSettings::GetImageClass() const
 	}
 }
 
+FString UGdhRenderingSettings::GetOutputDirectory() const
+{
+	return OutputDirectory.Path;
+}
+
 FString UGdhRenderingSettings::GetImageExtension(const bool IncludeDot) const
 {
 	switch (ImageFormat)

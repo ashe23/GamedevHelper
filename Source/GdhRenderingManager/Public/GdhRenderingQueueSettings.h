@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GdhCoreTypes.h"
 #include "GdhRenderingQueueSettings.generated.h"
 
 DECLARE_DELEGATE(FGDhQueueSettingsChanged);
@@ -23,6 +24,8 @@ public:
 	bool IsValid() const;
 	FString GetErrorMsg() const;
 	void Validate();
+
+	void GetFFmpegCommands(TArray<FGdhFFmpegCommand>& FFmpegCommands);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="QueueSettings")
 	TSet<TSoftObjectPtr<ULevelSequence>> LevelSequences;

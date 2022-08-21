@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
+DECLARE_DELEGATE(FGdhDelegateRenderRequested);
+
 class UGdhRenderingSettings;
 class UGdhRenderingQueueSettings;
 class UGdhRenderingManagerListItem;
@@ -25,9 +27,13 @@ private:
 	TSharedPtr<SHeaderRow> GetHeaderRow() const;
 	FText GetConsoleBoxText() const;
 	EVisibility GetConsoleBoxVisibility() const;
-	bool IsMovieRenderWorking() const;
+	static bool IsMovieRenderWorking();
 
-	FReply OnBtnRenderClicked();
+	FReply OnBtnRenderClicked() const;
+	FReply OnBtnRefreshClicked();
+
+	bool IsBtnRenderEnabled() const;
+	bool IsBtnRefreshEnabled() const;
 
 	void ListUpdate();
 	
@@ -36,4 +42,8 @@ private:
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>> ListItems;
 	TSharedPtr<SWidgetSwitcher> ListJobWidgetSwitcher;
+	const int32 WidgetSwitcherNoJobsIndex = 0;
+	const int32 WidgetSwitcherListIndex = 1;
+public:
+	FGdhDelegateRenderRequested GdhDelegateRenderRequested;
 };
