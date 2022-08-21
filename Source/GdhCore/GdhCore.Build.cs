@@ -23,6 +23,7 @@ public class GdhCore : ModuleRules
 				"Slate",
 				"SlateCore",
 				"DeveloperSettings",
+				"Projects"
 			}
 		);
 	}

@@ -1,6 +1,6 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "GdhEditorStyles.h"
+#include "GdhCoreStyles.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Slate/SlateGameResources.h"
@@ -16,9 +16,9 @@ const FVector2D Icon16x16(16.0f, 16.0f);
 const FVector2D Icon20x20(20.0f, 20.0f);
 const FVector2D Icon40x40(40.0f, 40.0f);
 
-TSharedPtr<FSlateStyleSet> FGdhEditorStyle::StyleInstance = nullptr;
+TSharedPtr<FSlateStyleSet> FGdhCoreStyles::StyleInstance = nullptr;
 
-void FGdhEditorStyle::Initialize()
+void FGdhCoreStyles::Initialize()
 {
 	if (!StyleInstance.IsValid())
 	{
@@ -27,14 +27,14 @@ void FGdhEditorStyle::Initialize()
 	}
 }
 
-void FGdhEditorStyle::Shutdown()
+void FGdhCoreStyles::Shutdown()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 	ensure(StyleInstance.IsUnique());
 	StyleInstance.Reset();
 }
 
-void FGdhEditorStyle::ReloadTextures()
+void FGdhCoreStyles::ReloadTextures()
 {
 	if (FSlateApplication::IsInitialized())
 	{
@@ -42,28 +42,28 @@ void FGdhEditorStyle::ReloadTextures()
 	}
 }
 
-const ISlateStyle& FGdhEditorStyle::Get()
+const ISlateStyle& FGdhCoreStyles::Get()
 {
 	return *StyleInstance;
 }
 
-FName FGdhEditorStyle::GetStyleSetName()
+FName FGdhCoreStyles::GetStyleSetName()
 {
 	static FName StyleSetName(TEXT("GamedevHelperStyle"));
 	return StyleSetName;
 }
 
-const FSlateBrush* FGdhEditorStyle::GetIcon(const FString& Specifier)
+const FSlateBrush* FGdhCoreStyles::GetIcon(const FString& Specifier)
 {
 	return Get().GetBrush(*Specifier);
 }
 
-FSlateColor FGdhEditorStyle::GetColor(const FString& Specifier)
+FSlateColor FGdhCoreStyles::GetColor(const FString& Specifier)
 {
 	return Get().GetSlateColor(*Specifier);
 }
 
-FString FGdhEditorStyle::GetIconByStatus(const EGdhGenericStatus Status)
+FString FGdhCoreStyles::GetIconByStatus(const EGdhGenericStatus Status)
 {
 	if (Status == EGdhGenericStatus::OK)
 	{
@@ -78,7 +78,7 @@ FString FGdhEditorStyle::GetIconByStatus(const EGdhGenericStatus Status)
 	return TEXT("GamedevHelper.Icon.Cross20");
 }
 
-FLinearColor FGdhEditorStyle::GetColorByStatus(const EGdhGenericStatus Status)
+FLinearColor FGdhCoreStyles::GetColorByStatus(const EGdhGenericStatus Status)
 {
 	if (Status == EGdhGenericStatus::OK)
 	{
@@ -93,7 +93,7 @@ FLinearColor FGdhEditorStyle::GetColorByStatus(const EGdhGenericStatus Status)
 	return FLinearColor::Red;
 }
 
-TSharedRef<FSlateStyleSet> FGdhEditorStyle::Create()
+TSharedRef<FSlateStyleSet> FGdhCoreStyles::Create()
 {
 	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("GamedevHelperStyle"));
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin("GamedevHelper")->GetBaseDir() / TEXT("Resources"));

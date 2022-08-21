@@ -1,7 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GdhEditor.h"
-#include "GdhEditorStyles.h"
+#include "GdhCoreStyles.h"
 #include "GdhEditorCommands.h"
 #include "GdhRenderingManagerWindow.h"
 // Engine Headers
@@ -36,8 +36,8 @@ bool FGdhEditor::IsGameModule() const
 
 void FGdhEditor::RegisterStyles()
 {
-	FGdhEditorStyle::Initialize();
-	FGdhEditorStyle::ReloadTextures();
+	FGdhCoreStyles::Initialize();
+	FGdhCoreStyles::ReloadTextures();
 }
 
 void FGdhEditor::RegisterCommands()
@@ -112,12 +112,12 @@ void FGdhEditor::RegisterTabs()
 		)
 		.SetDisplayName(FText::FromString(TEXT("Rendering Manager")))
 		.SetMenuType(ETabSpawnerMenuType::Hidden)
-		.SetIcon(FSlateIcon(FGdhEditorStyle::GetStyleSetName(), "GamedevHelper.Cmd_OpenRenderingManagerWindow"));
+		.SetIcon(FSlateIcon(FGdhCoreStyles::GetStyleSetName(), "GamedevHelper.Cmd_OpenRenderingManagerWindow"));
 }
 
 void FGdhEditor::UnregisterStyles()
 {
-	FGdhEditorStyle::Shutdown();
+	FGdhCoreStyles::Shutdown();
 }
 
 void FGdhEditor::UnregisterCommands()

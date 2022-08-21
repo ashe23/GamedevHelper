@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GdhEditorTypes.h"
+#include "GdhCoreTypes.h"
 #include "Styling/SlateStyle.h"
 
-class FGdhEditorStyle
+class GDHCORE_API FGdhCoreStyles
 {
 public:
 	static void Initialize();

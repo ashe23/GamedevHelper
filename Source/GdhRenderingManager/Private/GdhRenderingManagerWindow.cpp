@@ -1,6 +1,8 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GdhRenderingManagerWindow.h"
+
+#include "GdhCoreStyles.h"
 #include "GdhRenderingSettings.h"
 #include "GdhRenderingQueueSettings.h"
 
@@ -49,10 +51,26 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
 				.Padding(FMargin{10.0f})
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Font(FGdhCoreStyles::Get().GetFontStyle("GamedevHelper.Font.Light15"))
+					.Text(FText::FromString(TEXT("Rendering Settings")))
+				]
+				+ SVerticalBox::Slot()
+				.Padding(FMargin{10.0f})
 				.HAlign(HAlign_Fill)
 				.VAlign(VAlign_Fill)
 				[
 					RenderingSettingsProperty.ToSharedRef()
+				]
+				+ SVerticalBox::Slot()
+				.Padding(FMargin{10.0f})
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Font(FGdhCoreStyles::Get().GetFontStyle("GamedevHelper.Font.Light15"))
+					.Text(FText::FromString(TEXT("Queue Settings")))
 				]
 				+ SVerticalBox::Slot()
 				.Padding(FMargin{10.0f})

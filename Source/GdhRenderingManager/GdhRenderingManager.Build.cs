@@ -33,7 +33,7 @@ public class GdhRenderingManager : ModuleRules
 				"MovieRenderPipelineRenderPasses",
 				"MovieRenderPipelineSettings",
 				// Our modules
-				"GdhCore", 
+				"GdhCore",
 			}
 		);
 	}

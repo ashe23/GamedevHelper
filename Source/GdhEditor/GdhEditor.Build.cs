@@ -32,7 +32,7 @@ public class GdhEditor : ModuleRules
 				"MovieRenderPipelineEditor",
 				// our modules,
 				"GdhCore",
-				"GdhRenderingManager", 
+				"GdhRenderingManager",
 			}
 		);
 	}
