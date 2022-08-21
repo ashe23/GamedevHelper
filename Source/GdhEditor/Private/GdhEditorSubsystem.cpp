@@ -69,10 +69,11 @@ void UGdhSubsystem::RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> Lev
 		if (!bSuccess)
 		{
 			UE_LOG(LogGdhEditor, Error, TEXT("Error occured when rendering images"));
+			ShowModalWithOutputLog(TEXT("GamedevHelper: Rendering Manager"), TEXT("Error Occured when rendering images"), EGdhModalStatus::Error, 5.0f);
 			return;
 		}
 
-		UE_LOG(LogGdhEditor, Warning, TEXT("Rendering images finished successfully"));
+		ShowModal(TEXT("GamedevHelper: Rendering Manager"), TEXT("Rendering images finished successfully"), EGdhModalStatus::OK, 5.0f);
 	});
 }
 

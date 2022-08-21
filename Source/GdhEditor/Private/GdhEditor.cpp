@@ -107,7 +107,12 @@ void FGdhEditor::RegisterTabs()
 			GdhEditorConstants::TabRenderingManager,
 			FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
 			{
-				return SNew(SDockTab).TabRole(MajorTab)[SNew(SGdhRenderingManagerWindow)];
+				return
+					SNew(SDockTab)
+					.TabRole(MajorTab)
+					[
+						SNew(SGdhRenderingManagerWindow)
+					];
 			})
 		)
 		.SetDisplayName(FText::FromString(TEXT("Rendering Manager")))

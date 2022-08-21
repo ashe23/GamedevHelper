@@ -28,12 +28,15 @@ public class GdhRenderingManager : ModuleRules
 				"EditorStyle",
 				"MovieScene",
 				"LevelSequence",
+				"InputCore",
+				"UnrealEd",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",
 				"MovieRenderPipelineSettings",
+				"MovieRenderPipelineEditor",
 				// Our modules
-				"GdhCore",
+				"GdhCore", 
 			}
 		);
 	}

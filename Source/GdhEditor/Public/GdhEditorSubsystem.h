@@ -18,6 +18,7 @@ public:
 	virtual void Deinitialize() override;
 	
 public:
+	// todo:ashe23 remove this from here
 	UFUNCTION(BlueprintCallable, Category="GDH|RenderingLibrary", meta=(ToolTip="Renders specified LevelSequence using MovieRender and Gdh Rendering Settings. If Map not specified, will use current Editor Level"))
 	static void RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> LevelSequence, const TSoftObjectPtr<UWorld> Map, const bool bCreateVideo);
 
