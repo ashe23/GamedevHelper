@@ -13,6 +13,7 @@
 #include "MoviePipelineHighResSetting.h"
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "MovieSceneTimeHelpers.h"
+#include "Kismet/KismetStringLibrary.h"
 
 UGdhRenderingSettings::UGdhRenderingSettings()
 {
@@ -313,15 +314,8 @@ UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig(const ULevelS
 	OutputSetting->CustomStartFrame = FrameStart;
 	OutputSetting->CustomEndFrame = FrameEnd;
 
-	
-	const FString ImageOutputDir =  FString::Printf(
-		TEXT("%s/image/%s/%s/%s"),
-		*OutputDirectory.Path,
-		*GetResolutionFolderName(),
-		MoviePipelineQueue ? *MoviePipelineQueue->GetName() : TEXT("sequences"),
-		*LevelSequence->GetName()
-	);
 
+	const FString ImageOutputDir = GetImageOutputDir(LevelSequence, MoviePipelineQueue);
 	if (!FPaths::DirectoryExists(ImageOutputDir))
 	{
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -331,6 +325,55 @@ UMoviePipelineMasterConfig* UGdhRenderingSettings::GetMasterConfig(const ULevelS
 	OutputSetting->OutputDirectory.Path = ImageOutputDir;
 
 	return Config;
+}
+
+FString UGdhRenderingSettings::GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+{
+	if (!LevelSequence) return TEXT("");
+
+	return FPaths::ConvertRelativePathToFull(
+		FString::Printf(
+			TEXT("%s/image/%s/%s/%s"),
+			*OutputDirectory.Path,
+			*GetResolutionFolderName(),
+			MoviePipelineQueue ? *MoviePipelineQueue->GetName() : TEXT("sequences"),
+			*LevelSequence->GetName()
+		)
+	);
+}
+
+FString UGdhRenderingSettings::GetVideoOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+{
+	if (!LevelSequence) return TEXT("");
+
+	const FString LevelSequenceName = MoviePipelineQueue ? TEXT("/") + LevelSequence->GetName() : TEXT("");
+
+	return FPaths::ConvertRelativePathToFull(
+		FString::Printf(
+			TEXT("%s/video/%s/%s%s"),
+			*OutputDirectory.Path,
+			*GetResolutionFolderName(),
+			MoviePipelineQueue ? *MoviePipelineQueue->GetName() : TEXT("sequences"),
+			*LevelSequenceName
+		)
+	);
+}
+
+FString UGdhRenderingSettings::GetEncodeCommand(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+{
+	if (!LevelSequence) return TEXT("");
+
+	return FString::Printf(
+		TEXT("%s -y -i %s/%s_%%04d.%s %s %s/%s.%s"),
+		*FPaths::ConvertRelativePathToFull(FFmpegExe.FilePath),
+		*GetImageOutputDir(LevelSequence, MoviePipelineQueue),
+		*LevelSequence->GetName(),
+		*GetImageExtension(),
+		*UKismetStringLibrary::JoinStringArray(FFmpegCmdArgs),
+		*GetVideoOutputDir(LevelSequence, MoviePipelineQueue),
+		*LevelSequence->GetName(),
+		*GetVideoExtension()
+	);
 }
 
 bool UGdhRenderingSettings::ValidateOutputDirectory()

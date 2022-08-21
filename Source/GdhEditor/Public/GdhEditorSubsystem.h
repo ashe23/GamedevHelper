@@ -18,6 +18,9 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category="GDH|RenderingLibrary", meta=(ToolTip="Renders specified LevelSequence using MovieRender and Gdh Rendering Settings. If Map not specified, will use current Editor Level"))
 	static void RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> LevelSequence, const TSoftObjectPtr<UWorld> Map, const bool bCreateVideo);
+
+	UFUNCTION(BlueprintCallable, Category="GDH|RenderingLibrary")
+	static void EncodeLevelSequence(const TSoftObjectPtr<ULevelSequence> LevelSequence);
 	
 private:
 	void RegisterContextMenuActions() const;

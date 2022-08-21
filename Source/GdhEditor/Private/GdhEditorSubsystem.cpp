@@ -75,6 +75,19 @@ void UGdhSubsystem::RenderLevelSequence(const TSoftObjectPtr<ULevelSequence> Lev
 	});
 }
 
+void UGdhSubsystem::EncodeLevelSequence(const TSoftObjectPtr<ULevelSequence> LevelSequence)
+{
+	const ULevelSequence* Sequence = LevelSequence.LoadSynchronous();
+	if (!Sequence) return;
+
+	const UGdhRenderingSettings* RenderingSettings = GetDefault<UGdhRenderingSettings>();
+	if (!RenderingSettings) return;
+
+	// todo:ashe23 check if sequence images already rendered? 
+	
+	UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *RenderingSettings->GetEncodeCommand(Sequence));
+}
+
 void UGdhSubsystem::RegisterContextMenuActions() const
 {
 	// todo:ashe23
