@@ -17,23 +17,7 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "GdhCore",
-      "Type": "Editor",
-      "LoadingPhase": "PostEngineInit",
-      "WhitelistPlatforms": [
-        "Win64"
-      ]
-    },
-    {
-      "Name": "GdhEditor",
-      "Type": "Editor",
-      "LoadingPhase": "PostEngineInit",
-      "WhitelistPlatforms": [
-        "Win64"
-      ]
-    },
-    {
-      "Name": "GdhRenderingManager",
+      "Name": "Gdh",
       "Type": "Editor",
       "LoadingPhase": "PostEngineInit",
       "WhitelistPlatforms": [

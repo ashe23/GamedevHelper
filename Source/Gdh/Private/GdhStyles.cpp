@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "GdhCoreStyles.h"
+#include "GdhStyles.h"
+#include "Gdh.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Slate/SlateGameResources.h"
@@ -16,9 +17,9 @@ const FVector2D Icon16x16(16.0f, 16.0f);
 const FVector2D Icon20x20(20.0f, 20.0f);
 const FVector2D Icon40x40(40.0f, 40.0f);
 
-TSharedPtr<FSlateStyleSet> FGdhCoreStyles::StyleInstance = nullptr;
+TSharedPtr<FSlateStyleSet> FGdhStyles::StyleInstance = nullptr;
 
-void FGdhCoreStyles::Initialize()
+void FGdhStyles::Initialize()
 {
 	if (!StyleInstance.IsValid())
 	{
@@ -27,14 +28,14 @@ void FGdhCoreStyles::Initialize()
 	}
 }
 
-void FGdhCoreStyles::Shutdown()
+void FGdhStyles::Shutdown()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 	ensure(StyleInstance.IsUnique());
 	StyleInstance.Reset();
 }
 
-void FGdhCoreStyles::ReloadTextures()
+void FGdhStyles::ReloadTextures()
 {
 	if (FSlateApplication::IsInitialized())
 	{
@@ -42,28 +43,27 @@ void FGdhCoreStyles::ReloadTextures()
 	}
 }
 
-const ISlateStyle& FGdhCoreStyles::Get()
+const ISlateStyle& FGdhStyles::Get()
 {
 	return *StyleInstance;
 }
 
-FName FGdhCoreStyles::GetStyleSetName()
+FName FGdhStyles::GetStyleSetName()
 {
-	static FName StyleSetName(TEXT("GamedevHelperStyle"));
-	return StyleSetName;
+	return GdhConstants::ModuleStylesName;
 }
 
-const FSlateBrush* FGdhCoreStyles::GetIcon(const FString& Specifier)
+const FSlateBrush* FGdhStyles::GetIcon(const FString& Specifier)
 {
 	return Get().GetBrush(*Specifier);
 }
 
-FSlateColor FGdhCoreStyles::GetColor(const FString& Specifier)
+FSlateColor FGdhStyles::GetColor(const FString& Specifier)
 {
 	return Get().GetSlateColor(*Specifier);
 }
 
-FString FGdhCoreStyles::GetIconByStatus(const EGdhGenericStatus Status)
+FString FGdhStyles::GetIconByStatus(const EGdhGenericStatus Status)
 {
 	if (Status == EGdhGenericStatus::OK)
 	{
@@ -78,7 +78,7 @@ FString FGdhCoreStyles::GetIconByStatus(const EGdhGenericStatus Status)
 	return TEXT("GamedevHelper.Icon.Cross20");
 }
 
-FLinearColor FGdhCoreStyles::GetColorByStatus(const EGdhGenericStatus Status)
+FLinearColor FGdhStyles::GetColorByStatus(const EGdhGenericStatus Status)
 {
 	if (Status == EGdhGenericStatus::OK)
 	{
@@ -93,10 +93,10 @@ FLinearColor FGdhCoreStyles::GetColorByStatus(const EGdhGenericStatus Status)
 	return FLinearColor::Red;
 }
 
-TSharedRef<FSlateStyleSet> FGdhCoreStyles::Create()
+TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 {
-	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("GamedevHelperStyle"));
-	Style->SetContentRoot(IPluginManager::Get().FindPlugin("GamedevHelper")->GetBaseDir() / TEXT("Resources"));
+	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
+	Style->SetContentRoot(IPluginManager::Get().FindPlugin(GdhConstants::ModuleFullName.ToString())->GetBaseDir() / TEXT("Resources"));
 
 	// fonts light
 	Style->Set("GamedevHelper.Font.Light30", FCoreStyle::GetDefaultFontStyle("Light", 30));
@@ -119,22 +119,22 @@ TSharedRef<FSlateStyleSet> FGdhCoreStyles::Create()
 	Style->Set("GamedevHelper.Icon.Check20", new IMAGE_BRUSH(TEXT("IconCheck128"), Icon20x20));
 	Style->Set("GamedevHelper.Icon.Cross20", new IMAGE_BRUSH(TEXT("IconCross128"), Icon20x20));
 	Style->Set("GamedevHelper.Icon.Warning20", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon20x20));
-	// Style->Set("GamedevHelper.Cmd_AssetNamingManagerWindow", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
-	// Style->Set("GamedevHelper.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
-	// Style->Set("GamedevHelper.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));
-	// Style->Set("GamedevHelper.Cmd_WorldOutlinerManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon20x20));
+	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
+	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
+	// Style->Set("Gdh.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));
+	// Style->Set("Gdh.Cmd_WorldOutlinerManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon20x20));
 	Style->Set("GamedevHelper.Cmd_RestartEditor", new IMAGE_BRUSH(TEXT("IconRestart64"), Icon40x40));
 	Style->Set("GamedevHelper.Cmd_RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRestart64"), Icon20x20));
-	// Style->Set("GamedevHelper.Cmd_AssetNamingManagerOpenAsset", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon40x40));
-	// Style->Set("GamedevHelper.Cmd_AssetNamingManagerOpenAsset.Small", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon20x20));
-	// Style->Set("GamedevHelper.Cmd_AssetNamingManagerRenameSelected", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
-	// Style->Set("GamedevHelper.Cmd_AssetNamingManagerRenameSelected.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
-	Style->Set("GamedevHelper.Cmd_OpenRenderingManagerWindow", new IMAGE_BRUSH(TEXT("IconRenderer128"), Icon40x40));
-	Style->Set("GamedevHelper.Cmd_OpenRenderingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRenderer128"), Icon20x20));
-	// Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedImages", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon40x40));
-	// Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedImages.Small", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon20x20));
-	// Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedVideo", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon40x40));
-	// Style->Set("GamedevHelper.Cmd_RenderingManagerRemoveRenderedVideo.Small", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon20x20));
+	// Style->Set("Gdh.Cmd_AssetNamingManagerOpenAsset", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon40x40));
+	// Style->Set("Gdh.Cmd_AssetNamingManagerOpenAsset.Small", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon20x20));
+	// Style->Set("Gdh.Cmd_AssetNamingManagerRenameSelected", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
+	// Style->Set("Gdh.Cmd_AssetNamingManagerRenameSelected.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
+	Style->Set("GamedevHelper.Cmd_OpenWindowRenderingManager", new IMAGE_BRUSH(TEXT("IconRenderer128"), Icon40x40));
+	Style->Set("GamedevHelper.Cmd_OpenWindowRenderingManager.Small", new IMAGE_BRUSH(TEXT("IconRenderer128"), Icon20x20));
+	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedImages", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon40x40));
+	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedImages.Small", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon20x20));
+	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedVideo", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon40x40));
+	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedVideo.Small", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon20x20));
 	
 	// colors
 	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#C62828"))}});

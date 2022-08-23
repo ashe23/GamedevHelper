@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class GdhCore : ModuleRules
+public class Gdh : ModuleRules
 {
-	public GdhCore(ReadOnlyTargetRules Target) : base(Target)
+	public Gdh(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -26,10 +26,13 @@ public class GdhCore : ModuleRules
 				"Projects",
 				"UnrealEd",
 				"LevelSequence",
+				"MovieScene",
 				"LevelEditor",
 				"EditorSubsystem",
 				// MovieRender
 				"MovieRenderPipelineCore",
+				"MovieRenderPipelineRenderPasses",
+				"MovieRenderPipelineSettings",
 				"MovieRenderPipelineEditor",
 			}
 		);
