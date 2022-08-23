@@ -7,7 +7,7 @@
 #include "GdhStyles.h"
 #include "MoviePipelineQueueSubsystem.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-#include "Widgets/Notifications/SProgressBar.h"
+#include "Widgets/Layout/SScrollBox.h"
 
 void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 {
@@ -66,17 +66,45 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			  .Padding(FMargin{10.0f})
-			  .HAlign(HAlign_Fill)
-			  .VAlign(VAlign_Fill)
+			  .FillHeight(0.95f)
 			[
-				RenderingSettingsProperty.ToSharedRef()
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				  .HAlign(HAlign_Fill)
+				  .VAlign(VAlign_Fill)
+				[
+					RenderingSettingsProperty.ToSharedRef()
+				]
+				+ SVerticalBox::Slot()
+				  .HAlign(HAlign_Fill)
+				  .VAlign(VAlign_Fill)
+				[
+					MovieRenderSettingsProperty.ToSharedRef()
+				]
 			]
 			+ SVerticalBox::Slot()
 			  .Padding(FMargin{10.0f})
+			  .FillHeight(0.05f)
 			  .HAlign(HAlign_Fill)
 			  .VAlign(VAlign_Fill)
 			[
-				MovieRenderSettingsProperty.ToSharedRef()
+				SNew(SScrollBox)
+				.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+				.AnimateWheelScrolling(true)
+				.AllowOverscroll(EAllowOverscroll::No)
+				+ SScrollBox::Slot()
+				[
+					SNew(SBorder)
+					.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+					.Visibility_Raw(this, &SGdhRenderingManagerWindow::GetConsoleBoxVisibility)
+					[
+						SNew(STextBlock)
+						.Justification(ETextJustify::Left)
+						.Text_Raw(this, &SGdhRenderingManagerWindow::GetConsoleBoxText)
+						.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light15"))
+						.ColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#E53935"))})
+					]
+				]
 			]
 		]
 	];
@@ -89,4 +117,39 @@ int32 SGdhRenderingManagerWindow::GetActiveWidgetIndex() const
 	if (GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering()) return WidgetIndexRenderingManagerWorking;
 
 	return WidgetIndexRenderingManagerUI;
+}
+
+FText SGdhRenderingManagerWindow::GetConsoleBoxText() const
+{
+	if (RenderingSettings->OutputDirectory.Path.IsEmpty())
+	{
+		return FText::FromString(TEXT("Output directory not specified"));
+	}
+
+	if (!FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path))
+	{
+		return FText::FromString(TEXT("Output directory does not exist"));
+	}
+
+	if (RenderingSettings->FFmpegExe.FilePath.IsEmpty())
+	{
+		return FText::FromString(TEXT("FFmpeg.exe path not specified. Must be absolute path to exe, or just can be ffmpeg.exe if you have it in system PATHS"));
+	}
+
+	if (!FPaths::FileExists(RenderingSettings->FFmpegExe.FilePath))
+	{
+		return FText::FromString(FString::Printf(TEXT("Cant find ffmpeg.exe at given '%s' location"), *RenderingSettings->FFmpegExe.FilePath));
+	}
+
+	if (RenderingSettings->GetResolution().X % 2 != 0 || RenderingSettings->GetResolution().Y % 2 != 0)
+	{
+		return FText::FromString(TEXT("Resolution must have dimensions divisible by 2"));
+	}
+
+	return FText::FromString(TEXT(""));
+}
+
+EVisibility SGdhRenderingManagerWindow::GetConsoleBoxVisibility() const
+{
+	return RenderingSettings->IsValidSettings() ? EVisibility::Hidden : EVisibility::Visible;
 }

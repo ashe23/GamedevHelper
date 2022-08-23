@@ -26,6 +26,8 @@ public:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+
+	bool IsValidSettings() const;
 	
 	FIntPoint GetResolution() const;
 	FString GetResolutionFolderName() const;

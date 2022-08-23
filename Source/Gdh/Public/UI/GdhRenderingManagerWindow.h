@@ -15,8 +15,12 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
-	int32 GetActiveWidgetIndex() const;
+	
 private:
+	int32 GetActiveWidgetIndex() const;
+	FText GetConsoleBoxText() const;
+	EVisibility GetConsoleBoxVisibility() const;
+	
 	UGdhRenderingSettings* RenderingSettings = nullptr;
 	UGdhMovieRenderSettings* MovieRenderSettings = nullptr;
 	const int32 WidgetIndexRenderingManagerWorking = 0;

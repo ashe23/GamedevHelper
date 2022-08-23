@@ -71,9 +71,26 @@ void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& Proper
 			CurrentResolution = GdhConstants::Resolution1080P;
 	}
 
+	if (FPaths::FileExists(FFmpegExe.FilePath))
+	{
+		FFmpegExe.FilePath = FPaths::ConvertRelativePathToFull(FFmpegExe.FilePath);
+	}
+
 	SaveConfig();
 }
 #endif
+
+bool UGdhRenderingSettings::IsValidSettings() const
+{
+	if (OutputDirectory.Path.IsEmpty()) return false;
+	if (!FPaths::DirectoryExists(OutputDirectory.Path)) return false;
+	if (FFmpegExe.FilePath.IsEmpty()) return false;
+	if (FFmpegExe.FilePath.ToLower().Equals(TEXT("ffmpeg.exe"))) return true;
+	if (!FPaths::FileExists(FPaths::ConvertRelativePathToFull(FFmpegExe.FilePath))) return false;
+	if (CurrentResolution.X % 2 != 0 || CurrentResolution.Y % 2 != 0) return false;
+	
+	return true;
+}
 //
 // void UGdhRenderingSettings::Validate()
 // {
