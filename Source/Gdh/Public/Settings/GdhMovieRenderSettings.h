@@ -12,6 +12,11 @@ class UGdhMovieRenderSettings : public UObject
 {
 	GENERATED_BODY()
 public:
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", DisplayName="Use AA settings")
 	bool bSettingsAAEnabled = false;
 
@@ -132,4 +137,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|HighRes",
 		meta=(UIMin="64", ClampMin="0", UIMax="1024", EditCondition="bOverrideSubSurfaceScattering && bSettingsHighResEnabled"))
 	int32 BurleySampleCount = 64;
+
+	UMoviePipelineMasterConfig* CreateMasterConfig() const;
 };

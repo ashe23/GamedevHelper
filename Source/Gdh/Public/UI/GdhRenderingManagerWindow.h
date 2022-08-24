@@ -7,6 +7,7 @@
 
 class UGdhRenderingSettings;
 class UGdhMovieRenderSettings;
+class UGdhSubsystem;
 
 class SGdhRenderingManagerWindow : public SCompoundWidget
 {
@@ -23,6 +24,7 @@ private:
 	
 	UGdhRenderingSettings* RenderingSettings = nullptr;
 	UGdhMovieRenderSettings* MovieRenderSettings = nullptr;
+	UGdhSubsystem* GdhSubsystem = nullptr;
 	const int32 WidgetIndexRenderingManagerWorking = 0;
 	const int32 WidgetIndexRenderingManagerUI = 1;
 };

@@ -5,6 +5,7 @@
 #include "Settings/GdhRenderingSettings.h"
 // Engine Headers
 #include "GdhStyles.h"
+#include "GdhSubsystem.h"
 #include "MoviePipelineQueueSubsystem.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Layout/SScrollBox.h"
@@ -13,9 +14,11 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 {
 	RenderingSettings = GetMutableDefault<UGdhRenderingSettings>();
 	MovieRenderSettings = GetMutableDefault<UGdhMovieRenderSettings>();
+	GdhSubsystem = GEditor->GetEditorSubsystem<UGdhSubsystem>();
 
 	check(RenderingSettings);
 	check(MovieRenderSettings);
+	check(GdhSubsystem);
 
 	RenderingSettings->OnSettingChanged().AddLambda([&](const UObject* Obj, const FPropertyChangedEvent& ChangedEvent)
 	{
@@ -146,10 +149,16 @@ FText SGdhRenderingManagerWindow::GetConsoleBoxText() const
 		return FText::FromString(TEXT("Resolution must have dimensions divisible by 2"));
 	}
 
+	const UMoviePipelineMasterConfig* MasterConfig = MovieRenderSettings->CreateMasterConfig();
+	if (!GdhSubsystem->IsValidMasterConfig(MasterConfig))
+	{
+		return FText::FromString(GdhSubsystem->GetMasterConfigValidationMsg(MasterConfig));
+	}
+		
 	return FText::FromString(TEXT(""));
 }
 
 EVisibility SGdhRenderingManagerWindow::GetConsoleBoxVisibility() const
 {
-	return RenderingSettings->IsValidSettings() ? EVisibility::Hidden : EVisibility::Visible;
+	return RenderingSettings->IsValidSettings() && GdhSubsystem->IsValidMasterConfig(MovieRenderSettings->CreateMasterConfig()) ? EVisibility::Hidden : EVisibility::Visible;
 }

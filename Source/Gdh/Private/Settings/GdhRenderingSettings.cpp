@@ -207,86 +207,86 @@ FString UGdhRenderingSettings::GetVideoExtension(const bool IncludeDot) const
 // 	// EncoderSettings->OutputFileExtension = GetVideoExtension();
 // 	// EncoderSettings->PostEditChange();
 // 	//
-// 	// if (bSettingsAAEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass()))
-// 	// 	{
-// 	// 		AntiAliasingSetting->SpatialSampleCount = SpatialSampleCount;
-// 	// 		AntiAliasingSetting->TemporalSampleCount = TemporalSampleCount;
-// 	// 		AntiAliasingSetting->bOverrideAntiAliasing = bOverrideAntiAliasing;
-// 	// 		AntiAliasingSetting->AntiAliasingMethod = AntiAliasingMethod;
-// 	// 		AntiAliasingSetting->RenderWarmUpCount = RenderWarmUpCount;
-// 	// 		AntiAliasingSetting->bUseCameraCutForWarmUp = bUseCameraCutForWarmUp;
-// 	// 		AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
-// 	// 		AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
-// 	// 	}
-// 	// }
-// 	//
-// 	// if (bSettingsConsoleVariablesEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineConsoleVariableSetting> ConsoleVariableSetting = Config->FindOrAddSettingByClass(UMoviePipelineConsoleVariableSetting::StaticClass()))
-// 	// 	{
-// 	// 		ConsoleVariableSetting->ConsoleVariables = ConsoleVariables;
-// 	// 		ConsoleVariableSetting->StartConsoleCommands = StartConsoleCommands;
-// 	// 		ConsoleVariableSetting->EndConsoleCommands = EndConsoleCommands;
-// 	// 	}
-// 	// }
-// 	//
-// 	// if (bSettingsGameOverrideEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineGameOverrideSetting> GameOverrideSetting = Config->FindOrAddSettingByClass(UMoviePipelineGameOverrideSetting::StaticClass()))
-// 	// 	{
-// 	// 		GameOverrideSetting->GameModeOverride = GameModeOverride;
-// 	// 		GameOverrideSetting->bCinematicQualitySettings = bCinematicQualitySettings;
-// 	// 		GameOverrideSetting->TextureStreaming = TextureStreaming;
-// 	// 		GameOverrideSetting->bUseLODZero = bUseLODZero;
-// 	// 		GameOverrideSetting->bDisableHLODs = bDisableHLODs;
-// 	// 		GameOverrideSetting->bUseHighQualityShadows = bUseHighQualityShadows;
-// 	// 		GameOverrideSetting->ShadowDistanceScale = ShadowDistanceScale;
-// 	// 		GameOverrideSetting->ShadowRadiusThreshold = ShadowRadiusThreshold;
-// 	// 		GameOverrideSetting->bOverrideViewDistanceScale = bOverrideViewDistanceScale;
-// 	// 		GameOverrideSetting->ViewDistanceScale = ViewDistanceScale;
-// 	// 		GameOverrideSetting->bFlushGrassStreaming = bFlushGrassStreaming;
-// 	// 	}
-// 	// }
-// 	//
-// 	// if (bSettingsUIEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineWidgetRenderer> WidgetRenderer = Config->FindOrAddSettingByClass(UMoviePipelineWidgetRenderer::StaticClass()))
-// 	// 	{
-// 	// 		WidgetRenderer->bCompositeOntoFinalImage = bCompositeOntoFinalImage;
-// 	// 	}
-// 	// }
-// 	//
-// 	// if (bSettingsBurnInEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineBurnInSetting> BurnInSetting = Config->FindOrAddSettingByClass(UMoviePipelineBurnInSetting::StaticClass()))
-// 	// 	{
-// 	// 		BurnInSetting->BurnInClass = BurnInClass;
-// 	// 		BurnInSetting->bCompositeOntoFinalImage = bBurnInCompositeOntoFinalImage;
-// 	// 	}
-// 	// }
-// 	//
-// 	// if (bSettingsCameraEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineCameraSetting> CameraSetting = Config->FindOrAddSettingByClass(UMoviePipelineCameraSetting::StaticClass()))
-// 	// 	{
-// 	// 		CameraSetting->OverscanPercentage = OverscanPercentage;
-// 	// 		CameraSetting->ShutterTiming = ShutterTiming;
-// 	// 	}
-// 	// }
-// 	//
-// 	// if (bSettingsHighResEnabled)
-// 	// {
-// 	// 	if (const TSoftObjectPtr<UMoviePipelineHighResSetting> HighResSetting = Config->FindOrAddSettingByClass(UMoviePipelineHighResSetting::StaticClass()))
-// 	// 	{
-// 	// 		HighResSetting->TileCount = TileCount;
-// 	// 		HighResSetting->TextureSharpnessBias = TextureSharpnessBias;
-// 	// 		HighResSetting->OverlapRatio = OverlapRatio;
-// 	// 		HighResSetting->bOverrideSubSurfaceScattering = bOverrideSubSurfaceScattering;
-// 	// 		HighResSetting->BurleySampleCount = BurleySampleCount;
-// 	// 	}
-// 	// }
+	// if (bSettingsAAEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = Config->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass()))
+	// 	{
+	// 		AntiAliasingSetting->SpatialSampleCount = SpatialSampleCount;
+	// 		AntiAliasingSetting->TemporalSampleCount = TemporalSampleCount;
+	// 		AntiAliasingSetting->bOverrideAntiAliasing = bOverrideAntiAliasing;
+	// 		AntiAliasingSetting->AntiAliasingMethod = AntiAliasingMethod;
+	// 		AntiAliasingSetting->RenderWarmUpCount = RenderWarmUpCount;
+	// 		AntiAliasingSetting->bUseCameraCutForWarmUp = bUseCameraCutForWarmUp;
+	// 		AntiAliasingSetting->EngineWarmUpCount = EngineWarmUpCount;
+	// 		AntiAliasingSetting->bRenderWarmUpFrames = bRenderWarmUpFrames;
+	// 	}
+	// }
+	//
+	// if (bSettingsConsoleVariablesEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineConsoleVariableSetting> ConsoleVariableSetting = Config->FindOrAddSettingByClass(UMoviePipelineConsoleVariableSetting::StaticClass()))
+	// 	{
+	// 		ConsoleVariableSetting->ConsoleVariables = ConsoleVariables;
+	// 		ConsoleVariableSetting->StartConsoleCommands = StartConsoleCommands;
+	// 		ConsoleVariableSetting->EndConsoleCommands = EndConsoleCommands;
+	// 	}
+	// }
+	//
+	// if (bSettingsGameOverrideEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineGameOverrideSetting> GameOverrideSetting = Config->FindOrAddSettingByClass(UMoviePipelineGameOverrideSetting::StaticClass()))
+	// 	{
+	// 		GameOverrideSetting->GameModeOverride = GameModeOverride;
+	// 		GameOverrideSetting->bCinematicQualitySettings = bCinematicQualitySettings;
+	// 		GameOverrideSetting->TextureStreaming = TextureStreaming;
+	// 		GameOverrideSetting->bUseLODZero = bUseLODZero;
+	// 		GameOverrideSetting->bDisableHLODs = bDisableHLODs;
+	// 		GameOverrideSetting->bUseHighQualityShadows = bUseHighQualityShadows;
+	// 		GameOverrideSetting->ShadowDistanceScale = ShadowDistanceScale;
+	// 		GameOverrideSetting->ShadowRadiusThreshold = ShadowRadiusThreshold;
+	// 		GameOverrideSetting->bOverrideViewDistanceScale = bOverrideViewDistanceScale;
+	// 		GameOverrideSetting->ViewDistanceScale = ViewDistanceScale;
+	// 		GameOverrideSetting->bFlushGrassStreaming = bFlushGrassStreaming;
+	// 	}
+	// }
+	//
+	// if (bSettingsUIEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineWidgetRenderer> WidgetRenderer = Config->FindOrAddSettingByClass(UMoviePipelineWidgetRenderer::StaticClass()))
+	// 	{
+	// 		WidgetRenderer->bCompositeOntoFinalImage = bCompositeOntoFinalImage;
+	// 	}
+	// }
+	//
+	// if (bSettingsBurnInEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineBurnInSetting> BurnInSetting = Config->FindOrAddSettingByClass(UMoviePipelineBurnInSetting::StaticClass()))
+	// 	{
+	// 		BurnInSetting->BurnInClass = BurnInClass;
+	// 		BurnInSetting->bCompositeOntoFinalImage = bBurnInCompositeOntoFinalImage;
+	// 	}
+	// }
+	//
+	// if (bSettingsCameraEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineCameraSetting> CameraSetting = Config->FindOrAddSettingByClass(UMoviePipelineCameraSetting::StaticClass()))
+	// 	{
+	// 		CameraSetting->OverscanPercentage = OverscanPercentage;
+	// 		CameraSetting->ShutterTiming = ShutterTiming;
+	// 	}
+	// }
+	//
+	// if (bSettingsHighResEnabled)
+	// {
+	// 	if (const TSoftObjectPtr<UMoviePipelineHighResSetting> HighResSetting = Config->FindOrAddSettingByClass(UMoviePipelineHighResSetting::StaticClass()))
+	// 	{
+	// 		HighResSetting->TileCount = TileCount;
+	// 		HighResSetting->TextureSharpnessBias = TextureSharpnessBias;
+	// 		HighResSetting->OverlapRatio = OverlapRatio;
+	// 		HighResSetting->bOverrideSubSurfaceScattering = bOverrideSubSurfaceScattering;
+	// 		HighResSetting->BurleySampleCount = BurleySampleCount;
+	// 	}
+	// }
 //
 // 	return Config;
 // }
