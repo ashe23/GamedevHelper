@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequence.h"
+#include "GdhTypes.generated.h"
 
 UENUM(BlueprintType)
 enum class EGdhGenericStatus : uint8
@@ -48,4 +50,19 @@ enum class EGdhResolutionPreset : uint8
 	Res1440P UMETA(DisplayName = "1440p (2560x1440)", ToolTip = "1440p (QHD)"),
 	Res2160P UMETA(DisplayName = "2160p (3840x2160)", ToolTip = "2160p (4K)"),
 	ResCustom UMETA(DisplayName = "Custom", ToolTip = "Custom resolution settings")
+};
+
+USTRUCT(BlueprintType)
+struct FGdhLevelSequenceRenderSettings
+{
+	GENERATED_BODY();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
+	TSoftObjectPtr<ULevelSequence> LevelSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
+	bool bUseEditorMap = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(EditCondition="bUseEditorMap == false"))
+	TSoftObjectPtr<UWorld> Map;
 };

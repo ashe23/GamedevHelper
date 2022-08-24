@@ -30,6 +30,7 @@ public class Gdh : ModuleRules
 				"LevelEditor",
 				"EditorSubsystem",
 				"EditorStyle",
+				"InputCore",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",
