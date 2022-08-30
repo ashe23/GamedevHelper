@@ -32,14 +32,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", meta=(EditCondition="bOverrideAntiAliasing && bSettingsAAEnabled"))
 	TEnumAsByte<EAntiAliasingMethod> AntiAliasingMethod = AAM_None;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", meta=(UIMin = 0, ClampMin = 0, EditCondition="bSettingsAAEnabled"), AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing|Advanced", meta=(UIMin = 0, ClampMin = 0, EditCondition="bSettingsAAEnabled"))
 	int32 RenderWarmUpCount = 32;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", meta=(EditCondition="bSettingsAAEnabled"))
 	bool bUseCameraCutForWarmUp = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", meta=(UIMin = 0, ClampMin = 0, EditCondition="!bUseCameraCutForWarmUp && bSettingsAAEnabled"),
-		AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing|Advanced", meta=(UIMin = 0, ClampMin = 0, EditCondition="!bUseCameraCutForWarmUp && bSettingsAAEnabled"))
 	int32 EngineWarmUpCount = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", meta=(EditCondition="bSettingsAAEnabled"))
