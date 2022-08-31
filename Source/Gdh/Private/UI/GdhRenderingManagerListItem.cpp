@@ -1,8 +1,8 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "UI/GdhRenderingManagerListItem.h"
-
 #include "GdhStyles.h"
+#include "GdhSubsystem.h"
 
 void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
@@ -17,11 +17,49 @@ void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSh
 
 TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const FName& InColumnName)
 {
-	// todo:ashe23 check for rendered images
+	// checking for errors
+	FString ErrorMsg;
+	
+	if (!ListItem.IsValid())
+	{
+		return SNew(STextBlock).Text(FText::FromString(""));
+	}
+
+	if (!ListItem->LevelSequence || !ListItem->Map)
+	{
+		return SNew(STextBlock).Text(FText::FromString(""));
+	}
+
+	// checking for warnings if no errors
+	uint32 RenderedFramesNum = 0;
+	
+	if (ListItem->Status != EGdhGenericStatus::Error)
+	{
+		if (GEditor)
+		{
+			if (const UGdhSubsystem* GdhSubsystem = GEditor->GetEditorSubsystem<UGdhSubsystem>())
+			{
+				bool bHasMissingFrames = false;
+				RenderedFramesNum = GdhSubsystem->GetRenderedFramesNum(ListItem->LevelSequence, bHasMissingFrames);
+
+				if (RenderedFramesNum == 0)
+				{
+					ListItem->Status = EGdhGenericStatus::Warning;
+					ErrorMsg = TEXT("Missing rendered images");
+				}
+
+				if (RenderedFramesNum > 0 && bHasMissingFrames)
+				{
+					ListItem->Status = EGdhGenericStatus::Warning;
+					ErrorMsg = TEXT("Missing images for some frames. Image sequence is not sequential. Re-Render to fix this");
+				}
+			}
+		}
+	}
 	
 	if (InColumnName.IsEqual(TEXT("Status")))
 	{
-		const FString Icon = FGdhStyles::GetIconByStatus(EGdhGenericStatus::OK);
+		const FString Icon = FGdhStyles::GetIconByStatus(ListItem->Status);
 		return SNew(SBox)
 			.WidthOverride(20)
 			.HeightOverride(20)
@@ -36,10 +74,17 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 		return SNew(STextBlock).Text(FText::FromString(ListItem->LevelSequence->GetName()));
 	}
 
+	if (InColumnName.IsEqual(TEXT("RenderedFrames")))
+	{
+		return SNew(STextBlock).Text(FText::FromString(FString::Printf(TEXT("%d"), RenderedFramesNum)));
+	}
+
 	if (InColumnName.IsEqual(TEXT("Note")))
 	{
-		return SNew(STextBlock).Text(FText::FromString("Some note"));
+		const FLinearColor Color = FGdhStyles::GetColorByStatus(ListItem->Status);
+		
+		return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(ErrorMsg));
 	}
-	
+
 	return SNew(STextBlock).Text(FText::FromString(""));
 }

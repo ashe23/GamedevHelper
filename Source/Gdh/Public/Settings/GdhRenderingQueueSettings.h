@@ -6,6 +6,8 @@
 #include "GdhTypes.h"
 #include "GdhRenderingQueueSettings.generated.h"
 
+DECLARE_DELEGATE(FGdhQueueSettingsOnChangeDelegate);
+
 class ULevelSequence;
 class UMoviePipelineQueue;
 
@@ -21,4 +23,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="QueueSettings")
 	TArray<FGdhLevelSequenceRenderSettings> LevelSequences;
+
+	FGdhQueueSettingsOnChangeDelegate GdhQueueSettingsOnChangeDelegate;
 };

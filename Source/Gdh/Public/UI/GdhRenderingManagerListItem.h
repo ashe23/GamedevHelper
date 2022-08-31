@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GdhTypes.h"
 #include "GdhRenderingManagerListItem.generated.h"
 
 UCLASS(Transient)
@@ -10,6 +11,9 @@ class UGdhRenderingManagerListItem : public UObject
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY()
+	EGdhGenericStatus Status = EGdhGenericStatus::OK;
+	
 	UPROPERTY()
 	class ULevelSequence* LevelSequence;
 

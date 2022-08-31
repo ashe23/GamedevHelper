@@ -33,6 +33,8 @@ private:
 
 	FReply OnBtnRefreshClick();
 	FReply OnBtnRenderClick();
+
+	bool IsBtnRenderEnabled() const;
 	
 	UGdhRenderingSettings* RenderingSettings = nullptr;
 	UGdhMovieRenderSettings* MovieRenderSettings = nullptr;

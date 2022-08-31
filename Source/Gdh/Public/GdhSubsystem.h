@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GdhSubsystem.generated.h"
 
+class ULevelSequence;
 class UMoviePipelineSetting;
 class UMoviePipelineMasterConfig;
 
@@ -19,4 +20,7 @@ public:
 	static bool IsValidJobSetting(UMoviePipelineSetting* Setting);
 	static bool IsValidMasterConfig(const UMoviePipelineMasterConfig* MasterConfig);
 	static FString GetMasterConfigValidationMsg(const UMoviePipelineMasterConfig* MasterConfig);
+	static uint32 GetRenderedFramesNum(const ULevelSequence* LevelSequence, bool& bHasMissingFrames);
+	static FString GetImageOutputDirectoryPath(const ULevelSequence* LevelSequence);
+	static FString GetVideoOutputDirectoryPath(const ULevelSequence* LevelSequence);
 };
