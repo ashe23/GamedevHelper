@@ -416,7 +416,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
 						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open image output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 					}
-					
+
 					FPlatformProcess::ExploreFolder(*Path);
 				}
 			})
@@ -445,7 +445,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open video output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
-					
+
 					FPlatformProcess::ExploreFolder(*Path);
 				}
 			})
@@ -467,7 +467,8 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!SelectedItem.IsValid()) break;
 					if (!SelectedItem->LevelSequence) break;
 
-					const FString Path = FString::Printf(TEXT("%s/%s.%s"),
+					const FString Path = FString::Printf(
+						TEXT("%s/%s.%s"),
 						*GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence),
 						*SelectedItem->LevelSequence->GetName(),
 						*RenderingSettings->GetVideoExtension()
@@ -477,7 +478,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
 						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 					}
-					
+
 					FPlatformProcess::LaunchFileInDefaultExternalApplication(*Path);
 				}
 			})
@@ -515,10 +516,10 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
-					
+
 					PlatformFile.CreateDirectoryTree(*Path);
 				}
-				
+
 				GdhSubsystem->ShowModal(TEXT("Rendered images removed successfully"), EGdhModalStatus::OK, 3.0f);
 
 				ListUpdate();
@@ -541,7 +542,8 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!SelectedItem.IsValid()) break;
 					if (!SelectedItem->LevelSequence) break;
 
-					const FString Path = FString::Printf(TEXT("%s/%s.%s"),
+					const FString Path = FString::Printf(
+						TEXT("%s/%s.%s"),
 						*GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence),
 						*SelectedItem->LevelSequence->GetName(),
 						*RenderingSettings->GetVideoExtension()
@@ -561,10 +563,10 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
-					
+
 					PlatformFile.CreateDirectoryTree(*Path);
 				}
-				
+
 				GdhSubsystem->ShowModal(TEXT("Encoded video removed successfully"), EGdhModalStatus::OK, 3.0f);
 
 				ListUpdate();
