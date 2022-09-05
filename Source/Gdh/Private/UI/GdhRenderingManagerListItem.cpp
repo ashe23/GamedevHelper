@@ -3,6 +3,7 @@
 #include "UI/GdhRenderingManagerListItem.h"
 #include "GdhStyles.h"
 #include "GdhSubsystem.h"
+#include "Settings/GdhRenderingSettings.h"
 
 void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
@@ -19,7 +20,7 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 {
 	// checking for errors
 	FString ErrorMsg;
-	
+
 	if (!ListItem.IsValid())
 	{
 		return SNew(STextBlock).Text(FText::FromString(""));
@@ -32,7 +33,7 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 
 	// checking for warnings if no errors
 	uint32 RenderedFramesNum = 0;
-	
+
 	if (ListItem->Status != EGdhGenericStatus::Error)
 	{
 		if (GEditor)
@@ -56,7 +57,7 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 			}
 		}
 	}
-	
+
 	if (InColumnName.IsEqual(TEXT("Status")))
 	{
 		const FString Icon = FGdhStyles::GetIconByStatus(ListItem->Status);
@@ -67,6 +68,18 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 			SNew(SImage)
 			.Image(FGdhStyles::GetIcon(Icon))
 		];
+	}
+
+	if (InColumnName.IsEqual(TEXT("Duration")))
+	{
+		if (const UGdhSubsystem* GdhSubsystem = GEditor->GetEditorSubsystem<UGdhSubsystem>())
+		{
+			const uint32 DurationInFrames = GdhSubsystem->GetLevelSequenceDuration(ListItem->LevelSequence);
+			const double DurationInSeconds = DurationInFrames / GetDefault<UGdhRenderingSettings>()->Framerate.AsDecimal();
+			const FString Duration = FString::Printf(TEXT("%d frames (%.1f sec)"), DurationInFrames, DurationInSeconds);
+			
+			return SNew(STextBlock).Text(FText::FromString(Duration));
+		}
 	}
 
 	if (InColumnName.IsEqual(TEXT("Sequence")))
@@ -82,7 +95,7 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 	if (InColumnName.IsEqual(TEXT("Note")))
 	{
 		const FLinearColor Color = FGdhStyles::GetColorByStatus(ListItem->Status);
-		
+
 		return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(ErrorMsg));
 	}
 

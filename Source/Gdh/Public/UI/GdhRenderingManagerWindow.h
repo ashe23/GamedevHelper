@@ -22,6 +22,7 @@ public:
 private:
 	int32 GetActiveWidgetIndex() const;
 	FText GetConsoleBoxText() const;
+	FText GetJobStats() const;
 	EVisibility GetConsoleBoxVisibility() const;
 	TSharedRef<ITableRow> OnGenerateRow(
 		TWeakObjectPtr<UGdhRenderingManagerListItem> InItem,
@@ -45,4 +46,5 @@ private:
 	const int32 WidgetIndexRenderingManagerWorking = 0;
 	const int32 WidgetIndexRenderingManagerUI = 1;
 	FString ErrorMsg;
+	FString JobStats;
 };

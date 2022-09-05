@@ -8,7 +8,6 @@
 #include "GdhStyles.h"
 #include "GdhSubsystem.h"
 // Engine Headers
-#include "EditorLevelUtils.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
@@ -197,7 +196,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 					  .AutoHeight()
 					[
 						SNew(STextBlock)
-						.Text(FText::FromString(TEXT("113 jobs (total duration 34.23 sec)")))
+						.Text_Raw(this, &SGdhRenderingManagerWindow::GetJobStats)
 						.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light8"))
 					]
 					+ SVerticalBox::Slot()
@@ -294,6 +293,11 @@ FText SGdhRenderingManagerWindow::GetConsoleBoxText() const
 	return FText::FromString(TEXT(""));
 }
 
+FText SGdhRenderingManagerWindow::GetJobStats() const
+{
+	return FText::FromString(JobStats);
+}
+
 EVisibility SGdhRenderingManagerWindow::GetConsoleBoxVisibility() const
 {
 	return RenderingSettings->IsValidSettings() && GdhSubsystem->IsValidMasterConfig(MovieRenderSettings->CreateMasterConfig()) && ErrorMsg.IsEmpty() ? EVisibility::Hidden : EVisibility::Visible;
@@ -330,6 +334,17 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 			.ToolTipText(FText::FromString(TEXT("LevelSequence Name")))
 			.Text(FText::FromString(TEXT("Sequence")))
 		]
+		+ SHeaderRow::Column(FName("Duration"))
+		  .HAlignCell(HAlign_Center)
+		  .VAlignCell(VAlign_Center)
+		  .HAlignHeader(HAlign_Center)
+		  .HeaderContentPadding(FMargin(10.0f))
+		  .FillSized(200.0f)
+		[
+			SNew(STextBlock)
+			.ToolTipText(FText::FromString(TEXT("LevelSequence duration, based on framerate parameter. Does not take into account time dilation track")))
+			.Text(FText::FromString(TEXT("Duration")))
+		]
 		+ SHeaderRow::Column(FName("RenderedFrames"))
 		  .HAlignCell(HAlign_Center)
 		  .VAlignCell(VAlign_Center)
@@ -338,7 +353,7 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 		[
 			SNew(STextBlock)
 			.ToolTipText(FText::FromString(TEXT("Number of already rendered frames")))
-			.Text(FText::FromString(TEXT("RenderedFramesNum")))
+			.Text(FText::FromString(TEXT("Rendered Frames Num")))
 		]
 		// + SHeaderRow::Column(FName("RenderedFramesDir"))
 		//   .HAlignCell(HAlign_Center)
@@ -378,15 +393,16 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 void SGdhRenderingManagerWindow::ListUpdate()
 {
 	if (!GEditor) return;
-	
+
 	ErrorMsg.Reset();
+	JobStats.Reset();
 
 	if (QueueSettings->LevelSequences.Num() == 0)
 	{
 		ErrorMsg = TEXT("Queue is empty. Select some LevelSequences in order to render");
 		return;
 	}
-	
+
 	ListItems.Reset();
 	ListItems.Reserve(QueueSettings->LevelSequences.Num());
 
@@ -395,6 +411,8 @@ void SGdhRenderingManagerWindow::ListUpdate()
 		FText::FromString(TEXT("Loading Queue assets..."))
 	};
 	LevelSequenceSlowTask.MakeDialog();
+
+	double TotalJobsDuration = 0;
 
 	for (const auto& LevelSequenceSetting : QueueSettings->LevelSequences)
 	{
@@ -425,6 +443,8 @@ void SGdhRenderingManagerWindow::ListUpdate()
 		ListItem->LevelSequence = LevelSequence;
 		ListItem->Map = Map;
 
+		TotalJobsDuration += GdhSubsystem->GetLevelSequenceDuration(LevelSequence) / RenderingSettings->Framerate.AsDecimal();
+
 		ListItems.Add(ListItem);
 	}
 
@@ -432,6 +452,8 @@ void SGdhRenderingManagerWindow::ListUpdate()
 	{
 		ListView->RequestListRefresh();
 	}
+
+	JobStats = FString::Printf(TEXT("%d %s (total duration %.1f seconds)"), ListItems.Num(), ListItems.Num() > 1 ? TEXT("jobs") : TEXT("job"), TotalJobsDuration);
 }
 
 FReply SGdhRenderingManagerWindow::OnBtnRefreshClick()
@@ -446,7 +468,7 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
 	if (!CustomQueue)
 	{
-		// todo:ashe23 show dialog window
+		GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to create queue for rendering"), EGdhModalStatus::Error, 5.0f);
 		return FReply::Handled();
 	}
 
@@ -466,16 +488,16 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 		Job->Map = ListItem->Map;
 		Job->JobName = ListItem->LevelSequence->GetName();
 		Job->SetConfiguration(MovieRenderSettings->CreateMasterConfig());
-		
+
 		UMoviePipelineMasterConfig* Config = Job->GetConfiguration();
 		if (!Config)
 		{
 			return FReply::Handled();
 		}
-		
+
 		Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
 		Config->FindOrAddSettingByClass(RenderingSettings->GetImageClass());
-		
+
 		UMoviePipelineOutputSetting* OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
 		if (!OutputSetting)
 		{
@@ -492,7 +514,7 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 			ListItem->LevelSequence->MovieScene->GetTickResolution(),
 			ListItem->LevelSequence->MovieScene->GetDisplayRate()
 		).FloorToFrame().Value;
-		
+
 		OutputSetting->OutputDirectory.Path = GdhSubsystem->GetImageOutputDirectoryPath(ListItem->LevelSequence);
 		OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
 		OutputSetting->OutputResolution = RenderingSettings->GetResolution();
@@ -508,27 +530,40 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 		OutputSetting->CustomEndFrame = FrameEnd;
 	}
 
+	const FTimespan RenderStartTime = FTimespan::FromSeconds(FPlatformTime::Seconds());
+	
 	const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
 	if (!Executor) return FReply::Handled();
-	
+
 	Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
 	{
-		ListUpdate();
+		const FTimespan RenderEndTime = FTimespan::FromSeconds(FPlatformTime::Seconds());
 		
+		ListUpdate();
+
+		if (!GdhSubsystem) return;
+
 		if (!bSuccess)
 		{
-			// ShowModalWithOutputLog(TEXT("Error occured when rendering images"));
+			GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
 			return;
 		}
-		
 
-		// ShowModal(TEXT("Rendering images finished successfully"), EGamedevHelperModalStatus::Success);
+		
+		const FString SuccessText = FString::Printf(TEXT("Images rendered successfully in %d sec"), (RenderEndTime - RenderStartTime).GetSeconds());
+		UE_LOG(LogGdh, Log, TEXT("%s"), *SuccessText);
+		GdhSubsystem->ShowModal(SuccessText, EGdhModalStatus::OK, 5.0f);
 	});
 	Executor->OnExecutorErrored().AddLambda([&](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
 	{
 		ListUpdate();
+
+		if (!GdhSubsystem) return;
+
+		GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
+		UE_LOG(LogGdh, Error, TEXT("%s"), *ErrorText.ToString());
 	});
-	
+
 	return FReply::Handled();
 }
 
