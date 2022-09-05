@@ -8,6 +8,7 @@
 #include "GdhStyles.h"
 #include "GdhSubsystem.h"
 // Engine Headers
+#include "GdhCommands.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
@@ -39,6 +40,8 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 	{
 		ListUpdate();
 	});
+
+	RegisterCommands();
 
 	FPropertyEditorModule& PropertyEditor = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	FDetailsViewArgs DetailsViewArgs;
@@ -208,7 +211,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 						SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>)
 						.ListItemsSource(&ListItems)
 						.SelectionMode(ESelectionMode::SingleToggle)
-						// .OnContextMenuOpening(this, &SGamedevHelperRenderingManagerWindow::ListCreateContextMenu)
+						.OnContextMenuOpening(this, &SGdhRenderingManagerWindow::ListCreateContextMenu)
 						.OnGenerateRow(this, &SGdhRenderingManagerWindow::OnGenerateRow)
 						// .OnMouseButtonDoubleClick(this, &SGamedevHelperRenderingManagerWindow::OnListDblClick)
 						.HeaderRow(GetHeaderRow())
@@ -355,28 +358,6 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 			.ToolTipText(FText::FromString(TEXT("Number of already rendered frames")))
 			.Text(FText::FromString(TEXT("Rendered Frames Num")))
 		]
-		// + SHeaderRow::Column(FName("RenderedFramesDir"))
-		//   .HAlignCell(HAlign_Center)
-		//   .VAlignCell(VAlign_Center)
-		//   .HAlignHeader(HAlign_Center)
-		//   .HeaderContentPadding(FMargin(10.0f))
-		//   .FillSized(500.0f)
-		// [
-		// 	SNew(STextBlock)
-		// 	.ToolTipText(FText::FromString(TEXT("Job rendered frames image directory")))
-		// 	.Text(FText::FromString(TEXT("ImageDir")))
-		// ]
-		// + SHeaderRow::Column(FName("RenderedVideoFile"))
-		//   .HAlignCell(HAlign_Center)
-		//   .VAlignCell(VAlign_Center)
-		//   .HAlignHeader(HAlign_Center)
-		//   .HeaderContentPadding(FMargin(10.0f))
-		//   .FillSized(500.0f)
-		// [
-		// 	SNew(STextBlock)
-		// 	.ToolTipText(FText::FromString(TEXT("Job encoded video file")))
-		// 	.Text(FText::FromString(TEXT("VideoFile")))
-		// ]
 		+ SHeaderRow::Column(FName("Note"))
 		  .HAlignCell(HAlign_Center)
 		  .VAlignCell(VAlign_Center)
@@ -388,6 +369,208 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 			.ToolTipText(FText::FromString(TEXT("Job encoded video file")))
 			.Text(FText::FromString(TEXT("Note")))
 		];
+}
+
+TSharedPtr<SWidget> SGdhRenderingManagerWindow::ListCreateContextMenu() const
+{
+	FMenuBuilder MenuBuilder{true, PluginCommands};
+	MenuBuilder.BeginSection(TEXT("ActionsOpen"), FText::FromString(TEXT("Open")));
+	{
+		MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenImageDir);
+		MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenVideoDir);
+		MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_PlayVideoFile);
+	}
+	MenuBuilder.EndSection();
+	MenuBuilder.BeginSection(TEXT("ActionsRemove"), FText::FromString(TEXT("Remove")));
+	{
+		MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_RemoveRenderedImages);
+		MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_RemoveEncodedVideo);
+	}
+	MenuBuilder.EndSection();
+
+	return MenuBuilder.MakeWidget();
+}
+
+void SGdhRenderingManagerWindow::RegisterCommands()
+{
+	PluginCommands = MakeShareable(new FUICommandList);
+	PluginCommands->MapAction(
+		FGdhCommands::Get().Cmd_OpenImageDir,
+		FUIAction(
+			FExecuteAction::CreateLambda([&]()
+			{
+				if (!ListView.IsValid()) return;
+				if (!GdhSubsystem) return;
+
+				const auto SelectedItems = ListView->GetSelectedItems();
+				if (SelectedItems.Num() == 0) return;
+
+				for (const auto& SelectedItem : SelectedItems)
+				{
+					if (!SelectedItem.IsValid()) break;
+					if (!SelectedItem->LevelSequence) break;
+
+					const FString Path = GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence);
+					if (!FPaths::DirectoryExists(Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open image output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+					}
+					
+					FPlatformProcess::ExploreFolder(*Path);
+				}
+			})
+		)
+	);
+	PluginCommands->MapAction(
+		FGdhCommands::Get().Cmd_OpenVideoDir,
+		FUIAction(
+			FExecuteAction::CreateLambda([&]()
+			{
+				if (!ListView.IsValid()) return;
+				if (!GdhSubsystem) return;
+
+				const auto SelectedItems = ListView->GetSelectedItems();
+				if (SelectedItems.Num() == 0) return;
+
+				for (const auto& SelectedItem : SelectedItems)
+				{
+					if (!SelectedItem.IsValid()) break;
+					if (!SelectedItem->LevelSequence) break;
+
+					const FString Path = GdhSubsystem->GetVideoOutputDirectoryPath(SelectedItem->LevelSequence);
+					if (!FPaths::DirectoryExists(Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open video output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						return;
+					}
+					
+					FPlatformProcess::ExploreFolder(*Path);
+				}
+			})
+		)
+	);
+	PluginCommands->MapAction(
+		FGdhCommands::Get().Cmd_PlayVideoFile,
+		FUIAction(
+			FExecuteAction::CreateLambda([&]()
+			{
+				if (!ListView.IsValid()) return;
+				if (!GdhSubsystem) return;
+
+				const auto SelectedItems = ListView->GetSelectedItems();
+				if (SelectedItems.Num() == 0) return;
+
+				for (const auto& SelectedItem : SelectedItems)
+				{
+					if (!SelectedItem.IsValid()) break;
+					if (!SelectedItem->LevelSequence) break;
+
+					const FString Path = FString::Printf(TEXT("%s/%s.%s"),
+						*GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence),
+						*SelectedItem->LevelSequence->GetName(),
+						*RenderingSettings->GetVideoExtension()
+					);
+					if (!FPaths::FileExists(Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+					}
+					
+					FPlatformProcess::LaunchFileInDefaultExternalApplication(*Path);
+				}
+			})
+		)
+	);
+	PluginCommands->MapAction(
+		FGdhCommands::Get().Cmd_RemoveRenderedImages,
+		FUIAction(
+			FExecuteAction::CreateLambda([&]()
+			{
+				if (!ListView.IsValid()) return;
+				if (!GdhSubsystem) return;
+
+				const auto SelectedItems = ListView->GetSelectedItems();
+				if (SelectedItems.Num() == 0) return;
+
+				for (const auto& SelectedItem : SelectedItems)
+				{
+					if (!SelectedItem.IsValid()) break;
+					if (!SelectedItem->LevelSequence) break;
+
+					const FString Path = GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence);
+					if (!FPaths::DirectoryExists(Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						return;
+					}
+
+					IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+					if (!PlatformFile.DeleteDirectoryRecursively(*Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("Failed to remove %s directory"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						return;
+					}
+					
+					PlatformFile.CreateDirectoryTree(*Path);
+				}
+				
+				GdhSubsystem->ShowModal(TEXT("Rendered images removed successfully"), EGdhModalStatus::OK, 3.0f);
+
+				ListUpdate();
+			})
+		)
+	);
+	PluginCommands->MapAction(
+		FGdhCommands::Get().Cmd_RemoveEncodedVideo,
+		FUIAction(
+			FExecuteAction::CreateLambda([&]()
+			{
+				if (!ListView.IsValid()) return;
+				if (!GdhSubsystem) return;
+
+				const auto SelectedItems = ListView->GetSelectedItems();
+				if (SelectedItems.Num() == 0) return;
+
+				for (const auto& SelectedItem : SelectedItems)
+				{
+					if (!SelectedItem.IsValid()) break;
+					if (!SelectedItem->LevelSequence) break;
+
+					const FString Path = FString::Printf(TEXT("%s/%s.%s"),
+						*GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence),
+						*SelectedItem->LevelSequence->GetName(),
+						*RenderingSettings->GetVideoExtension()
+					);
+					if (!FPaths::FileExists(Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						return;
+					}
+
+					IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+					if (!PlatformFile.DeleteFile(*Path))
+					{
+						UE_LOG(LogGdh, Error, TEXT("Failed to remove %s file"), *Path);
+						GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						return;
+					}
+					
+					PlatformFile.CreateDirectoryTree(*Path);
+				}
+				
+				GdhSubsystem->ShowModal(TEXT("Encoded video removed successfully"), EGdhModalStatus::OK, 3.0f);
+
+				ListUpdate();
+			})
+		)
+	);
 }
 
 void SGdhRenderingManagerWindow::ListUpdate()
@@ -531,14 +714,14 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 	}
 
 	const FTimespan RenderStartTime = FTimespan::FromSeconds(FPlatformTime::Seconds());
-	
+
 	const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
 	if (!Executor) return FReply::Handled();
 
 	Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
 	{
 		const FTimespan RenderEndTime = FTimespan::FromSeconds(FPlatformTime::Seconds());
-		
+
 		ListUpdate();
 
 		if (!GdhSubsystem) return;
@@ -549,7 +732,7 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 			return;
 		}
 
-		
+
 		const FString SuccessText = FString::Printf(TEXT("Images rendered successfully in %d sec"), (RenderEndTime - RenderStartTime).GetSeconds());
 		UE_LOG(LogGdh, Log, TEXT("%s"), *SuccessText);
 		GdhSubsystem->ShowModal(SuccessText, EGdhModalStatus::OK, 5.0f);

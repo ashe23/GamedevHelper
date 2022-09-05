@@ -25,7 +25,12 @@ public:
 	// TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinerManagerWindow;
 	TSharedPtr<FUICommandInfo> Cmd_OpenWindowRenderingManager;
 
-	// context menu
+	// context menu for rendering manager
+	TSharedPtr<FUICommandInfo> Cmd_OpenImageDir;
+	TSharedPtr<FUICommandInfo> Cmd_OpenVideoDir;
+	TSharedPtr<FUICommandInfo> Cmd_PlayVideoFile;
+	TSharedPtr<FUICommandInfo> Cmd_RemoveRenderedImages;
+	TSharedPtr<FUICommandInfo> Cmd_RemoveEncodedVideo;
 	// TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
 	// TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerOpenAsset;
 	// TSharedPtr<FUICommandInfo> Cmd_RenderingManagerRemoveRenderedImages;

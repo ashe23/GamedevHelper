@@ -29,6 +29,8 @@ private:
 		const TSharedRef<STableViewBase>& OwnerTable
 	) const;
 	TSharedPtr<SHeaderRow> GetHeaderRow() const;
+	TSharedPtr<SWidget> ListCreateContextMenu() const;
+	void RegisterCommands();
 
 	void ListUpdate();
 
@@ -41,6 +43,7 @@ private:
 	UGdhMovieRenderSettings* MovieRenderSettings = nullptr;
 	UGdhRenderingQueueSettings* QueueSettings = nullptr;
 	UGdhSubsystem* GdhSubsystem = nullptr;
+	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>> ListItems;
 	const int32 WidgetIndexRenderingManagerWorking = 0;
