@@ -6,7 +6,8 @@
 #include "Settings/GdhRenderingSettings.h"
 #include "Settings/GdhRenderingQueueSettings.h"
 #include "GdhStyles.h"
-#include "GdhSubsystem.h"
+#include "Libs/GdhNotificationLibrary.h"
+#include "Libs/GdhRenderingLibrary.h"
 // Engine Headers
 #include "GdhCommands.h"
 #include "MoviePipelineDeferredPasses.h"
@@ -24,12 +25,10 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 	RenderingSettings = GetMutableDefault<UGdhRenderingSettings>();
 	MovieRenderSettings = GetMutableDefault<UGdhMovieRenderSettings>();
 	QueueSettings = GetMutableDefault<UGdhRenderingQueueSettings>();
-	GdhSubsystem = GEditor->GetEditorSubsystem<UGdhSubsystem>();
 
 	check(RenderingSettings);
 	check(MovieRenderSettings);
 	check(QueueSettings);
-	check(GdhSubsystem);
 
 	RenderingSettings->OnSettingChanged().AddLambda([&](const UObject* Obj, const FPropertyChangedEvent& ChangedEvent)
 	{
@@ -102,119 +101,140 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 				+ SSplitter::Slot()
 				.Value(0.3f)
 				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					  .AutoHeight()
-					  .Padding(FMargin{0.0f, 10.0f})
+					SNew(SScrollBox)
+					.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+					.AnimateWheelScrolling(true)
+					.AllowOverscroll(EAllowOverscroll::No)
+					+ SScrollBox::Slot()
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString(TEXT("Rendering Settings")))
-						.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-					]
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						RenderingSettingsProperty.ToSharedRef()
-					]
-					+ SVerticalBox::Slot()
-					  .AutoHeight()
-					  .Padding(FMargin{0.0f, 10.0f})
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString(TEXT("MovieRender Settings")))
-						.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-					]
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						MovieRenderSettingsProperty.ToSharedRef()
+						SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						  .AutoHeight()
+						  .Padding(FMargin{0.0f, 10.0f})
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString(TEXT("Rendering Settings")))
+							.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+						]
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							RenderingSettingsProperty.ToSharedRef()
+						]
+						+ SVerticalBox::Slot()
+						  .AutoHeight()
+						  .Padding(FMargin{0.0f, 10.0f})
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString(TEXT("MovieRender Settings")))
+							.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+						]
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							MovieRenderSettingsProperty.ToSharedRef()
+						]
 					]
 				]
 				+ SSplitter::Slot()
 				.Value(0.3f)
 				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					  .AutoHeight()
-					  .Padding(FMargin{5.0f, 10.0f})
+					SNew(SScrollBox)
+					.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+					.AnimateWheelScrolling(true)
+					.AllowOverscroll(EAllowOverscroll::No)
+					+ SScrollBox::Slot()
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString(TEXT("Queue Settings")))
-						.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
-					]
-					+ SVerticalBox::Slot()
-					  .Padding(FMargin{5.0f, 0.0f})
-					  .AutoHeight()
-					[
-						QueueSettingsProperty.ToSharedRef()
+						SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						  .AutoHeight()
+						  .Padding(FMargin{5.0f, 10.0f})
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString(TEXT("Queue Settings")))
+							.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+						]
+						+ SVerticalBox::Slot()
+						  .Padding(FMargin{5.0f, 0.0f})
+						  .AutoHeight()
+						[
+							QueueSettingsProperty.ToSharedRef()
+						]
 					]
 				]
 				+ SSplitter::Slot()
 				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					  .Padding(FMargin{10.0f})
-					  .AutoHeight()
+					SNew(SScrollBox)
+					.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+					.AnimateWheelScrolling(true)
+					.AllowOverscroll(EAllowOverscroll::No)
+					+ SScrollBox::Slot()
 					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-						  .Padding(FMargin{0.0f, 0.0f, 5.0f, 0.0f})
-						  .AutoWidth()
+						SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						  .Padding(FMargin{10.0f})
+						  .AutoHeight()
 						[
-							SNew(SButton)
-							.HAlign(HAlign_Center)
-							.VAlign(VAlign_Center)
-							// .ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
-							.ContentPadding(FMargin{5})
-							.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRefreshClick)
-							// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
-							.ToolTipText(FText::FromString(TEXT("Refresh list")))
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()
+							  .Padding(FMargin{0.0f, 0.0f, 5.0f, 0.0f})
+							  .AutoWidth()
 							[
-								SNew(STextBlock)
-								.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light10"))
-								.Text(FText::FromString(TEXT("Refresh")))
+								SNew(SButton)
+								.HAlign(HAlign_Center)
+								.VAlign(VAlign_Center)
+								// .ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
+								.ContentPadding(FMargin{5})
+								.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRefreshClick)
+								// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
+								.ToolTipText(FText::FromString(TEXT("Refresh list")))
+								[
+									SNew(STextBlock)
+									.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light10"))
+									.Text(FText::FromString(TEXT("Refresh")))
+								]
+							]
+							+ SHorizontalBox::Slot()
+							  .Padding(FMargin{0.0f, 0.0f, 5.0f, 0.0f})
+							  .AutoWidth()
+							[
+								SNew(SButton)
+								.HAlign(HAlign_Center)
+								.VAlign(VAlign_Center)
+								.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#FF5722"))})
+								.ContentPadding(FMargin{5})
+								.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRenderClick)
+								// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
+								.ToolTipText(FText::FromString(TEXT("Render everything in list")))
+								[
+									SNew(STextBlock)
+									.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light10"))
+									.Text(FText::FromString(TEXT("Render")))
+								]
 							]
 						]
-						+ SHorizontalBox::Slot()
-						  .Padding(FMargin{0.0f, 0.0f, 5.0f, 0.0f})
-						  .AutoWidth()
+						+ SVerticalBox::Slot()
+						  .Padding(FMargin{10.0f})
+						  .AutoHeight()
 						[
-							SNew(SButton)
-							.HAlign(HAlign_Center)
-							.VAlign(VAlign_Center)
-							.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#FF5722"))})
-							.ContentPadding(FMargin{5})
-							.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRenderClick)
-							// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
-							.ToolTipText(FText::FromString(TEXT("Render everything in list")))
-							[
-								SNew(STextBlock)
-								.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light10"))
-								.Text(FText::FromString(TEXT("Render")))
-							]
+							SNew(STextBlock)
+							.Text_Raw(this, &SGdhRenderingManagerWindow::GetJobStats)
+							.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light8"))
 						]
-					]
-					+ SVerticalBox::Slot()
-					  .Padding(FMargin{10.0f})
-					  .AutoHeight()
-					[
-						SNew(STextBlock)
-						.Text_Raw(this, &SGdhRenderingManagerWindow::GetJobStats)
-						.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light8"))
-					]
-					+ SVerticalBox::Slot()
-					  .Padding(FMargin{10.0f})
-					  .HAlign(HAlign_Fill)
-					  .VAlign(VAlign_Fill)
-					  .AutoHeight()
-					[
-						SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>)
-						.ListItemsSource(&ListItems)
-						.SelectionMode(ESelectionMode::SingleToggle)
-						.OnContextMenuOpening(this, &SGdhRenderingManagerWindow::ListCreateContextMenu)
-						.OnGenerateRow(this, &SGdhRenderingManagerWindow::OnGenerateRow)
-						// .OnMouseButtonDoubleClick(this, &SGamedevHelperRenderingManagerWindow::OnListDblClick)
-						.HeaderRow(GetHeaderRow())
+						+ SVerticalBox::Slot()
+						  .Padding(FMargin{10.0f})
+						  .HAlign(HAlign_Fill)
+						  .VAlign(VAlign_Fill)
+						  .AutoHeight()
+						[
+							SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>)
+							.ListItemsSource(&ListItems)
+							.SelectionMode(ESelectionMode::SingleToggle)
+							.OnContextMenuOpening(this, &SGdhRenderingManagerWindow::ListCreateContextMenu)
+							.OnGenerateRow(this, &SGdhRenderingManagerWindow::OnGenerateRow)
+							// .OnMouseButtonDoubleClick(this, &SGamedevHelperRenderingManagerWindow::OnListDblClick)
+							.HeaderRow(GetHeaderRow())
+						]
 					]
 				]
 			]
@@ -233,6 +253,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 					SNew(SBorder)
 					.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
 					.Visibility_Raw(this, &SGdhRenderingManagerWindow::GetConsoleBoxVisibility)
+					.VAlign(VAlign_Bottom)
 					[
 						SNew(STextBlock)
 						.Justification(ETextJustify::Left)
@@ -283,9 +304,9 @@ FText SGdhRenderingManagerWindow::GetConsoleBoxText() const
 	}
 
 	const UMoviePipelineMasterConfig* MasterConfig = MovieRenderSettings->CreateMasterConfig();
-	if (!GdhSubsystem->IsValidMasterConfig(MasterConfig))
+	if (!UGdhRenderingLibrary::IsValidMasterConfig(MasterConfig))
 	{
-		return FText::FromString(GdhSubsystem->GetMasterConfigValidationMsg(MasterConfig));
+		return FText::FromString(UGdhRenderingLibrary::GetMasterConfigValidationMsg(MasterConfig));
 	}
 
 	if (!ErrorMsg.IsEmpty())
@@ -303,7 +324,9 @@ FText SGdhRenderingManagerWindow::GetJobStats() const
 
 EVisibility SGdhRenderingManagerWindow::GetConsoleBoxVisibility() const
 {
-	return RenderingSettings->IsValidSettings() && GdhSubsystem->IsValidMasterConfig(MovieRenderSettings->CreateMasterConfig()) && ErrorMsg.IsEmpty() ? EVisibility::Hidden : EVisibility::Visible;
+	return RenderingSettings->IsValidSettings() && UGdhRenderingLibrary::IsValidMasterConfig(MovieRenderSettings->CreateMasterConfig()) && ErrorMsg.IsEmpty()
+		       ? EVisibility::Hidden
+		       : EVisibility::Visible;
 }
 
 TSharedRef<ITableRow> SGdhRenderingManagerWindow::OnGenerateRow(TWeakObjectPtr<UGdhRenderingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const
@@ -400,7 +423,6 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 			FExecuteAction::CreateLambda([&]()
 			{
 				if (!ListView.IsValid()) return;
-				if (!GdhSubsystem) return;
 
 				const auto SelectedItems = ListView->GetSelectedItems();
 				if (SelectedItems.Num() == 0) return;
@@ -410,11 +432,16 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!SelectedItem.IsValid()) break;
 					if (!SelectedItem->LevelSequence) break;
 
-					const FString Path = GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence);
+					const FString Path = UGdhRenderingLibrary::GetImageOutputDirectoryPath(SelectedItem->LevelSequence);
 					if (!FPaths::DirectoryExists(Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open image output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						UGdhNotificationLibrary::ShowModalOutputLog(
+							TEXT("Rendering Manager"),
+							TEXT("Failed to open image output directory. Try to render jobs before doing this action"),
+							EGdhModalStatus::Error,
+							5.0f
+						);
 					}
 
 					FPlatformProcess::ExploreFolder(*Path);
@@ -428,7 +455,6 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 			FExecuteAction::CreateLambda([&]()
 			{
 				if (!ListView.IsValid()) return;
-				if (!GdhSubsystem) return;
 
 				const auto SelectedItems = ListView->GetSelectedItems();
 				if (SelectedItems.Num() == 0) return;
@@ -438,11 +464,11 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!SelectedItem.IsValid()) break;
 					if (!SelectedItem->LevelSequence) break;
 
-					const FString Path = GdhSubsystem->GetVideoOutputDirectoryPath(SelectedItem->LevelSequence);
+					const FString Path = UGdhRenderingLibrary::GetVideoOutputDirectoryPath(SelectedItem->LevelSequence);
 					if (!FPaths::DirectoryExists(Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open video output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						UGdhNotificationLibrary::ShowModalOutputLog(TEXT(""),TEXT("Cant open video output directory for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
 
@@ -457,7 +483,6 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 			FExecuteAction::CreateLambda([&]()
 			{
 				if (!ListView.IsValid()) return;
-				if (!GdhSubsystem) return;
 
 				const auto SelectedItems = ListView->GetSelectedItems();
 				if (SelectedItems.Num() == 0) return;
@@ -469,14 +494,14 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 
 					const FString Path = FString::Printf(
 						TEXT("%s/%s.%s"),
-						*GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence),
+						*UGdhRenderingLibrary::GetVideoOutputDirectoryPath(SelectedItem->LevelSequence),
 						*SelectedItem->LevelSequence->GetName(),
 						*RenderingSettings->GetVideoExtension()
 					);
 					if (!FPaths::FileExists(Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant open video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						UGdhNotificationLibrary::ShowModalOutputLog(TEXT(""), TEXT("Cant open video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 					}
 
 					FPlatformProcess::LaunchFileInDefaultExternalApplication(*Path);
@@ -490,7 +515,6 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 			FExecuteAction::CreateLambda([&]()
 			{
 				if (!ListView.IsValid()) return;
-				if (!GdhSubsystem) return;
 
 				const auto SelectedItems = ListView->GetSelectedItems();
 				if (SelectedItems.Num() == 0) return;
@@ -500,11 +524,11 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!SelectedItem.IsValid()) break;
 					if (!SelectedItem->LevelSequence) break;
 
-					const FString Path = GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence);
+					const FString Path = UGdhRenderingLibrary::GetImageOutputDirectoryPath(SelectedItem->LevelSequence);
 					if (!FPaths::DirectoryExists(Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						// GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
 
@@ -513,14 +537,14 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!PlatformFile.DeleteDirectoryRecursively(*Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("Failed to remove %s directory"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						// GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove rendered images for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
 
 					PlatformFile.CreateDirectoryTree(*Path);
 				}
 
-				GdhSubsystem->ShowModal(TEXT("Rendered images removed successfully"), EGdhModalStatus::OK, 3.0f);
+				UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), TEXT("Rendered images removed successfully"), EGdhModalStatus::OK, 3.0f);
 
 				ListUpdate();
 			})
@@ -532,7 +556,6 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 			FExecuteAction::CreateLambda([&]()
 			{
 				if (!ListView.IsValid()) return;
-				if (!GdhSubsystem) return;
 
 				const auto SelectedItems = ListView->GetSelectedItems();
 				if (SelectedItems.Num() == 0) return;
@@ -544,14 +567,14 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 
 					const FString Path = FString::Printf(
 						TEXT("%s/%s.%s"),
-						*GdhSubsystem->GetImageOutputDirectoryPath(SelectedItem->LevelSequence),
+						*UGdhRenderingLibrary::GetVideoOutputDirectoryPath(SelectedItem->LevelSequence),
 						*SelectedItem->LevelSequence->GetName(),
 						*RenderingSettings->GetVideoExtension()
 					);
 					if (!FPaths::FileExists(Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("%s does not exist"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						// GdhSubsystem->ShowModalWithOutputLog(TEXT("Cant remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
 
@@ -560,14 +583,14 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 					if (!PlatformFile.DeleteFile(*Path))
 					{
 						UE_LOG(LogGdh, Error, TEXT("Failed to remove %s file"), *Path);
-						GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
+						// GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to remove encoded video file for selected LevelSequence"), EGdhModalStatus::Error, 5.0f);
 						return;
 					}
 
 					PlatformFile.CreateDirectoryTree(*Path);
 				}
 
-				GdhSubsystem->ShowModal(TEXT("Encoded video removed successfully"), EGdhModalStatus::OK, 3.0f);
+				UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), TEXT("Encoded video removed successfully"), EGdhModalStatus::OK, 3.0f);
 
 				ListUpdate();
 			})
@@ -590,6 +613,8 @@ void SGdhRenderingManagerWindow::ListUpdate()
 
 	ListItems.Reset();
 	ListItems.Reserve(QueueSettings->LevelSequences.Num());
+	FFmpegCommands.Reset();
+	FFmpegCommands.Reserve(QueueSettings->LevelSequences.Num());
 
 	FScopedSlowTask LevelSequenceSlowTask{
 		static_cast<float>(QueueSettings->LevelSequences.Num()),
@@ -628,7 +653,20 @@ void SGdhRenderingManagerWindow::ListUpdate()
 		ListItem->LevelSequence = LevelSequence;
 		ListItem->Map = Map;
 
-		TotalJobsDuration += GdhSubsystem->GetLevelSequenceDuration(LevelSequence) / RenderingSettings->Framerate.AsDecimal();
+		TotalJobsDuration += UGdhRenderingLibrary::GetLevelSequenceDuration(LevelSequence) / RenderingSettings->Framerate.AsDecimal();
+
+		const FString EncodeCommand = UGdhRenderingLibrary::GetFFmpegEncodeCmd(LevelSequence);
+		if (!EncodeCommand.IsEmpty())
+		{
+			FFmpegCommands.Add(FGdhFFmpegCommand{LevelSequence->GetName(), EncodeCommand});
+		}
+
+		const FString VideoOutputDir = UGdhRenderingLibrary::GetVideoOutputDirectoryPath(LevelSequence);
+		if (!FPaths::DirectoryExists(VideoOutputDir))
+		{
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+			PlatformFile.CreateDirectoryTree(*VideoOutputDir);
+		}
 
 		ListItems.Add(ListItem);
 	}
@@ -653,7 +691,7 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
 	if (!CustomQueue)
 	{
-		GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to create queue for rendering"), EGdhModalStatus::Error, 5.0f);
+		// GdhSubsystem->ShowModalWithOutputLog(TEXT("Failed to create queue for rendering"), EGdhModalStatus::Error, 5.0f);
 		return FReply::Handled();
 	}
 
@@ -700,7 +738,7 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 			ListItem->LevelSequence->MovieScene->GetDisplayRate()
 		).FloorToFrame().Value;
 
-		OutputSetting->OutputDirectory.Path = GdhSubsystem->GetImageOutputDirectoryPath(ListItem->LevelSequence);
+		OutputSetting->OutputDirectory.Path = UGdhRenderingLibrary::GetImageOutputDirectoryPath(ListItem->LevelSequence);
 		OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
 		OutputSetting->OutputResolution = RenderingSettings->GetResolution();
 		OutputSetting->bUseCustomFrameRate = true;
@@ -726,26 +764,24 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 
 		ListUpdate();
 
-		if (!GdhSubsystem) return;
-
 		if (!bSuccess)
 		{
-			GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
+			// GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
 			return;
 		}
 
 
 		const FString SuccessText = FString::Printf(TEXT("Images rendered successfully in %d sec"), (RenderEndTime - RenderStartTime).GetSeconds());
 		UE_LOG(LogGdh, Log, TEXT("%s"), *SuccessText);
-		GdhSubsystem->ShowModal(SuccessText, EGdhModalStatus::OK, 5.0f);
+		UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), SuccessText, EGdhModalStatus::OK, 5.0f);
+
+		UGdhRenderingLibrary::RunFFmpegCommands(FFmpegCommands);
 	});
 	Executor->OnExecutorErrored().AddLambda([&](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
 	{
 		ListUpdate();
 
-		if (!GdhSubsystem) return;
-
-		GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
+		// GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
 		UE_LOG(LogGdh, Error, TEXT("%s"), *ErrorText.ToString());
 	});
 

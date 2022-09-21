@@ -9,14 +9,14 @@ public class Gdh : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(
-			new []
+			new[]
 			{
 				"Core",
 			}
 		);
-		
+
 		PrivateDependencyModuleNames.AddRange(
-			new []
+			new[]
 			{
 				"CoreUObject",
 				"Engine",
@@ -31,6 +31,8 @@ public class Gdh : ModuleRules
 				"EditorSubsystem",
 				"EditorStyle",
 				"InputCore",
+				"Json",
+				"PythonScriptPlugin",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",

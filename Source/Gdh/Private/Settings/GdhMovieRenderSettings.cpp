@@ -22,7 +22,7 @@ UMoviePipelineMasterConfig* UGdhMovieRenderSettings::CreateMasterConfig() const
 {
 	UMoviePipelineMasterConfig* MasterConfig = NewObject<UMoviePipelineMasterConfig>();
 	if (!MasterConfig) return nullptr;
-	
+
 	if (bSettingsAAEnabled)
 	{
 		if (const TSoftObjectPtr<UMoviePipelineAntiAliasingSetting> AntiAliasingSetting = MasterConfig->FindOrAddSettingByClass(UMoviePipelineAntiAliasingSetting::StaticClass()))

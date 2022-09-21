@@ -17,9 +17,6 @@ namespace GdhConstants
 	static const FName TabRenderingManager{TEXT("TabRenderingManager")};
 
 	// Rendering Settings
-	static const FString DefaultFFmpegEncodeCmd{
-		TEXT("{ffmpeg_exe} -y -i {sequence_images} -r {framerate} -vf scale={resolution} {output_dir}/{resolution_name}/{queue_name}/{sequence_name}.{video_format}")
-	};
 	static const FIntPoint DefaultResolution{1920, 1080};
 	static const FFrameRate DefaultFrameRate{30, 1};
 	static constexpr EGdhImageFormat DefaultImageFormat{EGdhImageFormat::Png};

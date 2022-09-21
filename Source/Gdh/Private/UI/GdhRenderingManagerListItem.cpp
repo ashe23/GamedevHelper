@@ -2,8 +2,8 @@
 
 #include "UI/GdhRenderingManagerListItem.h"
 #include "GdhStyles.h"
-#include "GdhSubsystem.h"
 #include "Settings/GdhRenderingSettings.h"
+#include "Libs/GdhRenderingLibrary.h"
 
 void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
@@ -38,22 +38,19 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 	{
 		if (GEditor)
 		{
-			if (const UGdhSubsystem* GdhSubsystem = GEditor->GetEditorSubsystem<UGdhSubsystem>())
+			bool bHasMissingFrames = false;
+			RenderedFramesNum = UGdhRenderingLibrary::GetRenderedFramesNum(ListItem->LevelSequence, bHasMissingFrames);
+
+			if (RenderedFramesNum == 0)
 			{
-				bool bHasMissingFrames = false;
-				RenderedFramesNum = GdhSubsystem->GetRenderedFramesNum(ListItem->LevelSequence, bHasMissingFrames);
+				ListItem->Status = EGdhGenericStatus::Warning;
+				ErrorMsg = TEXT("Missing rendered images");
+			}
 
-				if (RenderedFramesNum == 0)
-				{
-					ListItem->Status = EGdhGenericStatus::Warning;
-					ErrorMsg = TEXT("Missing rendered images");
-				}
-
-				if (RenderedFramesNum > 0 && bHasMissingFrames)
-				{
-					ListItem->Status = EGdhGenericStatus::Warning;
-					ErrorMsg = TEXT("Missing images for some frames. Image sequence is not sequential. Re-Render to fix this");
-				}
+			if (RenderedFramesNum > 0 && bHasMissingFrames)
+			{
+				ListItem->Status = EGdhGenericStatus::Warning;
+				ErrorMsg = TEXT("Missing images for some frames. Image sequence is not sequential. Re-Render to fix this");
 			}
 		}
 	}
@@ -72,14 +69,11 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 
 	if (InColumnName.IsEqual(TEXT("Duration")))
 	{
-		if (const UGdhSubsystem* GdhSubsystem = GEditor->GetEditorSubsystem<UGdhSubsystem>())
-		{
-			const uint32 DurationInFrames = GdhSubsystem->GetLevelSequenceDuration(ListItem->LevelSequence);
-			const double DurationInSeconds = DurationInFrames / GetDefault<UGdhRenderingSettings>()->Framerate.AsDecimal();
-			const FString Duration = FString::Printf(TEXT("%d frames (%.1f sec)"), DurationInFrames, DurationInSeconds);
-			
-			return SNew(STextBlock).Text(FText::FromString(Duration));
-		}
+		const uint32 DurationInFrames = UGdhRenderingLibrary::GetLevelSequenceDuration(ListItem->LevelSequence);
+		const double DurationInSeconds = DurationInFrames / GetDefault<UGdhRenderingSettings>()->Framerate.AsDecimal();
+		const FString Duration = FString::Printf(TEXT("%d frames (%.1f sec)"), DurationInFrames, DurationInSeconds);
+		
+		return SNew(STextBlock).Text(FText::FromString(Duration));
 	}
 
 	if (InColumnName.IsEqual(TEXT("Sequence")))

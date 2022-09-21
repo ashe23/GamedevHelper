@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GdhTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
 class UGdhRenderingSettings;
 class UGdhMovieRenderSettings;
 class UGdhRenderingQueueSettings;
-class UGdhSubsystem;
 class UGdhRenderingManagerListItem;
 
 class SGdhRenderingManagerWindow : public SCompoundWidget
@@ -42,10 +42,10 @@ private:
 	UGdhRenderingSettings* RenderingSettings = nullptr;
 	UGdhMovieRenderSettings* MovieRenderSettings = nullptr;
 	UGdhRenderingQueueSettings* QueueSettings = nullptr;
-	UGdhSubsystem* GdhSubsystem = nullptr;
 	TSharedPtr<FUICommandList> PluginCommands;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>> ListItems;
+	TArray<FGdhFFmpegCommand> FFmpegCommands;
 	const int32 WidgetIndexRenderingManagerWorking = 0;
 	const int32 WidgetIndexRenderingManagerUI = 1;
 	FString ErrorMsg;

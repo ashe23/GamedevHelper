@@ -95,7 +95,7 @@ FLinearColor FGdhStyles::GetColorByStatus(const EGdhGenericStatus Status)
 
 TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 {
-	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
+	TSharedRef<FSlateStyleSet> Style = MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin(GdhConstants::ModuleFullName.ToString())->GetBaseDir() / TEXT("Resources"));
 
 	// fonts light
@@ -135,7 +135,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedImages.Small", new IMAGE_BRUSH(TEXT("IconRemoveImg128"), Icon20x20));
 	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedVideo", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon40x40));
 	// Style->Set("Gdh.Cmd_RenderingManagerRemoveRenderedVideo.Small", new IMAGE_BRUSH(TEXT("IconRemoveVideo128"), Icon20x20));
-	
+
 	// colors
 	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#C62828"))}});
 	Style->Set("GamedevHelper.Color.Green", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#2E7D32"))}});

@@ -66,3 +66,9 @@ struct FGdhLevelSequenceRenderSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(EditCondition="bUseEditorMap == false"))
 	TSoftObjectPtr<UWorld> Map;
 };
+
+struct FGdhFFmpegCommand
+{
+	FString SequenceName;
+	FString Command;
+};
