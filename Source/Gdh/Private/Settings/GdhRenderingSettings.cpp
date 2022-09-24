@@ -4,6 +4,7 @@
 #include "Gdh.h"
 // Engine Headers
 #include "MoviePipelineImageSequenceOutput.h"
+#include "Kismet/KismetStringLibrary.h"
 
 
 UGdhRenderingSettings::UGdhRenderingSettings()
@@ -14,6 +15,8 @@ UGdhRenderingSettings::UGdhRenderingSettings()
 	FFmpegFlags.Add(TEXT("-tune film"));
 	FFmpegFlags.Add(TEXT("-crf 18"));
 	FFmpegFlags.Add(TEXT("-pix_fmt yuv420p"));
+
+	FFmpegEncodeCmdPreview = GetEncodeCmdPreview();
 }
 
 FName UGdhRenderingSettings::GetContainerName() const
@@ -73,6 +76,8 @@ void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& Proper
 		FFmpegExe.FilePath = FPaths::ConvertRelativePathToFull(FFmpegExe.FilePath);
 	}
 
+	FFmpegEncodeCmdPreview = GetEncodeCmdPreview();
+
 	SaveConfig();
 }
 #endif
@@ -85,7 +90,7 @@ bool UGdhRenderingSettings::IsValidSettings() const
 	if (FFmpegExe.FilePath.ToLower().Equals(TEXT("ffmpeg.exe"))) return true;
 	if (!FPaths::FileExists(FPaths::ConvertRelativePathToFull(FFmpegExe.FilePath))) return false;
 	if (CurrentResolution.X % 2 != 0 || CurrentResolution.Y % 2 != 0) return false;
-	
+
 	return true;
 }
 
@@ -160,4 +165,17 @@ FString UGdhRenderingSettings::GetVideoExtension(const bool IncludeDot) const
 		default:
 			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
 	}
+}
+
+FString UGdhRenderingSettings::GetEncodeCmdPreview() const
+{
+	return FString::Printf(
+		TEXT("{ffmpeg_exe_path} -y -framerate %.1f -i {input_image_path}.%s -vf scale=%d:%d %s {output_video_path}.%s"),
+		Framerate.AsDecimal(),
+		*GetImageExtension(),
+		CurrentResolution.X,
+		CurrentResolution.Y,
+		*UKismetStringLibrary::JoinStringArray(FFmpegFlags, TEXT(" ")),
+		*GetVideoExtension()
+	);
 }
