@@ -32,6 +32,21 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 		return SNew(STextBlock).Text(FText::FromString(""));
 	}
 
+	if (ListItem->MoviePipelineQueue)
+	{
+		if (!ListItem->LevelSequence)
+		{
+			ListItem->Status = EGdhGenericStatus::Error;
+			ErrorMsg = TEXT("Job contains invalid LevelSequence");
+		}
+
+		if (!ListItem->Map)
+		{
+			ListItem->Status = EGdhGenericStatus::Error;
+			ErrorMsg = TEXT("Job contains invalid Map");
+		}
+	}
+
 	// checking for warnings if no errors
 	uint32 RenderedFramesNum = 0;
 
@@ -40,7 +55,7 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 		if (GEditor)
 		{
 			bool bHasMissingFrames = false;
-			RenderedFramesNum = UGdhRenderingLibrary::GetRenderedFramesNum(ListItem->LevelSequence, bHasMissingFrames);
+			RenderedFramesNum = UGdhRenderingLibrary::GetRenderedFramesNum(ListItem->LevelSequence, ListItem->MoviePipelineQueue, bHasMissingFrames);
 
 			if (RenderedFramesNum == 0)
 			{

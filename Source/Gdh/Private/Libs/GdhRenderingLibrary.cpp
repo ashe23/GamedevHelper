@@ -5,6 +5,7 @@
 // Engine Headers
 #include "IPythonScriptPlugin.h"
 #include "MoviePipelineMasterConfig.h"
+#include "MoviePipelineQueue.h"
 #include "MovieSceneTimeHelpers.h"
 #include "Async/Async.h"
 #include "Kismet/KismetStringLibrary.h"
@@ -63,7 +64,7 @@ FString UGdhRenderingLibrary::GetMasterConfigValidationMsg(const UMoviePipelineM
 	return TEXT("");
 }
 
-uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSequence, bool& bHasMissingFrames)
+uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue, bool& bHasMissingFrames)
 {
 	if (!LevelSequence) return 0;
 
@@ -99,7 +100,7 @@ uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSeq
 	Visitor.RequiredBaseName = LevelSequence->GetName();
 	Visitor.RequiredExtension = RenderingSettings->GetImageExtension();
 
-	const FString Path = GetImageOutputDirectoryPath(LevelSequence);
+	const FString Path = GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue);
 	if (Path.IsEmpty()) return 0;
 
 	if (!PlatformFile.IterateDirectory(*Path, Visitor))
@@ -145,41 +146,67 @@ uint32 UGdhRenderingLibrary::GetLevelSequenceDuration(const ULevelSequence* Leve
 	return FrameEnd - FrameStart;
 }
 
-FString UGdhRenderingLibrary::GetImageOutputDirectoryPath(const ULevelSequence* LevelSequence)
+FString UGdhRenderingLibrary::GetImageOutputDirectoryPath(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue)
 {
 	if (!LevelSequence) return TEXT("");
 
 	const UGdhRenderingSettings* RenderingSettings = GetDefault<UGdhRenderingSettings>();
 	if (!RenderingSettings) return TEXT("");
 
+	if (MoviePipelineQueue)
+	{
+		return FPaths::ConvertRelativePathToFull(
+			FString::Printf(
+				TEXT("%s/%s/%s/%s/image/"),
+				*RenderingSettings->OutputDirectory.Path,
+				*MoviePipelineQueue->GetName(),
+				*LevelSequence->GetName(),
+				*RenderingSettings->GetResolutionFolderName()
+			)
+		);
+	}
+
 	return FPaths::ConvertRelativePathToFull(
 		FString::Printf(
-			TEXT("%s/image/sequences/%s/%s"),
+			TEXT("%s/%s/%s/image/"),
 			*RenderingSettings->OutputDirectory.Path,
-			*RenderingSettings->GetResolutionFolderName(),
-			*LevelSequence->GetName()
+			*LevelSequence->GetName(),
+			*RenderingSettings->GetResolutionFolderName()
 		)
 	);
 }
 
-FString UGdhRenderingLibrary::GetVideoOutputDirectoryPath(const ULevelSequence* LevelSequence)
+FString UGdhRenderingLibrary::GetVideoOutputDirectoryPath(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue)
 {
 	if (!LevelSequence) return TEXT("");
 
 	const UGdhRenderingSettings* RenderingSettings = GetDefault<UGdhRenderingSettings>();
 	if (!RenderingSettings) return TEXT("");
 
+	if (MoviePipelineQueue)
+	{
+		return FPaths::ConvertRelativePathToFull(
+			FString::Printf(
+				TEXT("%s/%s/%s/%s/video"),
+				*RenderingSettings->OutputDirectory.Path,
+				*MoviePipelineQueue->GetName(),
+				*LevelSequence->GetName(),
+				*RenderingSettings->GetResolutionFolderName()
+			)
+		);
+	}
+
 	return FPaths::ConvertRelativePathToFull(
 		FString::Printf(
-			TEXT("%s/video/sequences/%s/%s"),
+			TEXT("%s/%s/%s/video"),
 			*RenderingSettings->OutputDirectory.Path,
-			*RenderingSettings->GetResolutionFolderName(),
-			*LevelSequence->GetName()
+			*LevelSequence->GetName(),
+			*RenderingSettings->GetResolutionFolderName()
 		)
 	);
 }
 
-FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequence)
+FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue)
 {
 	if (!LevelSequence) return TEXT("");
 
@@ -190,13 +217,13 @@ FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequ
 		TEXT("%s -y -framerate %.1f -i %s/%s_%%04d.%s -vf scale=%d:%d %s %s/%s.%s"),
 		*RenderingSettings->FFmpegExe.FilePath,
 		RenderingSettings->Framerate.AsDecimal(),
-		*GetImageOutputDirectoryPath(LevelSequence),
+		*GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
 		*RenderingSettings->GetImageExtension(),
 		RenderingSettings->GetResolution().X,
 		RenderingSettings->GetResolution().Y,
 		*UKismetStringLibrary::JoinStringArray(RenderingSettings->FFmpegFlags, TEXT(" ")),
-		*GetVideoOutputDirectoryPath(LevelSequence),
+		*GetVideoOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
 		*RenderingSettings->GetVideoExtension()
 	);
