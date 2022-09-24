@@ -2,6 +2,7 @@
 
 #include "UI/GdhRenderingManagerListItem.h"
 #include "GdhStyles.h"
+#include "MoviePipelineQueue.h"
 #include "Settings/GdhRenderingSettings.h"
 #include "Libs/GdhRenderingLibrary.h"
 
@@ -78,7 +79,8 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 
 	if (InColumnName.IsEqual(TEXT("Sequence")))
 	{
-		return SNew(STextBlock).Text(FText::FromString(ListItem->LevelSequence->GetName()));
+		const FString SequenceName = ListItem->MoviePipelineQueue ? ListItem->MoviePipelineQueue->GetName() + TEXT(":") + ListItem->LevelSequence->GetName() : ListItem->LevelSequence->GetName();
+		return SNew(STextBlock).Text(FText::FromString(SequenceName));
 	}
 
 	if (InColumnName.IsEqual(TEXT("RenderedFrames")))

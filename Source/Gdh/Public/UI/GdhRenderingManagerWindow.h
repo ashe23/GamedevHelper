@@ -53,4 +53,5 @@ private:
 	FString JobStats;
 	FString ConsoleBoxText;
 	bool bIsValidSettings = false;
+	bool bCanStartRendering = false;
 };

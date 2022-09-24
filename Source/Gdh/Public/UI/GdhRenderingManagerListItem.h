@@ -19,6 +19,9 @@ public:
 
 	UPROPERTY()
 	UWorld* Map;
+
+	UPROPERTY()
+	class UMoviePipelineQueue* MoviePipelineQueue;
 };
 
 class SGdhRenderingManagerListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGdhRenderingManagerListItem>>
