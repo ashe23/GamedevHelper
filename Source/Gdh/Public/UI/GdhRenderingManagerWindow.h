@@ -33,11 +33,13 @@ private:
 	void RegisterCommands();
 
 	void ListUpdate();
+	void ValidateSettings();
 
 	FReply OnBtnRefreshClick();
 	FReply OnBtnRenderClick();
 
 	bool IsBtnRenderEnabled() const;
+	bool IsBtnRefreshEnabled() const;
 	
 	UGdhRenderingSettings* RenderingSettings = nullptr;
 	UGdhMovieRenderSettings* MovieRenderSettings = nullptr;
@@ -48,6 +50,7 @@ private:
 	TArray<FGdhFFmpegCommand> FFmpegCommands;
 	const int32 WidgetIndexRenderingManagerWorking = 0;
 	const int32 WidgetIndexRenderingManagerUI = 1;
-	FString ErrorMsg;
 	FString JobStats;
+	FString ConsoleBoxText;
+	bool bIsValidSettings = false;
 };

@@ -30,14 +30,20 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 	check(MovieRenderSettings);
 	check(QueueSettings);
 
-	RenderingSettings->OnSettingChanged().AddLambda([&](const UObject* Obj, const FPropertyChangedEvent& ChangedEvent)
+	RenderingSettings->GdhRenderingSettingsOnChangeDelegate.BindLambda([&]()
 	{
-		ListUpdate();
+		ValidateSettings();
 	});
 
+	MovieRenderSettings->GdhMovieRenderSettingsOnChangeDelegate.BindLambda([&]()
+	{
+		ValidateSettings();
+	});
+	
 	QueueSettings->GdhQueueSettingsOnChangeDelegate.BindLambda([&]()
 	{
-		ListUpdate();
+		// ListUpdate();
+		UE_LOG(LogGdh, Warning, TEXT("Queue settings changed"));
 	});
 
 	RegisterCommands();
@@ -65,6 +71,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 	const TSharedPtr<IDetailsView> QueueSettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
 	QueueSettingsProperty->SetObject(QueueSettings);
 
+	ValidateSettings();
 	ListUpdate();
 
 	ChildSlot
@@ -186,7 +193,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 								// .ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#42A5F5"))})
 								.ContentPadding(FMargin{5})
 								.OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnRefreshClick)
-								// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
+								.IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnRefreshEnabled)
 								.ToolTipText(FText::FromString(TEXT("Refresh list")))
 								[
 									SNew(STextBlock)
@@ -278,43 +285,7 @@ int32 SGdhRenderingManagerWindow::GetActiveWidgetIndex() const
 
 FText SGdhRenderingManagerWindow::GetConsoleBoxText() const
 {
-	if (RenderingSettings->OutputDirectory.Path.IsEmpty())
-	{
-		return FText::FromString(TEXT("Output directory not specified"));
-	}
-
-	if (!FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path))
-	{
-		return FText::FromString(TEXT("Output directory does not exist"));
-	}
-
-	if (RenderingSettings->FFmpegExe.FilePath.IsEmpty())
-	{
-		return FText::FromString(TEXT("FFmpeg.exe path not specified. Must be absolute path to exe, or just can be ffmpeg.exe if you have it in system PATHS"));
-	}
-
-	if (!RenderingSettings->FFmpegExe.FilePath.ToLower().Equals(TEXT("ffmpeg.exe")) && !FPaths::FileExists(RenderingSettings->FFmpegExe.FilePath))
-	{
-		return FText::FromString(FString::Printf(TEXT("Cant find ffmpeg.exe at given '%s' location"), *RenderingSettings->FFmpegExe.FilePath));
-	}
-
-	if (RenderingSettings->GetResolution().X % 2 != 0 || RenderingSettings->GetResolution().Y % 2 != 0)
-	{
-		return FText::FromString(TEXT("Resolution must have dimensions divisible by 2"));
-	}
-
-	const UMoviePipelineMasterConfig* MasterConfig = MovieRenderSettings->CreateMasterConfig();
-	if (!UGdhRenderingLibrary::IsValidMasterConfig(MasterConfig))
-	{
-		return FText::FromString(UGdhRenderingLibrary::GetMasterConfigValidationMsg(MasterConfig));
-	}
-
-	if (!ErrorMsg.IsEmpty())
-	{
-		return FText::FromString(ErrorMsg);
-	}
-
-	return FText::FromString(TEXT(""));
+	return FText::FromString(ConsoleBoxText);
 }
 
 FText SGdhRenderingManagerWindow::GetJobStats() const
@@ -324,9 +295,11 @@ FText SGdhRenderingManagerWindow::GetJobStats() const
 
 EVisibility SGdhRenderingManagerWindow::GetConsoleBoxVisibility() const
 {
-	return RenderingSettings->IsValidSettings() && UGdhRenderingLibrary::IsValidMasterConfig(MovieRenderSettings->CreateMasterConfig()) && ErrorMsg.IsEmpty()
-		       ? EVisibility::Hidden
-		       : EVisibility::Visible;
+	return bIsValidSettings ? EVisibility::Hidden : EVisibility::Visible;
+
+	// return RenderingSettings->IsValidSettings() && UGdhRenderingLibrary::IsValidMasterConfig(MovieRenderSettings->CreateMasterConfig()) && ErrorMsg.IsEmpty()
+	// 	       ? EVisibility::Hidden
+	// 	       : EVisibility::Visible;
 }
 
 TSharedRef<ITableRow> SGdhRenderingManagerWindow::OnGenerateRow(TWeakObjectPtr<UGdhRenderingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const
@@ -600,14 +573,15 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 
 void SGdhRenderingManagerWindow::ListUpdate()
 {
+	return;
 	if (!GEditor) return;
-
-	ErrorMsg.Reset();
+	if (!bIsValidSettings) return;
+	
 	JobStats.Reset();
 
 	if (QueueSettings->LevelSequences.Num() == 0)
 	{
-		ErrorMsg = TEXT("Queue is empty. Select some LevelSequences in order to render");
+		ConsoleBoxText = TEXT("Queue is empty. Select some LevelSequences in order to render");
 		return;
 	}
 
@@ -616,18 +590,18 @@ void SGdhRenderingManagerWindow::ListUpdate()
 	FFmpegCommands.Reset();
 	FFmpegCommands.Reserve(QueueSettings->LevelSequences.Num());
 
-	FScopedSlowTask LevelSequenceSlowTask{
+	FScopedSlowTask SlowTask{
 		static_cast<float>(QueueSettings->LevelSequences.Num()),
 		FText::FromString(TEXT("Loading Queue assets..."))
 	};
-	LevelSequenceSlowTask.MakeDialog();
+	SlowTask.MakeDialog();
 
 	double TotalJobsDuration = 0;
 
 	for (const auto& LevelSequenceSetting : QueueSettings->LevelSequences)
 	{
-		LevelSequenceSlowTask.EnterProgressFrame(1.0f);
-		if (LevelSequenceSlowTask.ShouldCancel())
+		SlowTask.EnterProgressFrame(1.0f);
+		if (SlowTask.ShouldCancel())
 		{
 			break;
 		}
@@ -635,15 +609,14 @@ void SGdhRenderingManagerWindow::ListUpdate()
 		ULevelSequence* LevelSequence = LevelSequenceSetting.LevelSequence.LoadSynchronous();
 		if (!LevelSequence)
 		{
-			ErrorMsg = TEXT("Failed to load some of LevelSequence assets in Queue");
+			ConsoleBoxText = TEXT("Failed to load some queue elements");
 			return;
 		}
-
 
 		UWorld* Map = LevelSequenceSetting.bUseEditorMap ? GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld() : LevelSequenceSetting.Map.LoadSynchronous();
 		if (!Map)
 		{
-			ErrorMsg = TEXT("Failed to load some Map assets in queue");
+			ConsoleBoxText = TEXT("Failed to load some Map assets in queue");
 			return;
 		}
 
@@ -655,6 +628,7 @@ void SGdhRenderingManagerWindow::ListUpdate()
 
 		TotalJobsDuration += UGdhRenderingLibrary::GetLevelSequenceDuration(LevelSequence) / RenderingSettings->Framerate.AsDecimal();
 
+		// todo:ashe23 this must not be here
 		const FString EncodeCommand = UGdhRenderingLibrary::GetFFmpegEncodeCmd(LevelSequence);
 		if (!EncodeCommand.IsEmpty())
 		{
@@ -679,15 +653,62 @@ void SGdhRenderingManagerWindow::ListUpdate()
 	JobStats = FString::Printf(TEXT("%d %s (total duration %.1f seconds)"), ListItems.Num(), ListItems.Num() > 1 ? TEXT("jobs") : TEXT("job"), TotalJobsDuration);
 }
 
+void SGdhRenderingManagerWindow::ValidateSettings()
+{
+	bIsValidSettings = false;
+	ConsoleBoxText.Reset();
+	
+	if (RenderingSettings->OutputDirectory.Path.IsEmpty())
+	{
+		ConsoleBoxText = TEXT("Output directory not specified");
+		return;
+	}
+
+	if (!FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path))
+	{
+		ConsoleBoxText = TEXT("Output directory does not exist");
+		return;
+	}
+
+	if (RenderingSettings->FFmpegExe.FilePath.IsEmpty())
+	{
+		ConsoleBoxText = TEXT("FFmpeg.exe path not specified. Must be absolute path to exe, or just can be ffmpeg.exe if you have it in system PATHS");
+		return;
+	}
+
+	if (!RenderingSettings->FFmpegExe.FilePath.ToLower().Equals(TEXT("ffmpeg.exe")) && !FPaths::FileExists(RenderingSettings->FFmpegExe.FilePath))
+	{
+		ConsoleBoxText = FString::Printf(TEXT("Cant find ffmpeg.exe at given '%s' location"), *RenderingSettings->FFmpegExe.FilePath);
+		return;
+	}
+
+	if (RenderingSettings->GetResolution().X % 2 != 0 || RenderingSettings->GetResolution().Y % 2 != 0)
+	{
+		ConsoleBoxText = TEXT("Resolution must have dimensions divisible by 2");
+		return;
+	}
+
+	const UMoviePipelineMasterConfig* MasterConfig = MovieRenderSettings->CreateMasterConfig();
+	if (!UGdhRenderingLibrary::IsValidMasterConfig(MasterConfig))
+	{
+		ConsoleBoxText = UGdhRenderingLibrary::GetMasterConfigValidationMsg(MasterConfig);
+		return;
+	}
+
+	bIsValidSettings = true;
+}
+
 FReply SGdhRenderingManagerWindow::OnBtnRefreshClick()
 {
-	ListUpdate();
+	// ListUpdate();
 
 	return FReply::Handled();
 }
 
 FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 {
+	return FReply::Handled();
+	
 	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
 	if (!CustomQueue)
 	{
@@ -801,4 +822,9 @@ bool SGdhRenderingManagerWindow::IsBtnRenderEnabled() const
 	}
 
 	return true;
+}
+
+bool SGdhRenderingManagerWindow::IsBtnRefreshEnabled() const
+{
+	return bIsValidSettings;
 }

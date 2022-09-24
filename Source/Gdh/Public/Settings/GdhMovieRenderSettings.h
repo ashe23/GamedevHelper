@@ -7,6 +7,8 @@
 #include "MoviePipelineGameOverrideSetting.h"
 #include "GdhMovieRenderSettings.generated.h"
 
+DECLARE_DELEGATE(FGdhMovieRenderSettingsOnChangeDelegate);
+
 UCLASS(Config = EditorPerProjectUserSettings, meta=(DisplayName="MovieRender Common Settings"))
 class UGdhMovieRenderSettings : public UObject
 {
@@ -138,4 +140,6 @@ public:
 	int32 BurleySampleCount = 64;
 
 	UMoviePipelineMasterConfig* CreateMasterConfig() const;
+
+	FGdhMovieRenderSettingsOnChangeDelegate GdhMovieRenderSettingsOnChangeDelegate;
 };

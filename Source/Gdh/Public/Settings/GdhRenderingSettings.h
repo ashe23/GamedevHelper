@@ -9,6 +9,8 @@
 
 class UMoviePipelineQueue;
 
+DECLARE_DELEGATE(FGdhRenderingSettingsOnChangeDelegate);
+
 UCLASS(Config = EditorPerProjectUserSettings, meta=(DisplayName="Rendering Settings"))
 class GDH_API UGdhRenderingSettings : public UDeveloperSettings
 {
@@ -69,6 +71,9 @@ public:
 			"This is encode command preview, that will be used when encoding videos. Image input, Video output paths, framerate and resolution are generated automatically, the rest you can change via FFmpegFlags property. {ffmpeg_exe_path} is one you specified in FFmpegExe property"
 		))
 	FString FFmpegEncodeCmdPreview;
+
+	FGdhRenderingSettingsOnChangeDelegate GdhRenderingSettingsOnChangeDelegate;
 private:
 	FIntPoint CurrentResolution = GdhConstants::DefaultResolution;
+
 };

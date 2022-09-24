@@ -79,6 +79,11 @@ void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& Proper
 	FFmpegEncodeCmdPreview = GetEncodeCmdPreview();
 
 	SaveConfig();
+
+	if (GdhRenderingSettingsOnChangeDelegate.IsBound())
+	{
+		GdhRenderingSettingsOnChangeDelegate.Execute();
+	}
 }
 #endif
 

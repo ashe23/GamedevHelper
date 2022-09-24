@@ -15,6 +15,11 @@ void UGdhMovieRenderSettings::PostEditChangeProperty(FPropertyChangedEvent& Prop
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	SaveConfig();
+
+	if (GdhMovieRenderSettingsOnChangeDelegate.IsBound())
+	{
+		GdhMovieRenderSettingsOnChangeDelegate.Execute();
+	}
 }
 #endif
 
