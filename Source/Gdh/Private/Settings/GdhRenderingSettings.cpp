@@ -149,7 +149,7 @@ FString UGdhRenderingSettings::GetImageExtension(const bool IncludeDot) const
 		case EGdhImageFormat::Png:
 			return IncludeDot ? TEXT(".png") : TEXT("png");
 		case EGdhImageFormat::Jpg:
-			return IncludeDot ? TEXT(".jpg") : TEXT("jpg");
+			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
 		case EGdhImageFormat::Bmp:
 			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
 		default:
@@ -175,7 +175,7 @@ FString UGdhRenderingSettings::GetVideoExtension(const bool IncludeDot) const
 FString UGdhRenderingSettings::GetEncodeCmdPreview() const
 {
 	return FString::Printf(
-		TEXT("{ffmpeg_exe_path} -y -framerate %.1f -i {input_image_path}.%s -vf scale=%d:%d %s {output_video_path}.%s"),
+		TEXT("{ffmpeg_exe_path} -y -framerate %.3f -i {input_image_path}.%s -vf scale=%d:%d %s {output_video_path}.%s"),
 		Framerate.AsDecimal(),
 		*GetImageExtension(),
 		CurrentResolution.X,
