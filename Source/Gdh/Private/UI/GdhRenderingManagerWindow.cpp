@@ -555,7 +555,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						return;
 					}
 
-					PlatformFile.CreateDirectoryTree(*Path);
+					PlatformFile.CreateDirectoryTree(*FPaths::GetPath(Path));
 				}
 
 				UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), TEXT("Encoded video removed successfully"), EGdhModalStatus::OK, 3.0f);

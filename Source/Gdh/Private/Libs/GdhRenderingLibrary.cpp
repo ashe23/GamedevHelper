@@ -214,7 +214,7 @@ FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequ
 	if (!RenderingSettings) return TEXT("");
 
 	return FString::Printf(
-		TEXT("%s -y -framerate %.1f -i %s/%s_%%04d.%s -vf scale=%d:%d %s %s/%s.%s"),
+		TEXT("%s -y -framerate %.3f -i %s/%s_%%04d.%s -vf scale=%d:%d %s %s/%s.%s"),
 		*RenderingSettings->FFmpegExe.FilePath,
 		RenderingSettings->Framerate.AsDecimal(),
 		*GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
