@@ -847,7 +847,7 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 		).FloorToFrame().Value;
 	
 		OutputSetting->OutputDirectory.Path = UGdhRenderingLibrary::GetImageOutputDirectoryPath(ListItem->LevelSequence, ListItem->MoviePipelineQueue);
-		OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
+		OutputSetting->FileNameFormat = FString::Printf(TEXT("{sequence_name}_%0.3f_{frame_number_rel}"), RenderingSettings->Framerate.AsDecimal());
 		OutputSetting->OutputResolution = RenderingSettings->GetResolution();
 		OutputSetting->bUseCustomFrameRate = true;
 		OutputSetting->OutputFrameRate = RenderingSettings->Framerate;

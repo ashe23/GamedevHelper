@@ -81,7 +81,8 @@ uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSeq
 
 			const FString BaseName = FPaths::GetBaseFilename(FilenameOrDirectory);
 			const FString Extension = FPaths::GetExtension(FilenameOrDirectory);
-			if (BaseName.StartsWith(RequiredBaseName) && Extension.Equals(RequiredExtension))
+			const FString RequiredName = FString::Printf(TEXT("%s_%s"), *RequiredBaseName, *RequiredFramerate);
+			if (BaseName.StartsWith(RequiredName) && Extension.Equals(RequiredExtension))
 			{
 				TArray<FString> Parts;
 				BaseName.ParseIntoArray(Parts, TEXT("_"));
@@ -93,12 +94,14 @@ uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSeq
 
 		FString RequiredBaseName;
 		FString RequiredExtension;
+		FString RequiredFramerate;
 		TArray<int32> Frames;
 	};
 
 	DirectoryVisitor Visitor;
 	Visitor.RequiredBaseName = LevelSequence->GetName();
 	Visitor.RequiredExtension = RenderingSettings->GetImageExtension();
+	Visitor.RequiredFramerate = FString::Printf(TEXT("%.3f"), RenderingSettings->Framerate.AsDecimal());
 
 	const FString Path = GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue);
 	if (Path.IsEmpty()) return 0;
@@ -157,7 +160,7 @@ FString UGdhRenderingLibrary::GetImageOutputDirectoryPath(const ULevelSequence* 
 	{
 		return FPaths::ConvertRelativePathToFull(
 			FString::Printf(
-				TEXT("%s/%s/%s/%s/image/"),
+				TEXT("%s/%s/%s/%s/image"),
 				*RenderingSettings->OutputDirectory.Path,
 				*MoviePipelineQueue->GetName(),
 				*LevelSequence->GetName(),
@@ -168,7 +171,7 @@ FString UGdhRenderingLibrary::GetImageOutputDirectoryPath(const ULevelSequence* 
 
 	return FPaths::ConvertRelativePathToFull(
 		FString::Printf(
-			TEXT("%s/%s/%s/image/"),
+			TEXT("%s/%s/%s/image"),
 			*RenderingSettings->OutputDirectory.Path,
 			*LevelSequence->GetName(),
 			*RenderingSettings->GetResolutionFolderName()
@@ -214,11 +217,12 @@ FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequ
 	if (!RenderingSettings) return TEXT("");
 
 	return FString::Printf(
-		TEXT("%s -y -framerate %.3f -i %s/%s_%%04d.%s -vf scale=%d:%d %s %s/%s.%s"),
+		TEXT("%s -y -framerate %.3f -i %s/%s_%0.3f_%%04d.%s -vf scale=%d:%d %s %s/%s.%s"),
 		*RenderingSettings->FFmpegExe.FilePath,
 		RenderingSettings->Framerate.AsDecimal(),
 		*GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
+		RenderingSettings->Framerate.AsDecimal(),
 		*RenderingSettings->GetImageExtension(),
 		RenderingSettings->GetResolution().X,
 		RenderingSettings->GetResolution().Y,
