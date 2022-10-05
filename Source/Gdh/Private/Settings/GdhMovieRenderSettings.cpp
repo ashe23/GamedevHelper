@@ -16,9 +16,9 @@ void UGdhMovieRenderSettings::PostEditChangeProperty(FPropertyChangedEvent& Prop
 
 	SaveConfig();
 
-	if (GdhMovieRenderSettingsOnChangeDelegate.IsBound())
+	if (OnChangeDelegate.IsBound())
 	{
-		GdhMovieRenderSettingsOnChangeDelegate.Execute();
+		OnChangeDelegate.Execute();
 	}
 }
 #endif
@@ -110,4 +110,9 @@ UMoviePipelineMasterConfig* UGdhMovieRenderSettings::CreateMasterConfig() const
 	}
 
 	return MasterConfig;
+}
+
+FGdhMovieRenderSettingsOnChangeDelegate& UGdhMovieRenderSettings::OnChange()
+{
+	return OnChangeDelegate;
 }

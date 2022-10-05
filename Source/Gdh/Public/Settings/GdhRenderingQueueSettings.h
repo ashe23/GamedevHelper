@@ -12,7 +12,7 @@ class ULevelSequence;
 class UMoviePipelineQueue;
 
 UCLASS(Config = EditorPerProjectUserSettings, meta=(DisplayName="Rendering Queue Settings"))
-class UGdhRenderingQueueSettings : public UObject
+class UGdhRenderingQueueSettings final : public UObject
 {
 	GENERATED_BODY()
 public:

@@ -14,11 +14,10 @@ class UGdhRenderingManagerListItem;
 class SGdhRenderingManagerWindow : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SGdhRenderingManagerWindow){}
+	SLATE_BEGIN_ARGS(SGdhRenderingManagerWindow) {}
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
-	
 private:
 	int32 GetActiveWidgetIndex() const;
 	FText GetConsoleBoxText() const;

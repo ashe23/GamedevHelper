@@ -10,7 +10,7 @@
 DECLARE_DELEGATE(FGdhMovieRenderSettingsOnChangeDelegate);
 
 UCLASS(Config = EditorPerProjectUserSettings, meta=(DisplayName="MovieRender Common Settings"))
-class UGdhMovieRenderSettings : public UObject
+class UGdhMovieRenderSettings final : public UObject
 {
 	GENERATED_BODY()
 public:
@@ -140,6 +140,8 @@ public:
 	int32 BurleySampleCount = 64;
 
 	UMoviePipelineMasterConfig* CreateMasterConfig() const;
+	FGdhMovieRenderSettingsOnChangeDelegate& OnChange();
 
-	FGdhMovieRenderSettingsOnChangeDelegate GdhMovieRenderSettingsOnChangeDelegate;
+private:
+	FGdhMovieRenderSettingsOnChangeDelegate OnChangeDelegate;
 };

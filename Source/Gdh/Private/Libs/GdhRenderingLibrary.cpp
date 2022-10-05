@@ -2,17 +2,144 @@
 
 #include "Libs/GdhRenderingLibrary.h"
 #include "Libs/GdhNotificationLibrary.h"
+#include "Settings/GdhRenderingSettings.h"
+#include "Settings/GdhMovieRenderSettings.h"
 // Engine Headers
 #include "IPythonScriptPlugin.h"
 #include "MoviePipelineMasterConfig.h"
 #include "MoviePipelineQueue.h"
 #include "MovieSceneTimeHelpers.h"
+#include "MoviePipelineImageSequenceOutput.h"
 #include "Async/Async.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
-#include "Settings/GdhRenderingSettings.h"
+
+FString UGdhRenderingLibrary::Check(const UGdhRenderingSettings* RenderingSettings)
+{
+	if (!RenderingSettings) return TEXT("Error: RenderingSettings is nullptr");
+
+	if (RenderingSettings->OutputDirectory.Path.IsEmpty())
+	{
+		return TEXT("Error: Output directory is not specified");
+	}
+
+	if (!FPaths::DirectoryExists(RenderingSettings->OutputDirectory.Path))
+	{
+		return TEXT("Error: Output directory does not exist");
+	}
+
+	if (RenderingSettings->GetResolution().X % 2 != 0 || RenderingSettings->GetResolution().Y % 2 != 0)
+	{
+		return TEXT("Error: Resolution dimensions must be power of 2, in order to ffmpeg encoder work correctly");
+	}
+
+	if (RenderingSettings->FFmpegExe.FilePath.IsEmpty())
+	{
+		return TEXT("Error: FFmpegExe path is not specifed");
+	}
+
+	if (FMath::IsNearlyZero(RenderingSettings->Framerate.AsDecimal()))
+	{
+		return TEXT("Error: Invalid framerate");
+	}
+
+	if (RenderingSettings->FFmpegExe.FilePath.ToLower().Equals(TEXT("ffmpeg.exe")))
+	{
+		return TEXT(""); // maybe user installed ffmpeg cli in system PATHS, which available globally, in this case we wont return any errors
+	}
+
+	if (!FPaths::FileExists(FPaths::ConvertRelativePathToFull(RenderingSettings->FFmpegExe.FilePath)))
+	{
+		return TEXT("Error: Specified FFmpegExe path does not exist");
+	}
+
+	return TEXT("");
+}
+
+FString UGdhRenderingLibrary::Check(const UGdhMovieRenderSettings* MovieRenderSettings)
+{
+	if (!MovieRenderSettings) return TEXT("Error: MovieRenderSettings is nullptr");
+
+	return GetMasterConfigValidationMsg(MovieRenderSettings->CreateMasterConfig());
+}
+
+FString UGdhRenderingLibrary::GetResolutionFolderName(const UGdhRenderingSettings* RenderingSettings)
+{
+	check(RenderingSettings);
+
+	switch (RenderingSettings->ResolutionPreset)
+	{
+		case EGdhResolutionPreset::Res360P:
+			return TEXT("360p");
+		case EGdhResolutionPreset::Res480P:
+			return TEXT("480p");
+		case EGdhResolutionPreset::Res720P:
+			return TEXT("720p");
+		case EGdhResolutionPreset::Res1080P:
+			return TEXT("1080p");
+		case EGdhResolutionPreset::Res1440P:
+			return TEXT("1440p");
+		case EGdhResolutionPreset::Res2160P:
+			return TEXT("2160p");
+		case EGdhResolutionPreset::ResCustom:
+			return TEXT("custom_resolution");
+		default:
+			return TEXT("1080p");
+	}
+}
+
+UClass* UGdhRenderingLibrary::GetImageClass(const UGdhRenderingSettings* RenderingSettings)
+{
+	check(RenderingSettings);
+
+	switch (RenderingSettings->ImageFormat)
+	{
+		case EGdhImageFormat::Png:
+			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
+		case EGdhImageFormat::Jpg:
+			return UMoviePipelineImageSequenceOutput_JPG::StaticClass();
+		case EGdhImageFormat::Bmp:
+			return UMoviePipelineImageSequenceOutput_BMP::StaticClass();
+		default:
+			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
+	}
+}
+
+FString UGdhRenderingLibrary::GetImageExtension(const UGdhRenderingSettings* RenderingSettings, const bool IncludeDot)
+{
+	check(RenderingSettings);
+
+	switch (RenderingSettings->ImageFormat)
+	{
+		case EGdhImageFormat::Png:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+		case EGdhImageFormat::Jpg:
+			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
+		case EGdhImageFormat::Bmp:
+			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
+		default:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+	}
+}
+
+FString UGdhRenderingLibrary::GetVideoExtension(const UGdhRenderingSettings* RenderingSettings, const bool IncludeDot)
+{
+	check(RenderingSettings);
+
+	switch (RenderingSettings->VideoFormat)
+	{
+		case EGdhVideoFormat::Mp4:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+		case EGdhVideoFormat::Mkv:
+			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
+		case EGdhVideoFormat::Avi:
+			return IncludeDot ? TEXT(".avi") : TEXT("avi");
+		default:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+	}
+}
 
 bool UGdhRenderingLibrary::IsValidJobSetting(UMoviePipelineSetting* Setting)
 {
@@ -100,7 +227,7 @@ uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSeq
 
 	DirectoryVisitor Visitor;
 	Visitor.RequiredBaseName = LevelSequence->GetName();
-	Visitor.RequiredExtension = RenderingSettings->GetImageExtension();
+	Visitor.RequiredExtension = GetImageExtension(RenderingSettings);
 	Visitor.RequiredFramerate = FString::Printf(TEXT("%.3f"), RenderingSettings->Framerate.AsDecimal());
 
 	const FString Path = GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue);
@@ -164,7 +291,7 @@ FString UGdhRenderingLibrary::GetImageOutputDirectoryPath(const ULevelSequence* 
 				*RenderingSettings->OutputDirectory.Path,
 				*MoviePipelineQueue->GetName(),
 				*LevelSequence->GetName(),
-				*RenderingSettings->GetResolutionFolderName()
+				*GetResolutionFolderName(RenderingSettings)
 			)
 		);
 	}
@@ -174,7 +301,7 @@ FString UGdhRenderingLibrary::GetImageOutputDirectoryPath(const ULevelSequence* 
 			TEXT("%s/%s/%s/image"),
 			*RenderingSettings->OutputDirectory.Path,
 			*LevelSequence->GetName(),
-			*RenderingSettings->GetResolutionFolderName()
+			*GetResolutionFolderName(RenderingSettings)
 		)
 	);
 }
@@ -194,7 +321,7 @@ FString UGdhRenderingLibrary::GetVideoOutputDirectoryPath(const ULevelSequence* 
 				*RenderingSettings->OutputDirectory.Path,
 				*MoviePipelineQueue->GetName(),
 				*LevelSequence->GetName(),
-				*RenderingSettings->GetResolutionFolderName()
+				*GetResolutionFolderName(RenderingSettings)
 			)
 		);
 	}
@@ -204,7 +331,7 @@ FString UGdhRenderingLibrary::GetVideoOutputDirectoryPath(const ULevelSequence* 
 			TEXT("%s/%s/%s/video"),
 			*RenderingSettings->OutputDirectory.Path,
 			*LevelSequence->GetName(),
-			*RenderingSettings->GetResolutionFolderName()
+			*GetResolutionFolderName(RenderingSettings)
 		)
 	);
 }
@@ -223,13 +350,13 @@ FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequ
 		*GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
 		RenderingSettings->Framerate.AsDecimal(),
-		*RenderingSettings->GetImageExtension(),
+		*GetImageExtension(RenderingSettings),
 		RenderingSettings->GetResolution().X,
 		RenderingSettings->GetResolution().Y,
 		*UKismetStringLibrary::JoinStringArray(RenderingSettings->FFmpegFlags, TEXT(" ")),
 		*GetVideoOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
-		*RenderingSettings->GetVideoExtension()
+		*GetVideoExtension(RenderingSettings)
 	);
 }
 
