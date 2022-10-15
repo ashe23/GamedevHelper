@@ -30,7 +30,7 @@ FString UGdhRenderingLibrary::Check(const UGdhRenderingSettings* RenderingSettin
 		return TEXT("Error: Output directory does not exist");
 	}
 
-	if (RenderingSettings->GetResolution().X % 2 != 0 || RenderingSettings->GetResolution().Y % 2 != 0)
+	if (GetResolution(RenderingSettings).X % 2 != 0 || GetResolution(RenderingSettings).Y % 2 != 0)
 	{
 		return TEXT("Error: Resolution dimensions must be power of 2, in order to ffmpeg encoder work correctly");
 	}
@@ -67,7 +67,7 @@ FString UGdhRenderingLibrary::Check(const UGdhMovieRenderSettings* MovieRenderSe
 
 FString UGdhRenderingLibrary::GetResolutionFolderName(const UGdhRenderingSettings* RenderingSettings)
 {
-	check(RenderingSettings);
+	if (!RenderingSettings) return TEXT("");
 
 	switch (RenderingSettings->ResolutionPreset)
 	{
@@ -84,17 +84,15 @@ FString UGdhRenderingLibrary::GetResolutionFolderName(const UGdhRenderingSetting
 		case EGdhResolutionPreset::Res2160P:
 			return TEXT("2160p");
 		case EGdhResolutionPreset::ResCustom:
-			return TEXT("custom_resolution");
+			return FString::Printf(TEXT("%d_%d"), RenderingSettings->CustomResolution.X, RenderingSettings->CustomResolution.Y);
 		default:
 			return TEXT("1080p");
 	}
 }
 
-UClass* UGdhRenderingLibrary::GetImageClass(const UGdhRenderingSettings* RenderingSettings)
+UClass* UGdhRenderingLibrary::GetImageClass(const EGdhImageFormat ImageFormat)
 {
-	check(RenderingSettings);
-
-	switch (RenderingSettings->ImageFormat)
+	switch (ImageFormat)
 	{
 		case EGdhImageFormat::Png:
 			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
@@ -107,11 +105,9 @@ UClass* UGdhRenderingLibrary::GetImageClass(const UGdhRenderingSettings* Renderi
 	}
 }
 
-FString UGdhRenderingLibrary::GetImageExtension(const UGdhRenderingSettings* RenderingSettings, const bool IncludeDot)
+FString UGdhRenderingLibrary::GetImageExtension(const EGdhImageFormat ImageFormat, const bool IncludeDot)
 {
-	check(RenderingSettings);
-
-	switch (RenderingSettings->ImageFormat)
+	switch (ImageFormat)
 	{
 		case EGdhImageFormat::Png:
 			return IncludeDot ? TEXT(".png") : TEXT("png");
@@ -124,11 +120,9 @@ FString UGdhRenderingLibrary::GetImageExtension(const UGdhRenderingSettings* Ren
 	}
 }
 
-FString UGdhRenderingLibrary::GetVideoExtension(const UGdhRenderingSettings* RenderingSettings, const bool IncludeDot)
+FString UGdhRenderingLibrary::GetVideoExtension(const EGdhVideoFormat VideoFormat, const bool IncludeDot)
 {
-	check(RenderingSettings);
-
-	switch (RenderingSettings->VideoFormat)
+	switch (VideoFormat)
 	{
 		case EGdhVideoFormat::Mp4:
 			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
@@ -138,6 +132,23 @@ FString UGdhRenderingLibrary::GetVideoExtension(const UGdhRenderingSettings* Ren
 			return IncludeDot ? TEXT(".avi") : TEXT("avi");
 		default:
 			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+	}
+}
+
+FIntPoint UGdhRenderingLibrary::GetResolution(const UGdhRenderingSettings* RenderingSettings)
+{
+	if (!RenderingSettings) return FIntPoint::ZeroValue;
+
+	switch (RenderingSettings->ResolutionPreset)
+	{
+		case EGdhResolutionPreset::Res360P: return GdhConstants::Resolution360P;
+		case EGdhResolutionPreset::Res480P: return GdhConstants::Resolution480P;
+		case EGdhResolutionPreset::Res720P: return GdhConstants::Resolution720P;
+		case EGdhResolutionPreset::Res1080P: return GdhConstants::Resolution1080P;
+		case EGdhResolutionPreset::Res1440P: return GdhConstants::Resolution1440P;
+		case EGdhResolutionPreset::Res2160P: return GdhConstants::Resolution2160P;
+		case EGdhResolutionPreset::ResCustom: return RenderingSettings->CustomResolution;
+		default: return GdhConstants::Resolution1080P;
 	}
 }
 
@@ -227,7 +238,7 @@ uint32 UGdhRenderingLibrary::GetRenderedFramesNum(const ULevelSequence* LevelSeq
 
 	DirectoryVisitor Visitor;
 	Visitor.RequiredBaseName = LevelSequence->GetName();
-	Visitor.RequiredExtension = GetImageExtension(RenderingSettings);
+	Visitor.RequiredExtension = GetImageExtension(RenderingSettings->ImageFormat);
 	Visitor.RequiredFramerate = FString::Printf(TEXT("%.3f"), RenderingSettings->Framerate.AsDecimal());
 
 	const FString Path = GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue);
@@ -350,13 +361,29 @@ FString UGdhRenderingLibrary::GetFFmpegEncodeCmd(const ULevelSequence* LevelSequ
 		*GetImageOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
 		RenderingSettings->Framerate.AsDecimal(),
-		*GetImageExtension(RenderingSettings),
-		RenderingSettings->GetResolution().X,
-		RenderingSettings->GetResolution().Y,
+		*GetImageExtension(RenderingSettings->ImageFormat),
+		GetResolution(RenderingSettings).X,
+		GetResolution(RenderingSettings).Y,
 		*UKismetStringLibrary::JoinStringArray(RenderingSettings->FFmpegFlags, TEXT(" ")),
 		*GetVideoOutputDirectoryPath(LevelSequence, MoviePipelineQueue),
 		*LevelSequence->GetName(),
-		*GetVideoExtension(RenderingSettings)
+		*GetVideoExtension(RenderingSettings->VideoFormat)
+	);
+}
+
+FString UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(const UGdhRenderingSettings* RenderingSettings)
+{
+	if (!RenderingSettings) return TEXT("");
+
+	return FString::Printf(
+		TEXT("{ffmpeg_exe_path} -y -framerate %.3f -i {img_sequence_input}.%s -vf scale=%d:%d %s -r %.3f {output_video}.%s"),
+		RenderingSettings->Framerate.AsDecimal(),
+		*GetImageExtension(RenderingSettings->ImageFormat, false),
+		GetResolution(RenderingSettings).X,
+		GetResolution(RenderingSettings).Y,
+		*UKismetStringLibrary::JoinStringArray(RenderingSettings->FFmpegFlags, TEXT(" ")),
+		RenderingSettings->Framerate.AsDecimal(),
+		*GetVideoExtension(RenderingSettings->VideoFormat, false)
 	);
 }
 

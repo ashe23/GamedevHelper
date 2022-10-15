@@ -2,8 +2,7 @@
 
 #include "Settings/GdhRenderingSettings.h"
 #include "Gdh.h"
-// Engine Headers
-#include "MoviePipelineImageSequenceOutput.h"
+#include "Libs/GdhRenderingLibrary.h"
 
 UGdhRenderingSettings::UGdhRenderingSettings()
 {
@@ -14,7 +13,7 @@ UGdhRenderingSettings::UGdhRenderingSettings()
 	FFmpegFlags.Add(TEXT("-crf 18"));
 	FFmpegFlags.Add(TEXT("-pix_fmt yuv420p"));
 
-	// FFmpegEncodeCmdPreview = GetEncodeCmdPreview();
+	FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
 }
 
 FName UGdhRenderingSettings::GetContainerName() const
@@ -41,41 +40,9 @@ FString UGdhRenderingSettings::GetDesc()
 void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	switch (ResolutionPreset)
-	{
-		case EGdhResolutionPreset::Res360P:
-			CurrentResolution = GdhConstants::Resolution360P;
-			break;
-		case EGdhResolutionPreset::Res480P:
-			CurrentResolution = GdhConstants::Resolution480P;
-			break;
-		case EGdhResolutionPreset::Res720P:
-			CurrentResolution = GdhConstants::Resolution720P;
-			break;
-		case EGdhResolutionPreset::Res1080P:
-			CurrentResolution = GdhConstants::Resolution1080P;
-			break;
-		case EGdhResolutionPreset::Res1440P:
-			CurrentResolution = GdhConstants::Resolution1440P;
-			break;
-		case EGdhResolutionPreset::Res2160P:
-			CurrentResolution = GdhConstants::Resolution2160P;
-			break;
-		case EGdhResolutionPreset::ResCustom:
-			CurrentResolution = CustomResolution;
-			break;
-		default:
-			CurrentResolution = GdhConstants::Resolution1080P;
-	}
-
-	if (FPaths::FileExists(FFmpegExe.FilePath))
-	{
-		FFmpegExe.FilePath = FPaths::ConvertRelativePathToFull(FFmpegExe.FilePath);
-	}
-
-	// FFmpegEncodeCmdPreview = GetEncodeCmdPreview();
-
+	
+	FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
+	
 	SaveConfig();
 
 	if (OnChangeDelegate.IsBound())
@@ -85,25 +52,7 @@ void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& Proper
 }
 #endif
 
-FIntPoint UGdhRenderingSettings::GetResolution() const
-{
-	return CurrentResolution;
-}
-
 FGdhRenderingSettingsOnChangeDelegate& UGdhRenderingSettings::OnChange()
 {
 	return OnChangeDelegate;
 }
-
-// FString UGdhRenderingSettings::GetEncodeCmdPreview() const
-// {
-// 	return FString::Printf(
-// 		TEXT("{ffmpeg_exe_path} -y -framerate %.3f -i {input_image_path}.%s -vf scale=%d:%d %s {output_video_path}.%s"),
-// 		Framerate.AsDecimal(),
-// 		*GetImageExtension(),
-// 		CurrentResolution.X,
-// 		CurrentResolution.Y,
-// 		*UKismetStringLibrary::JoinStringArray(FFmpegFlags, TEXT(" ")),
-// 		*GetVideoExtension()
-// 	);
-// }

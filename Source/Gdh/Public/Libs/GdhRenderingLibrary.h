@@ -42,26 +42,33 @@ public:
 
 	/**
 	 * @brief Returns image class based on RenderingSettings image format. By default return .png
-	 * @param RenderingSettings UGdhRenderingSettings
+	 * @param ImageFormat EGdhImageFormat
 	 * @return UClass
 	 */
-	static UClass* GetImageClass(const UGdhRenderingSettings* RenderingSettings);
+	static UClass* GetImageClass(const EGdhImageFormat ImageFormat);
 
 	/**
 	 * @brief Returns image extension based on RenderingSettings image format
-	 * @param RenderingSettings UGdhRenderingSettings
+	 * @param ImageFormat EGdhImageFormat
 	 * @param IncludeDot 
 	 * @return FString
 	 */
-	static FString GetImageExtension(const UGdhRenderingSettings* RenderingSettings, const bool IncludeDot = false);
+	static FString GetImageExtension(const EGdhImageFormat ImageFormat, const bool IncludeDot = false);
 	
 	/**
 	 * @brief Returns video extension based on Rendering Settings video format
-	 * @param RenderingSettings UGdhRenderingSettings
+	 * @param VideoFormat EGdhVideoFormat
 	 * @param IncludeDot 
 	 * @return FString
 	 */
-	static FString GetVideoExtension(const UGdhRenderingSettings* RenderingSettings, const bool IncludeDot = false);
+	static FString GetVideoExtension(const EGdhVideoFormat VideoFormat, const bool IncludeDot = false);
+
+	/**
+	 * @brief Returns resolution based on rendering settings presets
+	 * @param RenderingSettings UGdhRenderingSettings
+	 * @return FIntPoint
+	 */
+	static FIntPoint GetResolution(const UGdhRenderingSettings* RenderingSettings);
 	
 	static bool IsValidJobSetting(UMoviePipelineSetting* Setting);
 	static bool IsValidMasterConfig(const UMoviePipelineMasterConfig* MasterConfig);
@@ -71,5 +78,6 @@ public:
 	static FString GetImageOutputDirectoryPath(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue);
 	static FString GetVideoOutputDirectoryPath(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue);
 	static FString GetFFmpegEncodeCmd(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue);
+	static FString GetFFmpegEncodeCmdPreview(const UGdhRenderingSettings* RenderingSettings);
 	static void RunFFmpegCommands(const TArray<FGdhFFmpegCommand>& FFmpegCommands);
 };

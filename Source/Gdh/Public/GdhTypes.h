@@ -52,6 +52,14 @@ enum class EGdhResolutionPreset : uint8
 	ResCustom UMETA(DisplayName = "Custom", ToolTip = "Custom resolution settings")
 };
 
+UENUM(BlueprintType)
+enum class EGdhRenderingMethod : uint8
+{
+	RenderImages UMETA(DisplayName = "RenderImagesOnly", ToolTip = "Renders images only using MovieRender, nothing will be encoded"),
+	EncodeVideos UMETA(DisplayName = "EncodeVideosOnly", ToolTip = "Encode video files from rendered images only"),
+	RenderAndEncode UMETA(DisplayName = "RenderAndEncode", ToolTip = "Will render images and then encode video files from them")
+};
+
 USTRUCT(BlueprintType)
 struct FGdhLevelSequenceRenderSettings
 {

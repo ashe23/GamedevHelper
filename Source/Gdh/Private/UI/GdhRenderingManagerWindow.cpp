@@ -464,7 +464,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						TEXT("%s/%s.%s"),
 						*UGdhRenderingLibrary::GetVideoOutputDirectoryPath(SelectedItem->LevelSequence, SelectedItem->MoviePipelineQueue),
 						*SelectedItem->LevelSequence->GetName(),
-						*UGdhRenderingLibrary::GetVideoExtension(RenderingSettings)
+						*UGdhRenderingLibrary::GetVideoExtension(RenderingSettings->VideoFormat, false)
 					);
 					if (!FPaths::FileExists(Path))
 					{
@@ -537,7 +537,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 						TEXT("%s/%s.%s"),
 						*UGdhRenderingLibrary::GetVideoOutputDirectoryPath(SelectedItem->LevelSequence, SelectedItem->MoviePipelineQueue),
 						*SelectedItem->LevelSequence->GetName(),
-						*UGdhRenderingLibrary::GetVideoExtension(RenderingSettings)
+						*UGdhRenderingLibrary::GetVideoExtension(RenderingSettings->VideoFormat)
 					);
 					if (!FPaths::FileExists(Path))
 					{
@@ -593,15 +593,11 @@ void SGdhRenderingManagerWindow::ListUpdate()
 			static_cast<float>(QueueSettings->LevelSequences.Num()),
 			FText::FromString(TEXT("Loading LevelSequence assets..."))
 		};
-		LevelSequenceLoadingSlowTask.MakeDialog();
+		LevelSequenceLoadingSlowTask.MakeDialog(false, false);
 
 		for (const auto& LevelSequenceSetting : QueueSettings->LevelSequences)
 		{
 			LevelSequenceLoadingSlowTask.EnterProgressFrame(1.0f);
-			if (LevelSequenceLoadingSlowTask.ShouldCancel())
-			{
-				break;
-			}
 
 			ULevelSequence* LevelSequence = LevelSequenceSetting.Key.LoadSynchronous();
 			if (!LevelSequence)
@@ -647,18 +643,14 @@ void SGdhRenderingManagerWindow::ListUpdate()
 
 		for (const auto& MoviePipelineQueue : QueueSettings->MoviePipelineQueues)
 		{
+			MoviePipelineQueueLoadingSlowTask.EnterProgressFrame(1.0f);
+			
 			if (!MoviePipelineQueue.LoadSynchronous())
 			{
 				ConsoleBoxText = TEXT("Failed to load some MoviePipelineQueue assets");
 				return;
 			}
-
-			MoviePipelineQueueLoadingSlowTask.EnterProgressFrame(1.0f);
-			if (MoviePipelineQueueLoadingSlowTask.ShouldCancel())
-			{
-				break;
-			}
-
+			
 			const TArray<UMoviePipelineExecutorJob*> Jobs = MoviePipelineQueue->GetJobs();
 			if (Jobs.Num() == 0)
 			{
@@ -677,10 +669,6 @@ void SGdhRenderingManagerWindow::ListUpdate()
 			for (const auto& Job : Jobs)
 			{
 				JobLoadingSlowTask.EnterProgressFrame(1.0f);
-				if (JobLoadingSlowTask.ShouldCancel())
-				{
-					break;
-				}
 
 				if (!Job) continue;
 
