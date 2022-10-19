@@ -15,6 +15,7 @@
 
 const FVector2D Icon16x16(16.0f, 16.0f);
 const FVector2D Icon20x20(20.0f, 20.0f);
+const FVector2D Icon32x32(32.0f, 32.0f);
 const FVector2D Icon40x40(40.0f, 40.0f);
 
 TSharedPtr<FSlateStyleSet> FGdhStyles::StyleInstance = nullptr;
@@ -117,8 +118,14 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.Icon.ArrowRight.16", new IMAGE_BRUSH(TEXT("IconArrowRight512"), Icon16x16));
 	Style->Set("GamedevHelper.Icon.BG.16", new IMAGE_BRUSH(TEXT("IconBG16"), Icon16x16));
 	Style->Set("GamedevHelper.Icon.Check20", new IMAGE_BRUSH(TEXT("IconCheck128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Check32", new IMAGE_BRUSH(TEXT("IconCheck128"), Icon32x32));
+	Style->Set("GamedevHelper.Icon.Check40", new IMAGE_BRUSH(TEXT("IconCheck128"), Icon40x40));
 	Style->Set("GamedevHelper.Icon.Cross20", new IMAGE_BRUSH(TEXT("IconCross128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Cross32", new IMAGE_BRUSH(TEXT("IconCross128"), Icon32x32));
+	Style->Set("GamedevHelper.Icon.Cross40", new IMAGE_BRUSH(TEXT("IconCross128"), Icon40x40));
 	Style->Set("GamedevHelper.Icon.Warning20", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Warning32", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon32x32));
+	Style->Set("GamedevHelper.Icon.Warning40", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon40x40));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 	// Style->Set("Gdh.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));

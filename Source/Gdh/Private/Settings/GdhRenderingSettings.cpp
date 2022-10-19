@@ -2,18 +2,16 @@
 
 #include "Settings/GdhRenderingSettings.h"
 #include "Gdh.h"
-#include "Libs/GdhRenderingLibrary.h"
 
 UGdhRenderingSettings::UGdhRenderingSettings()
 {
 	FFmpegFlags.Add(TEXT("-c:v libx264"));
-	FFmpegFlags.Add(TEXT("-profile:v high"));
 	FFmpegFlags.Add(TEXT("-preset slow"));
 	FFmpegFlags.Add(TEXT("-tune film"));
 	FFmpegFlags.Add(TEXT("-crf 18"));
 	FFmpegFlags.Add(TEXT("-pix_fmt yuv420p"));
 
-	FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
+	// FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
 }
 
 FName UGdhRenderingSettings::GetContainerName() const
@@ -41,7 +39,7 @@ void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& Proper
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	
-	FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
+	// FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
 	
 	SaveConfig();
 
