@@ -40,6 +40,7 @@ private:
 	void ListUpdate();
 	void ValidateSettings();
 	void ValidateRenderingSettings();
+	void ValidateRenderingAssetsSettings();
 	UMoviePipelineMasterConfig* CreateMasterConfig() const;
 	static FString GetMasterConfigValidationMsg(const UMoviePipelineMasterConfig* MasterConfig);
 	FIntPoint GetResolution() const;

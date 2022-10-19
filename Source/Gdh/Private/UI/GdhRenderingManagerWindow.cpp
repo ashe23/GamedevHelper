@@ -158,9 +158,29 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 						  .AutoHeight()
 						  .Padding(FMargin{5.0f, 10.0f})
 						[
-							SNew(STextBlock)
-							.Text(FText::FromString(TEXT("Rendering Assets")))
-							.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.Text(FText::FromString(TEXT("Rendering Assets")))
+								.Font(FGdhStyles::Get().GetFontStyle("GamedevHelper.Font.Light20"))
+							]
+							+ SHorizontalBox::Slot()
+							  .AutoWidth()
+							  .Padding(FMargin{5.0f, 0.0f})
+							[
+								SNew(SBox)
+								.WidthOverride(32.0f)
+								.HeightOverride(32.0f)
+								[
+									SNew(SImage).Image_Lambda([&]()
+									{
+										const FString Status = bIsValidRenderingAssetsSettings ? TEXT("GamedevHelper.Icon.Check32") : TEXT("GamedevHelper.Icon.Cross32");
+										return FGdhStyles::GetIcon(Status);
+									})
+								]
+							]
 						]
 						+ SVerticalBox::Slot()
 						  .Padding(FMargin{5.0f, 0.0f})
@@ -771,6 +791,97 @@ void SGdhRenderingManagerWindow::ValidateRenderingSettings()
 	bIsValidRenderingSettings = true;
 }
 
+void SGdhRenderingManagerWindow::ValidateRenderingAssetsSettings()
+{
+	if (!GEditor) return;
+	if (!RenderingAssetsSettings) return;
+
+	bIsValidRenderingAssetsSettings = false;
+	ErrorMsg.Reset();
+
+	if (RenderingAssetsSettings->LevelSequences.Num() == 0 && RenderingAssetsSettings->MoviePipelineQueues.Num() == 0)
+	{
+		ErrorMsg = TEXT("Select assets in order to start rendering");
+		return;
+	}
+
+	FScopedSlowTask SlowTaskLevelSequence{
+		static_cast<float>(RenderingAssetsSettings->LevelSequences.Num()),
+		FText::FromString(TEXT("Loading LevelSequence assets..."))
+	};
+	SlowTaskLevelSequence.MakeDialog(false, false);
+	for (const auto& LevelSequence : RenderingAssetsSettings->LevelSequences)
+	{
+		SlowTaskLevelSequence.EnterProgressFrame(1.0f);
+
+		if (!LevelSequence.Key.LoadSynchronous())
+		{
+			ErrorMsg = TEXT("Detected invalid LevelSequence asset in List");
+			return;
+		}
+
+		const UWorld* Map = LevelSequence.Value.LoadSynchronous() ? LevelSequence.Value.Get() : GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld();
+		if (!Map)
+		{
+			ErrorMsg = FString::Printf(TEXT("Error: Failed to load Map for %s"), *LevelSequence.Key.GetAssetName());
+			return;
+		}
+	}
+
+	FScopedSlowTask SlowTaskQueues{
+		static_cast<float>(RenderingAssetsSettings->MoviePipelineQueues.Num()),
+		FText::FromString(TEXT("Loading MoviePipelineQueue assets..."))
+	};
+	SlowTaskQueues.MakeDialog(false, false);
+	for (const auto& MoviePipelineQueue : RenderingAssetsSettings->MoviePipelineQueues)
+	{
+		SlowTaskQueues.EnterProgressFrame(1.0f);
+
+		if (!MoviePipelineQueue.LoadSynchronous())
+		{
+			ErrorMsg = TEXT("Detected invalid MoviePipelineQueue asset in list");
+			return;
+		}
+
+		const TArray<UMoviePipelineExecutorJob*> Jobs = MoviePipelineQueue->GetJobs();
+		if (Jobs.Num() == 0)
+		{
+			ErrorMsg = FString::Printf(TEXT("%s has no jobs in it. Specify at least 1 job to proceed"), *MoviePipelineQueue.GetAssetName());
+			return;
+		}
+
+		FScopedSlowTask SlowTaskJobs{
+			static_cast<float>(Jobs.Num()),
+			FText::FromString(FString::Printf(TEXT("Loading %s assets..."), *MoviePipelineQueue.GetAssetName()))
+		};
+		SlowTaskJobs.MakeDialog(false, false);
+
+		for (const auto& Job : Jobs)
+		{
+			SlowTaskJobs.EnterProgressFrame(1.0f);
+
+			if (!Job) continue;
+
+			const TSoftObjectPtr<ULevelSequence> JobSequence = Job->Sequence.TryLoad();
+			const TSoftObjectPtr<UWorld> JobMap = Job->Map.TryLoad();
+
+			if (JobSequence.IsNull())
+			{
+				ErrorMsg = FString::Printf(TEXT("%s contains job (%s) with invalid LevelSequence"), *MoviePipelineQueue.GetAssetName(), *Job->JobName);
+				return;
+			}
+
+			if (JobMap.IsNull())
+			{
+				ErrorMsg = FString::Printf(TEXT("%s contains job (%s) with invalid Map"), *MoviePipelineQueue.GetAssetName(), *Job->JobName);
+				return;
+			}
+		}
+	}
+
+	bIsValidRenderingAssetsSettings = true;
+}
+
 UMoviePipelineMasterConfig* SGdhRenderingManagerWindow::CreateMasterConfig() const
 {
 	UMoviePipelineMasterConfig* MasterConfig = NewObject<UMoviePipelineMasterConfig>();
@@ -889,7 +1000,7 @@ FString SGdhRenderingManagerWindow::GetMasterConfigValidationMsg(const UMoviePip
 FIntPoint SGdhRenderingManagerWindow::GetResolution() const
 {
 	if (!RenderingSettings) return FIntPoint::ZeroValue;
-	
+
 	switch (RenderingSettings->ResolutionPreset)
 	{
 		case EGdhResolutionPreset::Res360P: return GdhConstants::Resolution360P;
@@ -906,10 +1017,15 @@ FIntPoint SGdhRenderingManagerWindow::GetResolution() const
 void SGdhRenderingManagerWindow::ValidateSettings()
 {
 	ValidateRenderingSettings();
+
+	if (!bIsValidRenderingSettings) return;
+
+	ValidateRenderingAssetsSettings();
 }
 
 FReply SGdhRenderingManagerWindow::OnBtnRefreshClick()
 {
+	ValidateSettings();
 	// ListUpdate();
 
 	return FReply::Handled();

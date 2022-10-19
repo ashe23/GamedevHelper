@@ -6,22 +6,20 @@
 #include "GdhTypes.h"
 #include "GdhRenderingManagerListItem.generated.h"
 
+// class UMoviePipelineQueue;
+
 UCLASS(Transient)
 class UGdhRenderingManagerListItem : public UObject
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY()
-	EGdhGenericStatus Status = EGdhGenericStatus::OK;
+	FString Name;
+	FString Duration;
+	FString RenderedFrames;
 	
-	UPROPERTY()
-	class ULevelSequence* LevelSequence;
-
-	UPROPERTY()
-	UWorld* Map;
-
-	UPROPERTY()
-	class UMoviePipelineQueue* MoviePipelineQueue;
+	// TSoftObjectPtr<UWorld> Map;
+	// TSoftObjectPtr<ULevelSequence> LevelSequence;
+	// TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue;
 };
 
 class SGdhRenderingManagerListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGdhRenderingManagerListItem>>
