@@ -39,6 +39,7 @@ public class Gdh : ModuleRules
 				"MovieRenderPipelineSettings",
 				"MovieRenderPipelineEditor",
 				"MovieSceneTracks",
+				"MovieScene",
 			}
 		);
 	}

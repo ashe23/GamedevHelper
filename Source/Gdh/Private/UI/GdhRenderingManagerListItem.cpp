@@ -27,36 +27,46 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 
 	if (InColumnName.IsEqual(TEXT("Duration")))
 	{
-		const FString Duration = FString::Printf(TEXT("%d frames (%s)"), ListItem->DurationInFrames, *UGdhTimeLibrary::GetHumanReadableTime(ListItem->DurationInSeconds));
+		const FString Duration = FString::Printf(
+			TEXT("%d frames (%s%s)"),
+			ListItem->DurationInFrames,
+			ListItem->bHasTimeDilationTrack ? TEXT("~") : TEXT(""),
+			*UGdhTimeLibrary::GetHumanReadableTime(ListItem->DurationInSeconds));
+
 		return SNew(STextBlock).Text(FText::FromString(Duration));
 	}
 
 	if (InColumnName.IsEqual(TEXT("RenderedFrames")))
 	{
-		if (ListItem->RenderedFramesNum == 0)
+		EGdhGenericStatus Status;
+
+		if (ListItem->RenderedFramesNum == 0 || ListItem->bHasMissingFrames)
 		{
-			const FLinearColor Color = FGdhStyles::GetColorByStatus(EGdhGenericStatus::Error);
-			const FString Str = FString::Printf(TEXT("%d of %d"), ListItem->RenderedFramesNum, ListItem->DurationInFrames);
-			return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
+			Status = EGdhGenericStatus::Error;
+		}
+		else if (ListItem->bHasTimeDilationTrack)
+		{
+			Status = EGdhGenericStatus::Warning;
+		}
+		else
+		{
+			Status = ListItem->RenderedFramesNum == ListItem->DurationInFrames ? EGdhGenericStatus::OK : EGdhGenericStatus::Error;
 		}
 
-		if (ListItem->bHasTimeDilationTrack)
-		{
-			const EGdhGenericStatus Status = ListItem->RenderedFramesNum > 0 ? EGdhGenericStatus::OK : EGdhGenericStatus::Error;
-			const FLinearColor Color = FGdhStyles::GetColorByStatus(Status);
-			const FString Str = FString::Printf(TEXT("%d of %d"), ListItem->RenderedFramesNum, ListItem->DurationInFrames);
-			return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
-		}
-
-		const EGdhGenericStatus Status = ListItem->RenderedFramesNum == ListItem->DurationInFrames ? EGdhGenericStatus::OK : EGdhGenericStatus::Error;
 		const FLinearColor Color = FGdhStyles::GetColorByStatus(Status);
-		const FString Str = FString::Printf(TEXT("%d of %d"), ListItem->RenderedFramesNum, ListItem->DurationInFrames);
+		const FString Str = FString::Printf(
+			TEXT("%d of %d%s"),
+			ListItem->RenderedFramesNum,
+			ListItem->DurationInFrames,
+			ListItem->bHasTimeDilationTrack ? TEXT(" (Has Slomo Track)") : TEXT("")
+		);
 		return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
 	}
 
-	if (InColumnName.IsEqual(TEXT("SlomoTrack")))
+	if (InColumnName.IsEqual(TEXT("Note")))
 	{
-		return SNew(STextBlock).Text(FText::FromString(ListItem->bHasTimeDilationTrack ? TEXT("Yes") : TEXT("No")));
+		const FLinearColor Color = FGdhStyles::GetColorByStatus(ListItem->NoteStatus);
+		return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(ListItem->Note));
 	}
 
 	// checking for errors

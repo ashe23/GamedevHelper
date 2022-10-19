@@ -49,9 +49,10 @@ private:
 	FString GetImageExtension(const bool IncludeDot = false) const;
 	FString GetVideoExtension(const bool IncludeDot = false) const;
 	FString GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const;
+	UClass* GetImageClass() const;
 	int32 GetRenderedFramesNum(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue, bool& bHasMissingFrames) const;
 	bool ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const;
-	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
+	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UWorld* Map, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 	FReply OnBtnRefreshClick();
 	FReply OnBtnRenderClick();
 	bool IsBtnRenderEnabled() const;
@@ -63,11 +64,12 @@ private:
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhRenderingManagerListItem>>> ListView;
 	TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>> ListItems;
 	TArray<FGdhFFmpegCommand> FFmpegCommands;
-	const int32 WidgetIndexRenderingManagerWorking = 0;
-	const int32 WidgetIndexRenderingManagerUI = 1;
+	const int32 WidgetIndexWorking = 0;
+	const int32 WidgetIndexIdle = 1;
 	FString JobStats;
 	FString ErrorMsg;
-
+	int32 FinishedJobs = 0;
+	double RenderStartTime = 0.0;
 	bool bIsValidRenderingSettings = false;
 	bool bIsValidRenderingAssetsSettings = false;
 };

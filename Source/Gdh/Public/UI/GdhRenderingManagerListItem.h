@@ -6,7 +6,7 @@
 #include "GdhTypes.h"
 #include "GdhRenderingManagerListItem.generated.h"
 
-// class UMoviePipelineQueue;
+class UMoviePipelineQueue;
 
 UCLASS(Transient)
 class UGdhRenderingManagerListItem : public UObject
@@ -16,13 +16,17 @@ public:
 	FString Name;
 	int32 RenderedFramesNum = 0;
 	int32 DurationInFrames = 0;
+	int32 FrameStart = 0;
+	int32 FrameEnd = 0;
 	double DurationInSeconds = 0.0;
 	bool bHasTimeDilationTrack = false;
 	bool bHasMissingFrames = false;
+	FString Note;
+	EGdhGenericStatus NoteStatus = EGdhGenericStatus::None;
 
-	// TSoftObjectPtr<UWorld> Map;
-	// TSoftObjectPtr<ULevelSequence> LevelSequence;
-	// TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue;
+	TSoftObjectPtr<UWorld> Map;
+	TSoftObjectPtr<ULevelSequence> LevelSequence;
+	TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue;
 };
 
 class SGdhRenderingManagerListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGdhRenderingManagerListItem>>

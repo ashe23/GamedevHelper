@@ -16,8 +16,10 @@
 #include "MoviePipelineConsoleVariableSetting.h"
 #include "MoviePipelineDeferredPasses.h"
 #include "MoviePipelineHighResSetting.h"
+#include "MoviePipelineImageSequenceOutput.h"
 #include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
+#include "MoviePipelineQueue.h"
 #include "MoviePipelineQueueSubsystem.h"
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "MovieSceneTimeHelpers.h"
@@ -298,11 +300,10 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 int32 SGdhRenderingManagerWindow::GetActiveWidgetIndex() const
 {
-	if (!GEditor) return WidgetIndexRenderingManagerWorking;
+	if (!GEditor) return WidgetIndexIdle;
+	if (GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering()) return WidgetIndexWorking;
 
-	if (GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->IsRendering()) return WidgetIndexRenderingManagerWorking;
-
-	return WidgetIndexRenderingManagerUI;
+	return WidgetIndexIdle;
 }
 
 FText SGdhRenderingManagerWindow::GetErrorMsgBoxText() const
@@ -359,15 +360,14 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 			.ToolTipText(FText::FromString(TEXT("Number of already rendered frames")))
 			.Text(FText::FromString(TEXT("Rendered Frames Num")))
 		]
-		+ SHeaderRow::Column(FName("SlomoTrack"))
+		+ SHeaderRow::Column(FName("Note"))
 		  .HAlignCell(HAlign_Center)
 		  .VAlignCell(VAlign_Center)
 		  .HAlignHeader(HAlign_Center)
 		  .HeaderContentPadding(FMargin(10.0f))
 		[
 			SNew(STextBlock)
-			.ToolTipText(FText::FromString(TEXT("Does Job LevelSequence contains time dilation track or not (slomo track)")))
-			.Text(FText::FromString(TEXT("Has Slomo Track")))
+			.Text(FText::FromString(TEXT("Note")))
 		];
 }
 
@@ -590,7 +590,8 @@ void SGdhRenderingManagerWindow::ListUpdate()
 
 	for (const auto& LevelSequence : RenderingAssetsSettings->LevelSequences)
 	{
-		const auto ListItem = CreateListItem(LevelSequence.Key.Get(), nullptr);
+		const UWorld* Map = LevelSequence.Value.LoadSynchronous() ? LevelSequence.Value.Get() : GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld();
+		const auto ListItem = CreateListItem(LevelSequence.Key.Get(), Map);
 		if (!ListItem.IsValid()) continue;
 
 		TotalJobsDuration += ListItem->DurationInSeconds;
@@ -603,7 +604,7 @@ void SGdhRenderingManagerWindow::ListUpdate()
 
 		for (const auto& Job : MoviePipelineQueue->GetJobs())
 		{
-			const auto ListItem = CreateListItem(Cast<ULevelSequence>(Job->Sequence.TryLoad()), MoviePipelineQueue.Get());
+			const auto ListItem = CreateListItem(Cast<ULevelSequence>(Job->Sequence.TryLoad()), Cast<UWorld>(Job->Map.TryLoad()), MoviePipelineQueue.Get());
 			if (!ListItem.IsValid()) continue;
 
 			TotalJobsDuration += ListItem->DurationInSeconds;
@@ -985,6 +986,21 @@ FString SGdhRenderingManagerWindow::GetImageOutputDir(const ULevelSequence* Leve
 	);
 }
 
+UClass* SGdhRenderingManagerWindow::GetImageClass() const
+{
+	switch (RenderingSettings->ImageFormat)
+	{
+		case EGdhImageFormat::Png:
+			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
+		case EGdhImageFormat::Jpg:
+			return UMoviePipelineImageSequenceOutput_JPG::StaticClass();
+		case EGdhImageFormat::Bmp:
+			return UMoviePipelineImageSequenceOutput_BMP::StaticClass();
+		default:
+			return UMoviePipelineImageSequenceOutput_PNG::StaticClass();
+	}
+}
+
 int32 SGdhRenderingManagerWindow::GetRenderedFramesNum(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue, bool& bHasMissingFrames) const
 {
 	if (!LevelSequence) return 0;
@@ -1061,9 +1077,9 @@ bool SGdhRenderingManagerWindow::ContainsTimeDilationTrack(const ULevelSequence*
 	return false;
 }
 
-TWeakObjectPtr<UGdhRenderingManagerListItem> SGdhRenderingManagerWindow::CreateListItem(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+TWeakObjectPtr<UGdhRenderingManagerListItem> SGdhRenderingManagerWindow::CreateListItem(const ULevelSequence* LevelSequence, const UWorld* Map, const UMoviePipelineQueue* MoviePipelineQueue) const
 {
-	if (!LevelSequence) return nullptr;
+	if (!LevelSequence || !Map) return nullptr;
 
 	const TWeakObjectPtr<UGdhRenderingManagerListItem> ListItem = NewObject<UGdhRenderingManagerListItem>();
 
@@ -1082,13 +1098,31 @@ TWeakObjectPtr<UGdhRenderingManagerListItem> SGdhRenderingManagerWindow::CreateL
 
 	const int32 DurationInFrames = FrameEnd - FrameStart;
 	const int32 DurationInSeconds = DurationInFrames / RenderingSettings->Framerate.AsDecimal();
-	const int32 RenderedFramesNum = GetRenderedFramesNum(LevelSequence, nullptr, ListItem->bHasMissingFrames);
+	const int32 RenderedFramesNum = GetRenderedFramesNum(LevelSequence, MoviePipelineQueue, ListItem->bHasMissingFrames);
 
 	ListItem->Name = MoviePipelineQueue ? FString::Printf(TEXT("%s (%s)"), *LevelSequence->GetName(), *MoviePipelineQueue->GetName()) : LevelSequence->GetName();
 	ListItem->DurationInFrames = DurationInFrames;
 	ListItem->DurationInSeconds = DurationInSeconds;
 	ListItem->RenderedFramesNum = RenderedFramesNum;
+	ListItem->FrameStart = FrameStart;
+	ListItem->FrameEnd = FrameEnd;
 	ListItem->bHasTimeDilationTrack = ContainsTimeDilationTrack(LevelSequence);
+	ListItem->Map = Map;
+	ListItem->LevelSequence = LevelSequence;
+	ListItem->MoviePipelineQueue = MoviePipelineQueue;
+	ListItem->Note = TEXT("Done");
+	ListItem->NoteStatus = EGdhGenericStatus::OK;
+
+	if (ListItem->RenderedFramesNum == 0)
+	{
+		ListItem->Note = TEXT("Missing Rendered Images");
+		ListItem->NoteStatus = EGdhGenericStatus::Error;
+	}
+	else if (ListItem->bHasMissingFrames)
+	{
+		ListItem->Note = TEXT("Rendered images are not sequential. Missing some frames");
+		ListItem->NoteStatus = EGdhGenericStatus::Error;
+	}
 
 	return ListItem;
 }
@@ -1113,8 +1147,11 @@ FReply SGdhRenderingManagerWindow::OnBtnRefreshClick()
 
 FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 {
+	ListUpdate();
+
 	// FFmpegCommands.Reset();
 	// FFmpegCommands.Reserve(ListItems.Num());
+
 	//
 	// for (const auto& ListItem : ListItems)
 	// {
@@ -1133,102 +1170,111 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 	// 	}
 	// }
 	//
-	// UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
-	// if (!CustomQueue)
-	// {
-	// 	UGdhNotificationLibrary::ShowModalOutputLog(TEXT("Rendering Manager"), TEXT("Failed to create queue for rendering"), EGdhModalStatus::Error, 5.0f);
-	// 	return FReply::Handled();
-	// }
-	//
-	// CustomQueue->DeleteAllJobs();
-	//
-	// for (const auto& ListItem : ListItems)
-	// {
-	// 	if (!ListItem.IsValid()) continue;
-	//
-	// 	UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-	// 	if (!Job)
-	// 	{
-	// 		UE_LOG(LogGdh, Error, TEXT("Failed to create job for custom queue"));
-	// 		return FReply::Handled();
-	// 	}
-	// 	Job->Sequence = ListItem->LevelSequence;
-	// 	Job->Map = ListItem->Map;
-	// 	Job->JobName = ListItem->LevelSequence->GetName();
-	// 	Job->SetConfiguration(MovieRenderSettings->CreateMasterConfig());
-	//
-	// 	UMoviePipelineMasterConfig* Config = Job->GetConfiguration();
-	// 	if (!Config)
-	// 	{
-	// 		return FReply::Handled();
-	// 	}
-	//
-	// 	Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
-	// 	Config->FindOrAddSettingByClass(UGdhRenderingLibrary::GetImageClass(RenderingSettings));
-	//
-	// 	UMoviePipelineOutputSetting* OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
-	// 	if (!OutputSetting)
-	// 	{
-	// 		return FReply::Handled();
-	// 	}
-	//
-	// 	const int32 FrameStart = ConvertFrameTime(
-	// 		UE::MovieScene::DiscreteInclusiveLower(ListItem->LevelSequence->MovieScene->GetPlaybackRange()),
-	// 		ListItem->LevelSequence->MovieScene->GetTickResolution(),
-	// 		ListItem->LevelSequence->MovieScene->GetDisplayRate()
-	// 	).FloorToFrame().Value;
-	// 	const int32 FrameEnd = ConvertFrameTime(
-	// 		UE::MovieScene::DiscreteExclusiveUpper(ListItem->LevelSequence->MovieScene->GetPlaybackRange()),
-	// 		ListItem->LevelSequence->MovieScene->GetTickResolution(),
-	// 		ListItem->LevelSequence->MovieScene->GetDisplayRate()
-	// 	).FloorToFrame().Value;
-	//
-	// 	OutputSetting->OutputDirectory.Path = UGdhRenderingLibrary::GetImageOutputDirectoryPath(ListItem->LevelSequence, ListItem->MoviePipelineQueue);
-	// 	OutputSetting->FileNameFormat = FString::Printf(TEXT("{sequence_name}_%0.3f_{frame_number_rel}"), RenderingSettings->Framerate.AsDecimal());
-	// 	OutputSetting->OutputResolution = RenderingSettings->GetResolution();
-	// 	OutputSetting->bUseCustomFrameRate = true;
-	// 	OutputSetting->OutputFrameRate = RenderingSettings->Framerate;
-	// 	OutputSetting->bOverrideExistingOutput = true;
-	// 	OutputSetting->ZeroPadFrameNumbers = 4;
-	// 	OutputSetting->FrameNumberOffset = 0;
-	// 	OutputSetting->HandleFrameCount = 0;
-	// 	OutputSetting->OutputFrameStep = 1;
-	// 	OutputSetting->bUseCustomPlaybackRange = true;
-	// 	OutputSetting->CustomStartFrame = FrameStart;
-	// 	OutputSetting->CustomEndFrame = FrameEnd;
-	// }
-	//
-	// const FTimespan RenderStartTime = FTimespan::FromSeconds(FPlatformTime::Seconds());
-	//
-	// const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
-	// if (!Executor) return FReply::Handled();
-	//
-	// Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
-	// {
-	// 	const FTimespan RenderEndTime = FTimespan::FromSeconds(FPlatformTime::Seconds());
-	//
-	// 	ListUpdate();
-	//
-	// 	if (!bSuccess)
-	// 	{
-	// 		// UGdhNotificationLibrary::ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
-	// 		return;
-	// 	}
-	//
-	//
-	// 	const FString SuccessText = FString::Printf(TEXT("Images rendered successfully in %d sec"), (RenderEndTime - RenderStartTime).GetSeconds());
-	// 	UE_LOG(LogGdh, Log, TEXT("%s"), *SuccessText);
-	// 	UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), SuccessText, EGdhModalStatus::OK, 5.0f);
-	//
-	// 	UGdhRenderingLibrary::RunFFmpegCommands(FFmpegCommands);
-	// });
-	// Executor->OnExecutorErrored().AddLambda([&](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
-	// {
-	// 	ListUpdate();
-	//
-	// 	// GdhSubsystem->ShowModalWithOutputLog(TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
-	// 	UE_LOG(LogGdh, Error, TEXT("%s"), *ErrorText.ToString());
-	// });
+	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	if (!CustomQueue)
+	{
+		UGdhNotificationLibrary::ShowModalOutputLog(TEXT("Rendering Manager"), TEXT("Failed to create queue for rendering"), EGdhModalStatus::Error, 5.0f);
+		return FReply::Handled();
+	}
+
+	CustomQueue->DeleteAllJobs();
+
+	for (const auto& ListItem : ListItems)
+	{
+		if (!ListItem.IsValid()) continue;
+
+		UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+		if (!Job)
+		{
+			UE_LOG(LogGdh, Error, TEXT("Failed to create job for custom queue"));
+			return FReply::Handled();
+		}
+		Job->Sequence = ListItem->LevelSequence.ToSoftObjectPath();
+		Job->Map = ListItem->Map.ToSoftObjectPath();
+		Job->JobName = ListItem->LevelSequence.GetAssetName();
+		Job->SetConfiguration(CreateMasterConfig());
+
+		UMoviePipelineMasterConfig* Config = Job->GetConfiguration();
+		if (!Config)
+		{
+			return FReply::Handled();
+		}
+
+		Config->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
+		Config->FindOrAddSettingByClass(GetImageClass());
+
+		UMoviePipelineOutputSetting* OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
+		if (!OutputSetting)
+		{
+			return FReply::Handled();
+		}
+
+		// removing old rendered images
+		const FString ImageOutputDir = GetImageOutputDir(ListItem->LevelSequence.Get(), ListItem->MoviePipelineQueue.Get());
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		if (FPaths::DirectoryExists(ImageOutputDir))
+		{
+			PlatformFile.DeleteDirectoryRecursively(*ImageOutputDir);
+		}
+
+		OutputSetting->OutputDirectory.Path = GetImageOutputDir(ListItem->LevelSequence.Get(), ListItem->MoviePipelineQueue.Get());
+		OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
+		OutputSetting->OutputResolution = GetResolution();
+		OutputSetting->bUseCustomFrameRate = true;
+		OutputSetting->OutputFrameRate = RenderingSettings->Framerate;
+		OutputSetting->bOverrideExistingOutput = true;
+		OutputSetting->ZeroPadFrameNumbers = 4;
+		OutputSetting->FrameNumberOffset = 0;
+		OutputSetting->HandleFrameCount = 0;
+		OutputSetting->OutputFrameStep = 1;
+		OutputSetting->bUseCustomPlaybackRange = true;
+		OutputSetting->CustomStartFrame = ListItem->FrameStart;
+		OutputSetting->CustomEndFrame = ListItem->FrameEnd;
+	}
+
+	FinishedJobs = 0;
+
+	UMoviePipelinePIEExecutor* Executor = Cast<UMoviePipelinePIEExecutor>(
+		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass()));
+	if (!Executor) return FReply::Handled();
+
+	RenderStartTime = FPlatformTime::Seconds();
+
+	Executor->OnIndividualJobWorkFinished().AddLambda([&](FMoviePipelineOutputData OutputData)
+	{
+		if (OutputData.bSuccess)
+		{
+			FinishedJobs++;
+		}
+	});
+
+	Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
+	{
+		ListUpdate();
+
+		if (!bSuccess)
+		{
+			UGdhNotificationLibrary::ShowModalOutputLog(TEXT("Rendering Manager"),TEXT("Error occured when rendering images"), EGdhModalStatus::Error, 5.0f);
+			return;
+		}
+
+		const double ElapsedTime = FPlatformTime::Seconds() - RenderStartTime;
+		const FString Msg = FString::Printf(TEXT("Rendering Done. Finished %d of %d jobs in %s"), FinishedJobs, ListItems.Num(), *UGdhTimeLibrary::GetHumanReadableTime(ElapsedTime));
+		const EGdhModalStatus Status = ListItems.Num() == FinishedJobs ? EGdhModalStatus::OK : EGdhModalStatus::Error;
+		UE_LOG(LogGdh, Warning, TEXT("%s"), *Msg);
+		UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), Msg, Status, 5.0f);
+
+		// UGdhRenderingLibrary::RunFFmpegCommands(FFmpegCommands);
+	});
+	Executor->OnExecutorErrored().AddLambda([&](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
+	{
+		UGdhNotificationLibrary::ShowModal(
+			TEXT("Rendering Manager"),
+			FString::Printf(TEXT("Rendering finished with errors %s : %s"), *ErrorText.ToString(), PipelineExecutor ? *PipelineExecutor->GetName() : TEXT("")),
+			EGdhModalStatus::Error,
+			5.0f
+		);
+	});
 
 	return FReply::Handled();
 }
