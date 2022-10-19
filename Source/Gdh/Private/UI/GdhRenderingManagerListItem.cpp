@@ -5,6 +5,7 @@
 #include "MoviePipelineQueue.h"
 #include "Settings/GdhRenderingSettings.h"
 #include "Libs/GdhRenderingLibrary.h"
+#include "Libs/GdhTimeLibrary.h"
 
 void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
@@ -19,6 +20,45 @@ void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSh
 
 TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const FName& InColumnName)
 {
+	if (InColumnName.IsEqual(TEXT("Name")))
+	{
+		return SNew(STextBlock).Text(FText::FromString(ListItem->Name));
+	}
+
+	if (InColumnName.IsEqual(TEXT("Duration")))
+	{
+		const FString Duration = FString::Printf(TEXT("%d frames (%s)"), ListItem->DurationInFrames, *UGdhTimeLibrary::GetHumanReadableTime(ListItem->DurationInSeconds));
+		return SNew(STextBlock).Text(FText::FromString(Duration));
+	}
+
+	if (InColumnName.IsEqual(TEXT("RenderedFrames")))
+	{
+		if (ListItem->RenderedFramesNum == 0)
+		{
+			const FLinearColor Color = FGdhStyles::GetColorByStatus(EGdhGenericStatus::Error);
+			const FString Str = FString::Printf(TEXT("%d of %d"), ListItem->RenderedFramesNum, ListItem->DurationInFrames);
+			return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
+		}
+
+		if (ListItem->bHasTimeDilationTrack)
+		{
+			const EGdhGenericStatus Status = ListItem->RenderedFramesNum > 0 ? EGdhGenericStatus::OK : EGdhGenericStatus::Error;
+			const FLinearColor Color = FGdhStyles::GetColorByStatus(Status);
+			const FString Str = FString::Printf(TEXT("%d of %d"), ListItem->RenderedFramesNum, ListItem->DurationInFrames);
+			return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
+		}
+
+		const EGdhGenericStatus Status = ListItem->RenderedFramesNum == ListItem->DurationInFrames ? EGdhGenericStatus::OK : EGdhGenericStatus::Error;
+		const FLinearColor Color = FGdhStyles::GetColorByStatus(Status);
+		const FString Str = FString::Printf(TEXT("%d of %d"), ListItem->RenderedFramesNum, ListItem->DurationInFrames);
+		return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
+	}
+
+	if (InColumnName.IsEqual(TEXT("SlomoTrack")))
+	{
+		return SNew(STextBlock).Text(FText::FromString(ListItem->bHasTimeDilationTrack ? TEXT("Yes") : TEXT("No")));
+	}
+
 	// checking for errors
 	// FString ErrorMsg;
 	//

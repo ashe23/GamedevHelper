@@ -14,9 +14,12 @@ class UGdhRenderingManagerListItem : public UObject
 	GENERATED_BODY()
 public:
 	FString Name;
-	FString Duration;
-	FString RenderedFrames;
-	
+	int32 RenderedFramesNum = 0;
+	int32 DurationInFrames = 0;
+	double DurationInSeconds = 0.0;
+	bool bHasTimeDilationTrack = false;
+	bool bHasMissingFrames = false;
+
 	// TSoftObjectPtr<UWorld> Map;
 	// TSoftObjectPtr<ULevelSequence> LevelSequence;
 	// TSoftObjectPtr<UMoviePipelineQueue> MoviePipelineQueue;
@@ -25,7 +28,10 @@ public:
 class SGdhRenderingManagerListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGdhRenderingManagerListItem>>
 {
 public:
-	SLATE_BEGIN_ARGS(SGdhRenderingManagerListItem) {}
+	SLATE_BEGIN_ARGS(SGdhRenderingManagerListItem)
+		{
+		}
+
 		SLATE_ARGUMENT(TWeakObjectPtr<UGdhRenderingManagerListItem>, ListItem)
 	SLATE_END_ARGS()
 

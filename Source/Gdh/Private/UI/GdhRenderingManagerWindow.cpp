@@ -21,8 +21,10 @@
 #include "MoviePipelineQueueSubsystem.h"
 #include "MoviePipelineWidgetRenderSetting.h"
 #include "MovieSceneTimeHelpers.h"
+#include "Libs/GdhTimeLibrary.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Subsystems/UnrealEditorSubsystem.h"
+#include "Tracks/MovieSceneSlomoTrack.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Layout/SScrollBox.h"
 
@@ -36,12 +38,12 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 
 	RenderingSettings->OnChange().BindLambda([&]()
 	{
-		ValidateSettings();
+		ListUpdate();
 	});
 
 	RenderingAssetsSettings->OnChange().BindLambda([&]()
 	{
-		ValidateSettings();
+		ListUpdate();
 	});
 
 	RegisterCommands();
@@ -65,8 +67,7 @@ void SGdhRenderingManagerWindow::Construct(const FArguments& InArgs)
 	const TSharedPtr<IDetailsView> RenderingAssetsSettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
 	RenderingAssetsSettingsProperty->SetObject(RenderingAssetsSettings);
 
-	ValidateSettings();
-	// ListUpdate();
+	ListUpdate();
 
 	ChildSlot
 	[
@@ -328,34 +329,21 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 {
 	return
 		SNew(SHeaderRow)
-		+ SHeaderRow::Column(FName("Status"))
+		+ SHeaderRow::Column(FName("Name"))
 		  .HAlignCell(HAlign_Center)
 		  .VAlignCell(VAlign_Center)
 		  .HAlignHeader(HAlign_Center)
 		  .HeaderContentPadding(FMargin(10.0f))
-		  .FixedWidth(32.0f)
 		[
 			SNew(STextBlock)
-			.ToolTipText(FText::FromString(TEXT("Job Status")))
-			.Text(FText::FromString(TEXT("#")))
-		]
-		+ SHeaderRow::Column(FName("Sequence"))
-		  .HAlignCell(HAlign_Center)
-		  .VAlignCell(VAlign_Center)
-		  .HAlignHeader(HAlign_Center)
-		  .HeaderContentPadding(FMargin(10.0f))
-		  .FillSized(200.0f)
-		[
-			SNew(STextBlock)
-			.ToolTipText(FText::FromString(TEXT("LevelSequence Name")))
-			.Text(FText::FromString(TEXT("Sequence")))
+			.ToolTipText(FText::FromString(TEXT("Job Name")))
+			.Text(FText::FromString(TEXT("Job Name")))
 		]
 		+ SHeaderRow::Column(FName("Duration"))
 		  .HAlignCell(HAlign_Center)
 		  .VAlignCell(VAlign_Center)
 		  .HAlignHeader(HAlign_Center)
 		  .HeaderContentPadding(FMargin(10.0f))
-		  .FillSized(200.0f)
 		[
 			SNew(STextBlock)
 			.ToolTipText(FText::FromString(TEXT("LevelSequence duration, based on framerate parameter. Does not take into account time dilation track")))
@@ -371,16 +359,15 @@ TSharedPtr<SHeaderRow> SGdhRenderingManagerWindow::GetHeaderRow() const
 			.ToolTipText(FText::FromString(TEXT("Number of already rendered frames")))
 			.Text(FText::FromString(TEXT("Rendered Frames Num")))
 		]
-		+ SHeaderRow::Column(FName("Note"))
+		+ SHeaderRow::Column(FName("SlomoTrack"))
 		  .HAlignCell(HAlign_Center)
 		  .VAlignCell(VAlign_Center)
 		  .HAlignHeader(HAlign_Center)
 		  .HeaderContentPadding(FMargin(10.0f))
-		  .FillSized(500.0f)
 		[
 			SNew(STextBlock)
-			.ToolTipText(FText::FromString(TEXT("Job encoded video file")))
-			.Text(FText::FromString(TEXT("Note")))
+			.ToolTipText(FText::FromString(TEXT("Does Job LevelSequence contains time dilation track or not (slomo track)")))
+			.Text(FText::FromString(TEXT("Has Slomo Track")))
 		];
 }
 
@@ -590,146 +577,46 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 
 void SGdhRenderingManagerWindow::ListUpdate()
 {
-	// if (!GEditor) return;
-	// if (!bIsValidSettings) return;
-	//
-	// bCanStartRendering = false;
-	// JobStats.Reset();
-	// ConsoleBoxText.Reset();
-	// ListItems.Reset();
-	// ListItems.Reserve(QueueSettings->LevelSequences.Num() + QueueSettings->MoviePipelineQueues.Num());
-	//
-	// if (QueueSettings->LevelSequences.Num() == 0 && QueueSettings->MoviePipelineQueues.Num() == 0)
-	// {
-	// 	ConsoleBoxText = TEXT("Queue is empty. Select some LevelSequence or MoviePipelineQueue assets in order to render");
-	// 	return;
-	// }
-	//
-	// // FFmpegCommands.Reset();
-	// // FFmpegCommands.Reserve(QueueSettings->LevelSequences.Num());
-	// double TotalJobsDuration = 0;
-	//
-	// if (QueueSettings->LevelSequences.Num() > 0)
-	// {
-	// 	FScopedSlowTask LevelSequenceLoadingSlowTask{
-	// 		static_cast<float>(QueueSettings->LevelSequences.Num()),
-	// 		FText::FromString(TEXT("Loading LevelSequence assets..."))
-	// 	};
-	// 	LevelSequenceLoadingSlowTask.MakeDialog(false, false);
-	//
-	// 	for (const auto& LevelSequenceSetting : QueueSettings->LevelSequences)
-	// 	{
-	// 		LevelSequenceLoadingSlowTask.EnterProgressFrame(1.0f);
-	//
-	// 		ULevelSequence* LevelSequence = LevelSequenceSetting.Key.LoadSynchronous();
-	// 		if (!LevelSequence)
-	// 		{
-	// 			ConsoleBoxText = TEXT("Failed to load some LevelSequence assets in queue");
-	// 			return;
-	// 		}
-	//
-	// 		UGdhRenderingManagerListItem* ListItem = NewObject<UGdhRenderingManagerListItem>();
-	// 		if (!ListItem) continue;
-	//
-	// 		ListItem->LevelSequence = LevelSequence;
-	//
-	// 		if (LevelSequenceSetting.Value.IsNull())
-	// 		{
-	// 			ListItem->Map = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>()->GetEditorWorld();
-	// 		}
-	// 		else
-	// 		{
-	// 			UWorld* Map = LevelSequenceSetting.Value.LoadSynchronous();
-	// 			if (!Map)
-	// 			{
-	// 				ConsoleBoxText = FString::Printf(TEXT("Failed to load Map asset for %s LevelSequence"), *LevelSequence->GetName());
-	// 				return;
-	// 			}
-	//
-	// 			ListItem->Map = Map;
-	// 		}
-	//
-	// 		TotalJobsDuration += UGdhRenderingLibrary::GetLevelSequenceDuration(LevelSequence) / RenderingSettings->Framerate.AsDecimal();
-	//
-	// 		ListItems.Add(ListItem);
-	// 	}
-	// }
-	//
-	// if (QueueSettings->MoviePipelineQueues.Num() > 0)
-	// {
-	// 	FScopedSlowTask MoviePipelineQueueLoadingSlowTask{
-	// 		static_cast<float>(QueueSettings->MoviePipelineQueues.Num()),
-	// 		FText::FromString(TEXT("Loading MoviePipelineQueue assets..."))
-	// 	};
-	// 	MoviePipelineQueueLoadingSlowTask.MakeDialog();
-	//
-	// 	for (const auto& MoviePipelineQueue : QueueSettings->MoviePipelineQueues)
-	// 	{
-	// 		MoviePipelineQueueLoadingSlowTask.EnterProgressFrame(1.0f);
-	//
-	// 		if (!MoviePipelineQueue.LoadSynchronous())
-	// 		{
-	// 			ConsoleBoxText = TEXT("Failed to load some MoviePipelineQueue assets");
-	// 			return;
-	// 		}
-	//
-	// 		const TArray<UMoviePipelineExecutorJob*> Jobs = MoviePipelineQueue->GetJobs();
-	// 		if (Jobs.Num() == 0)
-	// 		{
-	// 			ConsoleBoxText = FString::Printf(TEXT("No jobs in %s asset"), *MoviePipelineQueue->GetName());
-	// 			return;
-	// 		}
-	//
-	// 		ListItems.Reserve(ListItems.Num() + Jobs.Num());
-	//
-	// 		FScopedSlowTask JobLoadingSlowTask{
-	// 			static_cast<float>(Jobs.Num()),
-	// 			FText::FromString(TEXT("Loading Jobs..."))
-	// 		};
-	// 		JobLoadingSlowTask.MakeDialog();
-	//
-	// 		for (const auto& Job : Jobs)
-	// 		{
-	// 			JobLoadingSlowTask.EnterProgressFrame(1.0f);
-	//
-	// 			if (!Job) continue;
-	//
-	// 			ULevelSequence* LevelSequence = Cast<ULevelSequence>(Job->Sequence.TryLoad());
-	// 			UWorld* Map = Cast<UWorld>(Job->Map.TryLoad());
-	//
-	// 			// todo:ashe23 refactor this part
-	// 			if (!LevelSequence)
-	// 			{
-	// 				ConsoleBoxText = FString::Printf(TEXT("%s asset contains job with invalid sequence"), *MoviePipelineQueue->GetName());
-	// 				return;
-	// 			}
-	//
-	// 			if (!Map)
-	// 			{
-	// 				ConsoleBoxText = FString::Printf(TEXT("%s asset contains job with invalid map"), *MoviePipelineQueue->GetName());
-	// 				return;
-	// 			}
-	//
-	// 			UGdhRenderingManagerListItem* ListItem = NewObject<UGdhRenderingManagerListItem>();
-	// 			if (!ListItem) continue;
-	// 			ListItem->Map = Map;
-	// 			ListItem->LevelSequence = LevelSequence;
-	// 			ListItem->MoviePipelineQueue = MoviePipelineQueue.Get();
-	//
-	// 			TotalJobsDuration += UGdhRenderingLibrary::GetLevelSequenceDuration(LevelSequence) / RenderingSettings->Framerate.AsDecimal();
-	//
-	// 			ListItems.Add(ListItem);
-	// 		}
-	// 	}
-	// }
-	//
-	// if (ListView.IsValid())
-	// {
-	// 	ListView->RequestListRefresh();
-	// }
-	//
-	// bCanStartRendering = ListItems.Num() > 0;
-	// JobStats = FString::Printf(TEXT("%d %s (total duration %.1f seconds)"), ListItems.Num(), ListItems.Num() > 1 ? TEXT("jobs") : TEXT("job"), TotalJobsDuration);
+	if (!GEditor) return;
+
+	ValidateSettings();
+
+	if (!bIsValidRenderingSettings || !bIsValidRenderingAssetsSettings) return;
+
+	ListItems.Reset();
+	ListItems.Reserve(RenderingAssetsSettings->LevelSequences.Num());
+
+	double TotalJobsDuration = 0;
+
+	for (const auto& LevelSequence : RenderingAssetsSettings->LevelSequences)
+	{
+		const auto ListItem = CreateListItem(LevelSequence.Key.Get(), nullptr);
+		if (!ListItem.IsValid()) continue;
+
+		TotalJobsDuration += ListItem->DurationInSeconds;
+		ListItems.Add(ListItem);
+	}
+
+	for (const auto& MoviePipelineQueue : RenderingAssetsSettings->MoviePipelineQueues)
+	{
+		ListItems.Reserve(ListItems.Num() + MoviePipelineQueue->GetJobs().Num());
+
+		for (const auto& Job : MoviePipelineQueue->GetJobs())
+		{
+			const auto ListItem = CreateListItem(Cast<ULevelSequence>(Job->Sequence.TryLoad()), MoviePipelineQueue.Get());
+			if (!ListItem.IsValid()) continue;
+
+			TotalJobsDuration += ListItem->DurationInSeconds;
+			ListItems.Add(ListItem);
+		}
+	}
+
+	if (ListView.IsValid())
+	{
+		ListView->RequestListRefresh();
+	}
+
+	JobStats = FString::Printf(TEXT("%d %s (total duration %s)"), ListItems.Num(), ListItems.Num() > 1 ? TEXT("jobs") : TEXT("job"), *UGdhTimeLibrary::GetHumanReadableTime(TotalJobsDuration));
 }
 
 void SGdhRenderingManagerWindow::ValidateRenderingSettings()
@@ -1014,8 +901,202 @@ FIntPoint SGdhRenderingManagerWindow::GetResolution() const
 	}
 }
 
+FString SGdhRenderingManagerWindow::GetResolutionFolderName() const
+{
+	switch (RenderingSettings->ResolutionPreset)
+	{
+		case EGdhResolutionPreset::Res360P:
+			return TEXT("360p");
+		case EGdhResolutionPreset::Res480P:
+			return TEXT("480p");
+		case EGdhResolutionPreset::Res720P:
+			return TEXT("720p");
+		case EGdhResolutionPreset::Res1080P:
+			return TEXT("1080p");
+		case EGdhResolutionPreset::Res1440P:
+			return TEXT("1440p");
+		case EGdhResolutionPreset::Res2160P:
+			return TEXT("2160p");
+		case EGdhResolutionPreset::ResCustom:
+			return FString::Printf(TEXT("%d_%d"), RenderingSettings->CustomResolution.X, RenderingSettings->CustomResolution.Y);
+		default:
+			return TEXT("1080p");
+	}
+}
+
+FString SGdhRenderingManagerWindow::GetImageExtension(const bool IncludeDot) const
+{
+	switch (RenderingSettings->ImageFormat)
+	{
+		case EGdhImageFormat::Png:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+		case EGdhImageFormat::Jpg:
+			return IncludeDot ? TEXT(".jpeg") : TEXT("jpeg");
+		case EGdhImageFormat::Bmp:
+			return IncludeDot ? TEXT(".bmp") : TEXT("bmp");
+		default:
+			return IncludeDot ? TEXT(".png") : TEXT("png");
+	}
+}
+
+FString SGdhRenderingManagerWindow::GetVideoExtension(const bool IncludeDot) const
+{
+	switch (RenderingSettings->VideoFormat)
+	{
+		case EGdhVideoFormat::Mp4:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+		case EGdhVideoFormat::Mkv:
+			return IncludeDot ? TEXT(".mkv") : TEXT("mkv");
+		case EGdhVideoFormat::Avi:
+			return IncludeDot ? TEXT(".avi") : TEXT("avi");
+		default:
+			return IncludeDot ? TEXT(".mp4") : TEXT("mp4");
+	}
+}
+
+FString SGdhRenderingManagerWindow::GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+{
+	if (!LevelSequence) return TEXT("");
+
+	if (MoviePipelineQueue)
+	{
+		return FPaths::ConvertRelativePathToFull(
+			FString::Printf(
+				TEXT("%s/images/%s_%.3f_%s/%s/%s"),
+				*RenderingSettings->OutputDirectory.Path,
+				*GetResolutionFolderName(),
+				RenderingSettings->Framerate.AsDecimal(),
+				*GetImageExtension(),
+				*MoviePipelineQueue->GetName(),
+				*LevelSequence->GetName()
+			)
+		);
+	}
+
+	return FPaths::ConvertRelativePathToFull(
+		FString::Printf(
+			TEXT("%s/images/%s_%.3f_%s/%s"),
+			*RenderingSettings->OutputDirectory.Path,
+			*GetResolutionFolderName(),
+			RenderingSettings->Framerate.AsDecimal(),
+			*GetImageExtension(),
+			*LevelSequence->GetName()
+		)
+	);
+}
+
+int32 SGdhRenderingManagerWindow::GetRenderedFramesNum(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue, bool& bHasMissingFrames) const
+{
+	if (!LevelSequence) return 0;
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	struct DirectoryVisitor : IPlatformFile::FDirectoryVisitor
+	{
+		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
+		{
+			if (bIsDirectory) return false;
+
+			const FString BaseName = FPaths::GetBaseFilename(FilenameOrDirectory);
+			const FString Extension = FPaths::GetExtension(FilenameOrDirectory);
+			if (BaseName.StartsWith(RequiredBaseName) && Extension.Equals(RequiredExtension))
+			{
+				TArray<FString> Parts;
+				BaseName.ParseIntoArray(Parts, TEXT("_"));
+				Frames.Add(FCString::Atoi(*Parts.Last()));
+			}
+
+			return true;
+		}
+
+		FString RequiredBaseName;
+		FString RequiredExtension;
+		TArray<int32> Frames;
+	};
+
+	DirectoryVisitor Visitor;
+	Visitor.RequiredBaseName = LevelSequence->GetName();
+	Visitor.RequiredExtension = GetImageExtension();
+
+	const FString Path = GetImageOutputDir(LevelSequence, MoviePipelineQueue);
+	if (Path.IsEmpty()) return 0;
+
+	if (!PlatformFile.IterateDirectory(*Path, Visitor))
+	{
+		return 0;
+	}
+
+	if (Visitor.Frames.Num() == 0)
+	{
+		return 0;
+	}
+
+	Visitor.Frames.Sort();
+	bHasMissingFrames = false;
+
+	for (int32 i = 0; i < Visitor.Frames.Num(); ++i)
+	{
+		if (Visitor.Frames[i] != i)
+		{
+			bHasMissingFrames = true;
+		}
+	}
+
+	return Visitor.Frames.Num();
+}
+
+bool SGdhRenderingManagerWindow::ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const
+{
+	if (!LevelSequence) return false;
+
+	const auto Tracks = LevelSequence->GetMovieScene()->GetMasterTracks();
+	for (const auto& Track : Tracks)
+	{
+		if (Cast<UMovieSceneSlomoTrack>(Track))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+TWeakObjectPtr<UGdhRenderingManagerListItem> SGdhRenderingManagerWindow::CreateListItem(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const
+{
+	if (!LevelSequence) return nullptr;
+
+	const TWeakObjectPtr<UGdhRenderingManagerListItem> ListItem = NewObject<UGdhRenderingManagerListItem>();
+
+	LevelSequence->MovieScene->SetDisplayRate(RenderingSettings->Framerate);
+
+	const int32 FrameStart = ConvertFrameTime(
+		UE::MovieScene::DiscreteInclusiveLower(LevelSequence->MovieScene->GetPlaybackRange()),
+		LevelSequence->MovieScene->GetTickResolution(),
+		LevelSequence->MovieScene->GetDisplayRate()
+	).FloorToFrame().Value;
+	const int32 FrameEnd = ConvertFrameTime(
+		UE::MovieScene::DiscreteExclusiveUpper(LevelSequence->MovieScene->GetPlaybackRange()),
+		LevelSequence->MovieScene->GetTickResolution(),
+		LevelSequence->MovieScene->GetDisplayRate()
+	).FloorToFrame().Value;
+
+	const int32 DurationInFrames = FrameEnd - FrameStart;
+	const int32 DurationInSeconds = DurationInFrames / RenderingSettings->Framerate.AsDecimal();
+	const int32 RenderedFramesNum = GetRenderedFramesNum(LevelSequence, nullptr, ListItem->bHasMissingFrames);
+
+	ListItem->Name = MoviePipelineQueue ? FString::Printf(TEXT("%s (%s)"), *LevelSequence->GetName(), *MoviePipelineQueue->GetName()) : LevelSequence->GetName();
+	ListItem->DurationInFrames = DurationInFrames;
+	ListItem->DurationInSeconds = DurationInSeconds;
+	ListItem->RenderedFramesNum = RenderedFramesNum;
+	ListItem->bHasTimeDilationTrack = ContainsTimeDilationTrack(LevelSequence);
+
+	return ListItem;
+}
+
 void SGdhRenderingManagerWindow::ValidateSettings()
 {
+	ListItems.Reset();
+
 	ValidateRenderingSettings();
 
 	if (!bIsValidRenderingSettings) return;
@@ -1025,8 +1106,7 @@ void SGdhRenderingManagerWindow::ValidateSettings()
 
 FReply SGdhRenderingManagerWindow::OnBtnRefreshClick()
 {
-	ValidateSettings();
-	// ListUpdate();
+	ListUpdate();
 
 	return FReply::Handled();
 }
@@ -1155,15 +1235,10 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 
 bool SGdhRenderingManagerWindow::IsBtnRenderEnabled() const
 {
-	// if (const FString ErrorMsg = UGdhRenderingLibrary::Check(RenderingSettings); !ErrorMsg.IsEmpty())
-	// {
-	// 	
-	// }
-
-	return bCanStartRendering;
+	return bIsValidRenderingSettings && bIsValidRenderingAssetsSettings && ListItems.Num() > 0;
 }
 
 bool SGdhRenderingManagerWindow::IsBtnRefreshEnabled() const
 {
-	return bIsValidRenderingSettings; // todo:ashe23 not sure
+	return bIsValidRenderingSettings;
 }

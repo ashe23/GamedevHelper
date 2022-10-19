@@ -10,6 +10,7 @@
 class UGdhRenderingSettings;
 class UGdhRenderingAssetsSettings;
 class UMoviePipelineMasterConfig;
+class UMoviePipelineQueue;
 // class UGdhMovieRenderSettings;
 // class UGdhRenderingQueueSettings;
 class UGdhRenderingManagerListItem;
@@ -44,7 +45,13 @@ private:
 	UMoviePipelineMasterConfig* CreateMasterConfig() const;
 	static FString GetMasterConfigValidationMsg(const UMoviePipelineMasterConfig* MasterConfig);
 	FIntPoint GetResolution() const;
-
+	FString GetResolutionFolderName() const;
+	FString GetImageExtension(const bool IncludeDot = false) const;
+	FString GetVideoExtension(const bool IncludeDot = false) const;
+	FString GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const;
+	int32 GetRenderedFramesNum(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue, bool& bHasMissingFrames) const;
+	bool ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const;
+	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 	FReply OnBtnRefreshClick();
 	FReply OnBtnRenderClick();
 	bool IsBtnRenderEnabled() const;
@@ -63,7 +70,4 @@ private:
 
 	bool bIsValidRenderingSettings = false;
 	bool bIsValidRenderingAssetsSettings = false;
-
-	bool bIsValidSettings = false;
-	bool bCanStartRendering = false;
 };
