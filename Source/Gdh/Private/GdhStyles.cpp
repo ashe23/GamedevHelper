@@ -126,6 +126,11 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.Icon.Warning20", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon20x20));
 	Style->Set("GamedevHelper.Icon.Warning32", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon32x32));
 	Style->Set("GamedevHelper.Icon.Warning40", new IMAGE_BRUSH(TEXT("IconWarning128"), Icon40x40));
+	Style->Set("GamedevHelper.Icon.Refresh", new IMAGE_BRUSH(TEXT("IconRefresh128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Render", new IMAGE_BRUSH(TEXT("IconRender128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.Bin", new IMAGE_BRUSH(TEXT("IconBin128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.OpenFolder", new IMAGE_BRUSH(TEXT("IconOpenFolder128"), Icon20x20));
+	Style->Set("GamedevHelper.Icon.RemoveFolder", new IMAGE_BRUSH(TEXT("IconRemoveFolder128"), Icon20x20));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 	// Style->Set("Gdh.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));

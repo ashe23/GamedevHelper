@@ -32,7 +32,11 @@ private:
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhRenderingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const;
 	FReply OnBtnRefreshClick();
 	FReply OnBtnRenderClick();
+	FReply OnBtnOutputDirCleanClick();
+	FReply OnBtnOutputDirOpenClick();
 	bool IsBtnRenderEnabled() const;
+	bool IsBtnOutputDirCleanEnabled() const;
+	bool IsBtnOutputDirOpenEnabled() const;
 
 	void ListUpdate();
 	void ValidateSettings();
@@ -54,6 +58,7 @@ private:
 	bool MustEncodeVideo(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	bool ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const;
 	void CalculateRenderedFrames(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void ImagesRender(const TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>>& Items, const bool bForceRender = false, const bool bEncodeAfterRender = false);
 	void RunFFmpegCommands();
 	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UWorld* Map, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 

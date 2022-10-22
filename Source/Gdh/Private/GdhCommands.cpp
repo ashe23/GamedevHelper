@@ -13,6 +13,8 @@ void FGdhCommands::RegisterCommands()
 	UI_COMMAND(Cmd_PlayVideoFile, "Play Video", "Plays selected LevelSequence encoded video in external video player", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_RemoveRenderedImages, "Remove rendered images", "Removes all existing rendered images for selected LevelSequence", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_RemoveEncodedVideo, "Remove encoded video", "Removes encoded video file for selected LevelSequence", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(Cmd_RenderSelected, "Render Selected", "Render images for selected job", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(Cmd_EncodeSelected, "Encode Selected", "Encode video file from images for selected job", EUserInterfaceActionType::Button, FInputChord());
 }
 
 #undef LOCTEXT_NAMESPACE

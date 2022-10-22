@@ -28,22 +28,20 @@ jobs_total = len(cmds)
 start_time = time.time()
 jobs_finished = 0
 
-with unreal.ScopedSlowTask(jobs_total, "Encoding...") as slow_task:
+with unreal.ScopedSlowTask(jobs_total) as slow_task:
     slow_task.make_dialog(False, False)
 
     for cmd in cmds:
 
         cmd_str = str(cmd).split(":")
         sequence_name = cmd_str[0]
-        command_name = cmd_str[1]
         ffmpeg_cmd = cmds[cmd]
 
-        slow_task.enter_progress_frame(1, "{} {} ({} of {})".format(command_name, sequence_name, jobs_finished, jobs_total))
+        slow_task.enter_progress_frame(1, "Encoding {} ({} of {})".format(sequence_name, jobs_finished, jobs_total))
 
         result = subprocess.run(ffmpeg_cmd, shell=True)
         if result.returncode != 0:
-            unreal.log_error("{} failed: {}".format(command_name,sequence_name))
-            unreal.log_error("Failed Cmd: {}".format(ffmpeg_cmd))
+            unreal.log_error("Failed cmd ({}) : {}".format(sequence_name, ffmpeg_cmd))
             break
 
         jobs_finished+=1

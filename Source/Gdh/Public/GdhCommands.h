@@ -31,8 +31,8 @@ public:
 	TSharedPtr<FUICommandInfo> Cmd_PlayVideoFile;
 	TSharedPtr<FUICommandInfo> Cmd_RemoveRenderedImages;
 	TSharedPtr<FUICommandInfo> Cmd_RemoveEncodedVideo;
+	TSharedPtr<FUICommandInfo> Cmd_RenderSelected;
+	TSharedPtr<FUICommandInfo> Cmd_EncodeSelected;
 	// TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerRenameSelected;
 	// TSharedPtr<FUICommandInfo> Cmd_AssetNamingManagerOpenAsset;
-	// TSharedPtr<FUICommandInfo> Cmd_RenderingManagerRemoveRenderedImages;
-	// TSharedPtr<FUICommandInfo> Cmd_RenderingManagerRemoveRenderedVideo;
 };

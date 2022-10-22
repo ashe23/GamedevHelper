@@ -66,6 +66,14 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 		return SNew(STextBlock).ColorAndOpacity(Color).Text(FText::FromString(Str));
 	}
 
+	if (InColumnName.IsEqual(TEXT("VideoEncoded")))
+	{
+		const FString Icon = FGdhStyles::GetIconByStatus(ListItem->bVideoEncoded ? EGdhGenericStatus::OK : EGdhGenericStatus::Error);
+		const FString Msg = ListItem->bVideoEncoded ? TEXT("") : TEXT("Missing encoded video");
+		
+		return SNew(SImage).ToolTipText(FText::FromString(Msg)).Image(FGdhStyles::GetIcon(Icon));
+	}
+
 	if (InColumnName.IsEqual(TEXT("Note")))
 	{
 		const FLinearColor Color = FGdhStyles::GetColorByStatus(ListItem->NoteStatus);

@@ -21,6 +21,7 @@ public:
 	double DurationInSeconds = 0.0;
 	bool bHasTimeDilationTrack = false;
 	bool bHasMissingFrames = false;
+	bool bVideoEncoded = false;
 	FString Note;
 	EGdhGenericStatus NoteStatus = EGdhGenericStatus::None;
 

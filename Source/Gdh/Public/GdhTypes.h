@@ -55,6 +55,5 @@ enum class EGdhResolutionPreset : uint8
 struct FGdhFFmpegCommand
 {
 	FString SequenceName;
-	FString CommandName;
 	FString Command;
 };
