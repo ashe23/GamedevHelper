@@ -10,8 +10,6 @@ UGdhRenderingSettings::UGdhRenderingSettings()
 	FFmpegFlags.Add(TEXT("-tune film"));
 	FFmpegFlags.Add(TEXT("-crf 18"));
 	FFmpegFlags.Add(TEXT("-pix_fmt yuv420p"));
-
-	// FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
 }
 
 FName UGdhRenderingSettings::GetContainerName() const
@@ -38,8 +36,6 @@ FString UGdhRenderingSettings::GetDesc()
 void UGdhRenderingSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-	
-	// FFmpegEncodeCmdPreview = UGdhRenderingLibrary::GetFFmpegEncodeCmdPreview(this);
 	
 	SaveConfig();
 

@@ -33,6 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="General", meta=(ToolTip="FFmpeg exe path. Can be just ffmpeg.exe, if you have already installed it on system", FilePathFilter="exe"))
 	FFilePath FFmpegExe;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="General", meta=(ToolTip="Override old renders"))
+	bool bOverrideExistingRenders = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="OutputSettings", meta=(ToolTip="Rendered image format"))
 	EGdhImageFormat ImageFormat;
 
@@ -56,10 +59,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="OutputSettings", AdvancedDisplay,
 		meta=(ToolTip="FFmpeg command input flags, that will be used when encoding video. You can see complete command in FFmpegEncodeCmdPreview property"))
 	TArray<FString> FFmpegFlags;
-
-	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EncodingSettings", DisplayName="Encode Cmd Preview",
-	// 	meta=(ToolTip="This is encode command preview, that will be used when encoding videos. Image input, Video output paths, framerate and resolution are generated automatically."))
-	// FString FFmpegEncodeCmdPreview;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="MovieRenderSettings|AntiAliasing", DisplayName="Use AA settings")
 	bool bSettingsAAEnabled = false;

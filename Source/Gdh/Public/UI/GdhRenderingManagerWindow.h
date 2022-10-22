@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GdhRenderingManagerListItem.h"
 #include "GdhTypes.h"
 #include "MoviePipelineMasterConfig.h"
 #include "Widgets/SCompoundWidget.h"
@@ -11,8 +12,6 @@ class UGdhRenderingSettings;
 class UGdhRenderingAssetsSettings;
 class UMoviePipelineMasterConfig;
 class UMoviePipelineQueue;
-// class UGdhMovieRenderSettings;
-// class UGdhRenderingQueueSettings;
 class UGdhRenderingManagerListItem;
 
 class SGdhRenderingManagerWindow : public SCompoundWidget
@@ -26,37 +25,41 @@ public:
 
 	void Construct(const FArguments& InArgs);
 private:
-	int32 GetActiveWidgetIndex() const;
-	FText GetErrorMsgBoxText() const;
-	EVisibility GetErrorMsgBoxVisibility() const;
+
+	void ListUpdate();
+	void RegisterCommands();
+	void ValidateSettings();
+	void ValidateRenderingSettings();
+	void ValidateRenderingAssetsSettings();
 	FText GetJobStats() const;
+	FText GetErrorMsgBoxText() const;
+	int32 GetActiveWidgetIndex() const;
+	TSharedPtr<SHeaderRow> GetHeaderRow() const;
+	EVisibility GetErrorMsgBoxVisibility() const;
+	TSharedPtr<SWidget> ListCreateContextMenu() const;
+	void OnListItemDblClick(TWeakObjectPtr<UGdhRenderingManagerListItem> Item);
 	TSharedRef<ITableRow> OnGenerateRow(
 		TWeakObjectPtr<UGdhRenderingManagerListItem> InItem,
 		const TSharedRef<STableViewBase>& OwnerTable
 	) const;
-	TSharedPtr<SHeaderRow> GetHeaderRow() const;
-	TSharedPtr<SWidget> ListCreateContextMenu() const;
-	void RegisterCommands();
-
-	void ListUpdate();
-	void ValidateSettings();
-	void ValidateRenderingSettings();
-	void ValidateRenderingAssetsSettings();
+	UGdhRenderingManagerListItem* GetSelectedItemChecked() const;
 	UMoviePipelineMasterConfig* CreateMasterConfig() const;
 	static FString GetMasterConfigValidationMsg(const UMoviePipelineMasterConfig* MasterConfig);
 	FIntPoint GetResolution() const;
 	FString GetResolutionFolderName() const;
 	FString GetImageExtension(const bool IncludeDot = false) const;
 	FString GetVideoExtension(const bool IncludeDot = false) const;
-	FString GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const;
+	FString GetImageOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	FString GetVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	FString GetVideoFilePath(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	// FString GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const;
 	UClass* GetImageClass() const;
-	int32 GetRenderedFramesNum(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue, bool& bHasMissingFrames) const;
+	int32 GetRenderedFramesNum(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	bool ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const;
 	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UWorld* Map, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 	FReply OnBtnRefreshClick();
 	FReply OnBtnRenderClick();
 	bool IsBtnRenderEnabled() const;
-	bool IsBtnRefreshEnabled() const;
 
 	UGdhRenderingSettings* RenderingSettings = nullptr;
 	UGdhRenderingAssetsSettings* RenderingAssetsSettings = nullptr;
@@ -73,3 +76,5 @@ private:
 	bool bIsValidRenderingSettings = false;
 	bool bIsValidRenderingAssetsSettings = false;
 };
+
+

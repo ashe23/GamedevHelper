@@ -2,9 +2,7 @@
 
 #include "UI/GdhRenderingManagerListItem.h"
 #include "GdhStyles.h"
-#include "MoviePipelineQueue.h"
 #include "Settings/GdhRenderingSettings.h"
-#include "Libs/GdhRenderingLibrary.h"
 #include "Libs/GdhTimeLibrary.h"
 
 void SGdhRenderingManagerListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
@@ -34,6 +32,11 @@ TSharedRef<SWidget> SGdhRenderingManagerListItem::GenerateWidgetForColumn(const 
 			*UGdhTimeLibrary::GetHumanReadableTime(ListItem->DurationInSeconds));
 
 		return SNew(STextBlock).Text(FText::FromString(Duration));
+	}
+
+	if (InColumnName.IsEqual(TEXT("FrameStart")))
+	{
+		return SNew(STextBlock).Text(FText::FromString(FString::Printf(TEXT("%d"), ListItem->FrameStart)));
 	}
 
 	if (InColumnName.IsEqual(TEXT("RenderedFrames")))

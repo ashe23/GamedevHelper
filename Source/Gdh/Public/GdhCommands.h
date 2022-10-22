@@ -21,9 +21,9 @@ public:
 
 	// main menu
 	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
+	TSharedPtr<FUICommandInfo> Cmd_OpenWindowRenderingManager;
 	// TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManagerWindow;
 	// TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinerManagerWindow;
-	TSharedPtr<FUICommandInfo> Cmd_OpenWindowRenderingManager;
 
 	// context menu for rendering manager
 	TSharedPtr<FUICommandInfo> Cmd_OpenImageDir;
