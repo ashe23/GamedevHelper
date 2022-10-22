@@ -32,10 +32,7 @@ public:
 class SGdhRenderingManagerListItem : public SMultiColumnTableRow<TWeakObjectPtr<UGdhRenderingManagerListItem>>
 {
 public:
-	SLATE_BEGIN_ARGS(SGdhRenderingManagerListItem)
-		{
-		}
-
+	SLATE_BEGIN_ARGS(SGdhRenderingManagerListItem){}
 		SLATE_ARGUMENT(TWeakObjectPtr<UGdhRenderingManagerListItem>, ListItem)
 	SLATE_END_ARGS()
 
