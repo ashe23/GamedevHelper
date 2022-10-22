@@ -52,9 +52,12 @@ private:
 	FString GetImageOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	FString GetVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	FString GetVideoFilePath(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
-	// FString GetImageOutputDir(const ULevelSequence* LevelSequence, const UMoviePipelineQueue* MoviePipelineQueue) const;
+	FString GetVideoEncodeCmd(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	UClass* GetImageClass() const;
-	int32 GetRenderedFramesNum(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	bool MustRenderImages(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	bool MustEncodeVideo(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void CalculateRenderedFrames(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void RunFFmpegCommands();
 	bool ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const;
 	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UWorld* Map, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 	FReply OnBtnRefreshClick();
@@ -71,7 +74,8 @@ private:
 	const int32 WidgetIndexIdle = 1;
 	FString JobStats;
 	FString ErrorMsg;
-	int32 FinishedJobs = 0;
+	int32 JobsTotal = 0;
+	int32 JobsFinished = 0;
 	double RenderStartTime = 0.0;
 	bool bIsValidRenderingSettings = false;
 	bool bIsValidRenderingAssetsSettings = false;
