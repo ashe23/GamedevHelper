@@ -516,6 +516,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 				TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>> Items;
 				Items.Add(SelectedItem);
 
+				// render images only
 				ImagesRender(Items, true, false);
 			}),
 			FCanExecuteAction::CreateLambda([&]()
@@ -540,6 +541,7 @@ void SGdhRenderingManagerWindow::RegisterCommands()
 				TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>> Items;
 				Items.Add(SelectedItem);
 
+				// encode videos only
 				ImagesRender(Items, false, true);
 			}),
 			FCanExecuteAction::CreateLambda([&]()
@@ -696,8 +698,8 @@ FReply SGdhRenderingManagerWindow::OnBtnRenderClick()
 
 	if (!bIsValidRenderingSettings || !bIsValidRenderingAssetsSettings) return FReply::Handled();
 
-	ImagesRender(ListItems, RenderingSettings->bOverrideExistingRenders, true);
-	
+	ImagesRender(ListItems, RenderingSettings->bOverrideExistingRenders, RenderingSettings->bOverrideExistingRenders);
+
 	return FReply::Handled();
 }
 
@@ -1263,18 +1265,52 @@ FString SGdhRenderingManagerWindow::GetVideoEncodeCmd(const TWeakObjectPtr<UGdhR
 	);
 }
 
-bool SGdhRenderingManagerWindow::MustRenderImages(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
+void SGdhRenderingManagerWindow::CreateImageOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
 {
-	if (RenderingSettings->bOverrideExistingRenders || ListItem->bHasMissingFrames || ListItem->RenderedFramesNum == 0) return true;
+	const FString OutputDir = GetImageOutputDir(ListItem);
+	if (OutputDir.IsEmpty() || FPaths::DirectoryExists(OutputDir)) return;
 
-	return ListItem->RenderedFramesNum != ListItem->DurationInFrames && !ListItem->bHasTimeDilationTrack;
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	PlatformFile.CreateDirectoryTree(*OutputDir);
 }
 
-bool SGdhRenderingManagerWindow::MustEncodeVideo(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
+void SGdhRenderingManagerWindow::CreateVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
 {
-	if (RenderingSettings->bOverrideExistingRenders) return true;
+	const FString OutputDir = GetVideoOutputDir(ListItem);
+	if (OutputDir.IsEmpty() || FPaths::DirectoryExists(OutputDir)) return;
 
-	return !FPaths::FileExists(GetVideoFilePath(ListItem));
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	PlatformFile.CreateDirectoryTree(*OutputDir);
+}
+
+void SGdhRenderingManagerWindow::RemoveImageOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
+{
+	const FString OutputDir = GetImageOutputDir(ListItem);
+
+	if (OutputDir.IsEmpty() || !FPaths::DirectoryExists(OutputDir)) return;
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	PlatformFile.DeleteDirectoryRecursively(*OutputDir);
+}
+
+void SGdhRenderingManagerWindow::RemoveVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
+{
+	const FString OutputDir = GetVideoOutputDir(ListItem);
+
+	if (OutputDir.IsEmpty() || !FPaths::DirectoryExists(OutputDir)) return;
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	PlatformFile.DeleteDirectoryRecursively(*OutputDir);
+}
+
+void SGdhRenderingManagerWindow::RemoveVideoFile(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const
+{
+	const FString VideoFile = GetVideoFilePath(ListItem);
+
+	if (VideoFile.IsEmpty() || !FPaths::FileExists(VideoFile)) return;
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	PlatformFile.DeleteFile(*VideoFile);
 }
 
 bool SGdhRenderingManagerWindow::ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const
@@ -1351,33 +1387,25 @@ void SGdhRenderingManagerWindow::CalculateRenderedFrames(const TWeakObjectPtr<UG
 	ListItem.Get()->RenderedFramesNum = Visitor.Frames.Num();
 }
 
-void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>>& Items, const bool bForceRender, const bool bEncodeAfterRender)
+void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>>& Items, const bool bForceRender, const bool bForceEncode)
 {
-	if (bEncodeAfterRender)
-	{
-		FFmpegCommands.Reset();
-		FFmpegCommands.Reserve(Items.Num());
-	}
-
 	UMoviePipelineQueue* CustomQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
 	if (!CustomQueue) return;
 
 	CustomQueue->DeleteAllJobs();
 
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-	for (const auto& ListItem : Items)
+	for (const auto& Item : Items)
 	{
-		if (!ListItem.IsValid()) continue;
+		if (!Item.IsValid()) continue;
 
-		if (bForceRender || MustRenderImages(ListItem))
+		if (bForceRender || Item->bHasMissingFrames || Item->RenderedFramesNum == 0 || Item->RenderedFramesNum != Item->DurationInFrames && !Item->bHasTimeDilationTrack)
 		{
 			UMoviePipelineExecutorJob* Job = CustomQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
 			if (!Job) continue;
 
-			Job->Sequence = ListItem->LevelSequence.ToSoftObjectPath();
-			Job->Map = ListItem->Map.ToSoftObjectPath();
-			Job->JobName = ListItem->LevelSequence.GetAssetName();
+			Job->Sequence = Item->LevelSequence.ToSoftObjectPath();
+			Job->Map = Item->Map.ToSoftObjectPath();
+			Job->JobName = Item->LevelSequence.GetAssetName();
 			Job->SetConfiguration(CreateMasterConfig());
 
 			UMoviePipelineMasterConfig* Config = Job->GetConfiguration();
@@ -1389,15 +1417,11 @@ void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRe
 			UMoviePipelineOutputSetting* OutputSetting = Cast<UMoviePipelineOutputSetting>(Config->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
 			if (!OutputSetting) continue;
 
-			const FString ImageOutputDir = GetImageOutputDir(ListItem);
+			// removing old renders
+			RemoveImageOutputDir(Item);
+			CreateImageOutputDir(Item);
 
-			// removing old rendered images
-			if (FPaths::DirectoryExists(ImageOutputDir) && !ImageOutputDir.IsEmpty())
-			{
-				PlatformFile.DeleteDirectoryRecursively(*ImageOutputDir);
-			}
-
-			OutputSetting->OutputDirectory.Path = ImageOutputDir;
+			OutputSetting->OutputDirectory.Path = GetImageOutputDir(Item);
 			OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
 			OutputSetting->OutputResolution = GetResolution();
 			OutputSetting->bUseCustomFrameRate = true;
@@ -1408,19 +1432,23 @@ void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRe
 			OutputSetting->HandleFrameCount = 0;
 			OutputSetting->OutputFrameStep = 1;
 			OutputSetting->bUseCustomPlaybackRange = true;
-			OutputSetting->CustomStartFrame = ListItem->FrameStart;
-			OutputSetting->CustomEndFrame = ListItem->FrameEnd;
+			OutputSetting->CustomStartFrame = Item->FrameStart;
+			OutputSetting->CustomEndFrame = Item->FrameEnd;
 		}
+	}
 
-		if (bEncodeAfterRender || MustEncodeVideo(ListItem))
+	FFmpegCommands.Reset();
+	FFmpegCommands.Reserve(Items.Num());
+
+	for (const auto& Item : Items)
+	{
+		if (bForceEncode || !FPaths::FileExists(GetVideoFilePath(Item)) && !bForceRender)
 		{
-			const FString VideoOutputDir = GetVideoOutputDir(ListItem);
-			if (!FPaths::DirectoryExists(VideoOutputDir))
-			{
-				PlatformFile.CreateDirectoryTree(*VideoOutputDir);
-			}
+			// removing old encoded video file
+			CreateVideoOutputDir(Item);
+			RemoveVideoFile(Item);
 
-			FFmpegCommands.Add(FGdhFFmpegCommand{ListItem->Name, GetVideoEncodeCmd(ListItem)});
+			FFmpegCommands.Add(FGdhFFmpegCommand{Item->Name, GetVideoEncodeCmd(Item)});
 		}
 	}
 
@@ -1440,7 +1468,6 @@ void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRe
 		if (!Executor) return;
 
 		RenderStartTime = FPlatformTime::Seconds();
-		
 
 		Executor->OnIndividualJobWorkFinished().AddLambda([&](FMoviePipelineOutputData OutputData)
 		{
@@ -1450,7 +1477,7 @@ void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRe
 			}
 		});
 
-		Executor->OnExecutorFinished().AddLambda([&, bEncodeAfterRender](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
+		Executor->OnExecutorFinished().AddLambda([&](UMoviePipelineExecutorBase* ExecutorBase, bool bSuccess)
 		{
 			if (!bSuccess)
 			{
@@ -1464,11 +1491,11 @@ void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRe
 			UE_LOG(LogGdh, Warning, TEXT("%s"), *Msg);
 			UGdhNotificationLibrary::ShowModal(TEXT("Rendering Manager"), Msg, Status, 5.0f);
 
-			if (bEncodeAfterRender && Status == EGdhModalStatus::OK)
+			if (Status == EGdhModalStatus::OK)
 			{
 				RunFFmpegCommands();
 			}
-			
+
 			ListUpdate();
 		});
 		Executor->OnExecutorErrored().AddLambda([&](UMoviePipelineExecutorBase* PipelineExecutor, UMoviePipeline* PipelineWithError, bool bIsFatal, FText ErrorText)
@@ -1486,11 +1513,7 @@ void SGdhRenderingManagerWindow::ImagesRender(const TArray<TWeakObjectPtr<UGdhRe
 		return;
 	}
 
-	if (bEncodeAfterRender)
-	{
-		RunFFmpegCommands();
-	}
-
+	RunFFmpegCommands();
 	ListUpdate();
 }
 

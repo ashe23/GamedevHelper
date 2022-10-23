@@ -54,11 +54,14 @@ private:
 	FString GetVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	FString GetVideoFilePath(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	FString GetVideoEncodeCmd(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
-	bool MustRenderImages(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
-	bool MustEncodeVideo(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void CreateImageOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void CreateVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void RemoveImageOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void RemoveVideoOutputDir(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
+	void RemoveVideoFile(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
 	bool ContainsTimeDilationTrack(const ULevelSequence* LevelSequence) const;
 	void CalculateRenderedFrames(const TWeakObjectPtr<UGdhRenderingManagerListItem>& ListItem) const;
-	void ImagesRender(const TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>>& Items, const bool bForceRender = false, const bool bEncodeAfterRender = false);
+	void ImagesRender(const TArray<TWeakObjectPtr<UGdhRenderingManagerListItem>>& Items, const bool bForceRender = false, const bool bForceEncode = false);
 	void RunFFmpegCommands();
 	TWeakObjectPtr<UGdhRenderingManagerListItem> CreateListItem(const ULevelSequence* LevelSequence, const UWorld* Map, const UMoviePipelineQueue* MoviePipelineQueue = nullptr) const;
 

@@ -135,8 +135,8 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	// Style->Set("Gdh.Cmd_AssetNamingManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconRename64"), Icon20x20));
 	// Style->Set("Gdh.Cmd_WorldOutlinerManagerWindow", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon40x40));
 	// Style->Set("Gdh.Cmd_WorldOutlinerManagerWindow.Small", new IMAGE_BRUSH(TEXT("IconOrganize64"), Icon20x20));
-	Style->Set("GamedevHelper.Cmd_RestartEditor", new IMAGE_BRUSH(TEXT("IconRestart64"), Icon40x40));
-	Style->Set("GamedevHelper.Cmd_RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRestart64"), Icon20x20));
+	Style->Set("GamedevHelper.Cmd_RestartEditor", new IMAGE_BRUSH(TEXT("IconRestart128"), Icon40x40));
+	Style->Set("GamedevHelper.Cmd_RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRestart128"), Icon20x20));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerOpenAsset", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon40x40));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerOpenAsset.Small", new IMAGE_BRUSH(TEXT("IconSearch64"), Icon20x20));
 	// Style->Set("Gdh.Cmd_AssetNamingManagerRenameSelected", new IMAGE_BRUSH(TEXT("IconRename64"), Icon40x40));

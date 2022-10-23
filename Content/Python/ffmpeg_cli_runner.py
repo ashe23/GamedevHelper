@@ -28,7 +28,7 @@ jobs_total = len(cmds)
 start_time = time.time()
 jobs_finished = 0
 
-with unreal.ScopedSlowTask(jobs_total) as slow_task:
+with unreal.ScopedSlowTask(jobs_total, "Encoding...") as slow_task:
     slow_task.make_dialog(False, False)
 
     for cmd in cmds:
