@@ -128,7 +128,7 @@ void FGdh::RegisterContextMenuActions()
 		FToolMenuSection& Section = Menu->FindOrAddSection("VSStaticMeshActions");
 		Section.InsertPosition = FToolMenuInsert("CommonAssetActions", EToolMenuInsertType::After);
 		Section.AddSubMenu(
-			TEXT("VirtualSportActionsSubMenu"),
+			TEXT("GamedevHelperActionsSubMenu"),
 			FText::FromString(TEXT("GamedevHelper Actions")),
 			FText::FromString(TEXT("Asset Helper Actions")),
 			FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
