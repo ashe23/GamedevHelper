@@ -7,6 +7,8 @@
 // Engine Headers
 #include "UnrealEdMisc.h"
 #include "LevelEditor.h"
+#include "ToolMenus.h"
+#include "Libs/GdhAssetLibrary.h"
 
 IMPLEMENT_MODULE(FGdh, Gdh);
 DEFINE_LOG_CATEGORY(LogGdh);
@@ -17,6 +19,7 @@ void FGdh::StartupModule()
 	RegisterCommands();
 	RegisterMainMenu();
 	RegisterTabs();
+	RegisterContextMenuActions();
 }
 
 void FGdh::ShutdownModule()
@@ -115,6 +118,99 @@ void FGdh::RegisterMainMenu()
 		);
 
 		LevelEditorMenuExtensibilityManager->AddExtender(MenuExtender);
+	}
+}
+
+void FGdh::RegisterContextMenuActions()
+{
+	{
+		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.StaticMesh");
+		FToolMenuSection& Section = Menu->FindOrAddSection("VSStaticMeshActions");
+		Section.InsertPosition = FToolMenuInsert("CommonAssetActions", EToolMenuInsertType::After);
+		Section.AddSubMenu(
+			TEXT("VirtualSportActionsSubMenu"),
+			FText::FromString(TEXT("GamedevHelper Actions")),
+			FText::FromString(TEXT("Asset Helper Actions")),
+			FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
+			{
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("VertexAnimTools"));
+				MenuBuilder.AddMenuEntry(
+					FText::FromString(TEXT("Configure for VertexAnim")),
+					FText::FromString(TEXT("Configure selected static meshes for vertex animation")),
+					FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.VertexAnim"),
+					FUIAction(
+						FExecuteAction::CreateLambda([]()
+						{
+							TArray<UStaticMesh*> StaticMeshes;
+							UGdhAssetLibrary::GetSelectedAssetsFiltered<UStaticMesh>(StaticMeshes);
+							UGdhAssetLibrary::VertexAnimConfigureStaticMeshes(StaticMeshes);
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+				MenuBuilder.BeginSection("Section_Util", FText::FromString("Utility"));
+				MenuBuilder.AddMenuEntry(
+					FText::FromString(TEXT("Disable Collision")),
+					FText::FromString(TEXT("Disables collision on selected static meshes, included all LODS")),
+					FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.Collision"),
+					FUIAction(
+						FExecuteAction::CreateLambda([]()
+						{
+							TArray<UStaticMesh*> StaticMeshes;
+							UGdhAssetLibrary::GetSelectedAssetsFiltered<UStaticMesh>(StaticMeshes);
+							UGdhAssetLibrary::DisableCollisions(StaticMeshes);
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+			}),
+			false,
+			FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon16")
+		);
+	}
+
+	{
+		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.Texture");
+		FToolMenuSection& Section = Menu->FindOrAddSection("VSTextureActions");
+		Section.InsertPosition = FToolMenuInsert("CommonAssetActions", EToolMenuInsertType::After);
+		Section.AddSubMenu(
+			TEXT("GamedevHelperActionsSubMenu"),
+			FText::FromString(TEXT("GamedevHelper Actions")),
+			FText::FromString(TEXT("Asset Helper Actions")),
+			FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
+			{
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("VertexAnimTools"));
+				MenuBuilder.AddMenuEntry(
+					FText::FromString(TEXT("Configure for VertexAnim as UV")),
+					FText::FromString(TEXT("Configure selected textures for vertex animation as UV texture")),
+					FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.VertexAnim"),
+					FUIAction(
+						FExecuteAction::CreateLambda([]()
+						{
+							TArray<UTexture2D*> Textures;
+							UGdhAssetLibrary::GetSelectedAssetsFiltered<UTexture2D>(Textures);
+							UGdhAssetLibrary::VertexAnimConfigureTextures(Textures, EGdhVertexAnimTextureType::UV);
+						})
+					)
+				);
+				MenuBuilder.AddMenuEntry(
+					FText::FromString(TEXT("Configure for VertexAnim as Normal")),
+					FText::FromString(TEXT("Configure selected textures for vertex animation as Normal texture")),
+					FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.VertexAnim"),
+					FUIAction(
+						FExecuteAction::CreateLambda([]()
+						{
+							TArray<UTexture2D*> Textures;
+							UGdhAssetLibrary::GetSelectedAssetsFiltered<UTexture2D>(Textures);
+							UGdhAssetLibrary::VertexAnimConfigureTextures(Textures, EGdhVertexAnimTextureType::Normal);
+						})
+					)
+				);
+				MenuBuilder.EndSection();
+			}),
+			false,
+			FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon16")
+		);
 	}
 }
 

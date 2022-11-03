@@ -44,6 +44,7 @@ public:
 	void RegisterCommands();
 	void RegisterTabs();
 	void RegisterMainMenu();
+	void RegisterContextMenuActions();
 	void UnregisterStyles();
 	void UnregisterCommands();
 	void UnregisterTabs();

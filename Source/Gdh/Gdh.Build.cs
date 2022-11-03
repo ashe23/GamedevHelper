@@ -33,13 +33,16 @@ public class Gdh : ModuleRules
 				"InputCore",
 				"Json",
 				"PythonScriptPlugin",
+				"ToolMenus",
+				"ContentBrowser",
+				"EditorScriptingUtilities",
 				// MovieRender
 				"MovieRenderPipelineCore",
 				"MovieRenderPipelineRenderPasses",
 				"MovieRenderPipelineSettings",
 				"MovieRenderPipelineEditor",
 				"MovieSceneTracks",
-				"MovieScene",
+				"MovieScene", 
 			}
 		);
 	}

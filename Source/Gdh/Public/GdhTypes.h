@@ -41,6 +41,13 @@ enum class EGdhVideoFormat : uint8
 };
 
 UENUM(BlueprintType)
+enum class EGdhVertexAnimTextureType : uint8
+{
+	UV,
+	Normal
+};
+
+UENUM(BlueprintType)
 enum class EGdhResolutionPreset : uint8
 {
 	Res360P UMETA(DisplayName = "360p (480x360)", ToolTip = "360p"),
