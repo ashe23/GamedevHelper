@@ -48,6 +48,16 @@ enum class EGdhVertexAnimTextureType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EGdhNamingCase : uint8
+{
+	PascalCase UMETA(DisplayName = "PascalCase"),
+	PascalSnakeCase UMETA(DisplayName = "Pascal_Snake_Case"),
+	SnakeCase UMETA(DisplayName = "snake_case"),
+	KebabCase UMETA(DisplayName = "kebab-case"),
+	CamelCase UMETA(DisplayName = "camelCase"),
+};
+
+UENUM(BlueprintType)
 enum class EGdhResolutionPreset : uint8
 {
 	Res360P UMETA(DisplayName = "360p (480x360)", ToolTip = "360p"),

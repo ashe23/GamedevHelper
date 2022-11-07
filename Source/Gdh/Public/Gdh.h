@@ -29,6 +29,10 @@ namespace GdhConstants
 	static const FIntPoint Resolution1080P{1920, 1080};
 	static const FIntPoint Resolution1440P{2560, 1440};
 	static const FIntPoint Resolution2160P{3840, 2160};
+	static const FString AlphaLower{TEXT("abcdefghijklmnopqrstuvwxyz")};
+	static const FString AlphaUpper{AlphaLower.ToUpper()};
+	static const FString AlphaMixed{AlphaLower + AlphaLower.ToUpper()};
+	static const FString Digits{TEXT("0123456789")};
 }
 
 class FGdh final : public IModuleInterface

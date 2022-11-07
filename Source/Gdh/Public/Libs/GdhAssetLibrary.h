@@ -32,6 +32,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Gdh|Lib_Asset")
 	static void DisableCollisions(TArray<UStaticMesh*> StaticMeshes);
 
+	// static void RenameAssetByConvention(const FAssetData& AssetData);
+
 	template <class A>
 	static void GetSelectedAssetsFiltered(TArray<A*>& Assets);
 };
