@@ -133,7 +133,7 @@ void FGdh::RegisterContextMenuActions()
 			FText::FromString(TEXT("Asset Helper Actions")),
 			FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
 			{
-				MenuBuilder.BeginSection("Section_VAT", FText::FromString("VertexAnimTools"));
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Anim Tools"));
 				MenuBuilder.AddMenuEntry(
 					FText::FromString(TEXT("Configure for VertexAnim")),
 					FText::FromString(TEXT("Configure selected static meshes for vertex animation")),
@@ -179,7 +179,7 @@ void FGdh::RegisterContextMenuActions()
 			FText::FromString(TEXT("Asset Helper Actions")),
 			FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
 			{
-				MenuBuilder.BeginSection("Section_VAT", FText::FromString("VertexAnimTools"));
+				MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Anim Tools"));
 				MenuBuilder.AddMenuEntry(
 					FText::FromString(TEXT("Configure for VertexAnim as UV")),
 					FText::FromString(TEXT("Configure selected textures for vertex animation as UV texture")),
