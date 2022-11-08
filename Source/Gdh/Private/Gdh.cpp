@@ -4,6 +4,7 @@
 #include "GdhCommands.h"
 #include "GdhStyles.h"
 #include "UI/GdhRenderingManagerWindow.h"
+#include "UI/GdhWorldOutlinearWindow.h"
 // Engine Headers
 #include "UnrealEdMisc.h"
 #include "LevelEditor.h"
@@ -63,6 +64,13 @@ void FGdh::RegisterCommands()
 			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabRenderingManager);
 		})
 	);
+	Commands->MapAction(
+		FGdhCommands::Get().Cmd_OpenWorldOutlinerManagerWindow,
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabWorldOutlinearManager);
+		})
+	);
 }
 
 void FGdh::RegisterTabs()
@@ -83,6 +91,23 @@ void FGdh::RegisterTabs()
 		.SetDisplayName(FText::FromString(TEXT("Rendering Manager")))
 		.SetMenuType(ETabSpawnerMenuType::Hidden)
 		.SetIcon(FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Cmd_OpenWindowRenderingManager"));
+	
+	FGlobalTabmanager::Get()
+		->RegisterNomadTabSpawner(
+			GdhConstants::TabWorldOutlinearManager,
+			FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
+			{
+				return
+					SNew(SDockTab)
+					.TabRole(NomadTab)
+					[
+						SNew(SGdhWorldOutlinearWindow)
+					];
+			})
+		)
+		.SetDisplayName(FText::FromString(TEXT("World Outlinear Manager")))
+		.SetMenuType(ETabSpawnerMenuType::Hidden)
+		.SetIcon(FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Cmd_OpenWorldOutlinerManagerWindow"));
 }
 
 void FGdh::RegisterMainMenu()
@@ -109,6 +134,7 @@ void FGdh::RegisterMainMenu()
 
 						MenuBuilder.BeginSection("GdhManagersSection", FText::FromString("Managers"));
 						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWindowRenderingManager);
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWorldOutlinerManagerWindow);
 						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleFullName,
@@ -227,4 +253,5 @@ void FGdh::UnregisterCommands()
 void FGdh::UnregisterTabs()
 {
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabRenderingManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabWorldOutlinearManager);
 }
