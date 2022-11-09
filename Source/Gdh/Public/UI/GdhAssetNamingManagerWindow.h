@@ -5,6 +5,35 @@
 #include "CoreMinimal.h"
 #include "Settings/GdhAssetNamingConventionSettings.h"
 #include "Widgets/SCompoundWidget.h"
+#include "GdhAssetNamingManagerWindow.generated.h"
+
+class UGdhAssetNamingManagerListItem;
+struct FGdhRenamePreview;
+
+UCLASS(Config=EditorPerProjectUserSettings)
+class UGdhAssetNamingManagerScanSettings : public UObject
+{
+	GENERATED_BODY()
+public:
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
+	{
+		Super::PostEditChangeProperty(PropertyChangedEvent);
+
+		SaveConfig();
+	}
+#endif
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="Settings", meta = (ContentDir))
+	FDirectoryPath ScanPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="Settings", meta = (ToolTip = "Scan folder recursively"))
+	bool bScanRecursive = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="Settings", meta = (ToolTip = "If enabled will show assets whose classes are missing in naming convention list"))
+	bool bShowMissingTypes = false;
+};
 
 class SGdhAssetNamingManagerWindow : public SCompoundWidget
 {
@@ -14,5 +43,21 @@ public:
 
 	void Construct(const FArguments& InArgs);
 private:
-	TWeakObjectPtr<UGdhAssetNamingConventionSettings> AssetNamingConventionSettings;
+	void ListUpdate();
+	void ListSort();
+	void OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
+	void UpdateRenamePreviews(const TArray<FAssetData>& Assets);
+	FGdhAssetFormat GetNameFormatByAssetData(const FAssetData& Asset) const;
+	FGdhAssetFormat GetNameFormatByClass(const UClass* SearchClass) const;
+	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhAssetNamingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const;
+
+	
+	TWeakObjectPtr<UGdhAssetNamingConventionSettings> ConventionSettings;
+	TWeakObjectPtr<UGdhAssetNamingManagerScanSettings> ScanSettings;
+	TSharedPtr<SListView<TWeakObjectPtr<UGdhAssetNamingManagerListItem>>> ListView;
+	TArray<TWeakObjectPtr<UGdhAssetNamingManagerListItem>> ListItems;
+	TArray<FGdhRenamePreview> RenamePreviews;
+	TEnumAsByte<EColumnSortMode::Type> CurrentSortMode = EColumnSortMode::Ascending;
+	FName SortColumn = TEXT("AssetClass");
+	bool bRenameBtnActive = false;
 };

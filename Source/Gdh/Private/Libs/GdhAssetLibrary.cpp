@@ -2,10 +2,13 @@
 
 #include "Libs/GdhAssetLibrary.h"
 #include "Libs/GdhNotificationLibrary.h"
+#include "Settings/GdhAssetNamingConventionSettings.h"
+#include "UI/GdhAssetNamingManagerRenamePreview.h"
 // Engine Headers
 #include "ContentBrowserModule.h"
 #include "EditorAssetLibrary.h"
 #include "IContentBrowserSingleton.h"
+#include "Libs/GdhStringLibrary.h"
 #include "Misc/FeedbackContext.h"
 
 void UGdhAssetLibrary::GetSelectedAssets(TArray<FAssetData>& Assets)
@@ -182,6 +185,16 @@ void UGdhAssetLibrary::DisableCollisions(TArray<UStaticMesh*> StaticMeshes)
 	{
 		UGdhNotificationLibrary::ShowModalOutputLog(TEXT("Asset Library"), MsgError);
 	}
+}
+
+UClass* UGdhAssetLibrary::GetBlueprintParentClass(const FAssetData& AssetData)
+{
+	if (!AssetData.IsValid()) return nullptr;
+
+	const auto BlueprintAsset = Cast<UBlueprint>(AssetData.GetAsset());
+	if (!BlueprintAsset) return nullptr;
+
+	return BlueprintAsset->ParentClass;
 }
 
 template <class A>

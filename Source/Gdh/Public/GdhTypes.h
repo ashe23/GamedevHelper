@@ -69,6 +69,16 @@ enum class EGdhResolutionPreset : uint8
 	ResCustom UMETA(DisplayName = "Custom", ToolTip = "Custom resolution settings")
 };
 
+UENUM(BlueprintType)
+enum class EGdhRenameStatus : uint8
+{
+	Ok,
+	OkToRename,
+	MissingSettings,
+	DuplicateNameContentBrowser,
+	DuplicateNamePreview
+};
+
 USTRUCT(BlueprintType)
 struct FGdhAssetFormat
 {
@@ -84,6 +94,14 @@ struct FGdhAssetFormat
 	{
 		return Prefix.IsEmpty() && Suffix.IsEmpty();
 	}
+};
+
+struct FGdhAssetNameParts
+{
+	FString Prefix;
+	FString BaseName;
+	FString Variation;
+	FString Suffix;
 };
 
 struct FGdhFFmpegCommand

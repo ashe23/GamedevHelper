@@ -6,6 +6,9 @@
 #include "GdhTypes.h"
 #include "GdhAssetLibrary.generated.h"
 
+class UGdhAssetNamingConventionSettings;
+struct FGdhRenamePreview;
+
 UCLASS()
 class UGdhAssetLibrary : public UBlueprintFunctionLibrary
 {
@@ -31,8 +34,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Gdh|Lib_Asset")
 	static void DisableCollisions(TArray<UStaticMesh*> StaticMeshes);
-
-	// static void RenameAssetByConvention(const FAssetData& AssetData);
+	
+	UFUNCTION(BlueprintCallable, Category="Gdh|Lib_Asset")
+	static UClass* GetBlueprintParentClass(const FAssetData& AssetData);
 
 	template <class A>
 	static void GetSelectedAssetsFiltered(TArray<A*>& Assets);
