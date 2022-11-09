@@ -19,11 +19,11 @@ public:
 
 	virtual void RegisterCommands() override;
 
-	// main menu
+	// main menu bar
 	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
 	TSharedPtr<FUICommandInfo> Cmd_OpenWindowRenderingManager;
 	TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinerManagerWindow;
-	// TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManagerWindow;
+	TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManagerWindow;
 
 	// context menu for rendering manager
 	TSharedPtr<FUICommandInfo> Cmd_OpenImageDir;

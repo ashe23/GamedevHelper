@@ -5,11 +5,12 @@
 #include "GdhStyles.h"
 #include "UI/GdhRenderingManagerWindow.h"
 #include "UI/GdhWorldOutlinearWindow.h"
+#include "UI/GdhAssetNamingManagerWindow.h"
+#include "Libs/GdhAssetLibrary.h"
 // Engine Headers
 #include "UnrealEdMisc.h"
 #include "LevelEditor.h"
 #include "ToolMenus.h"
-#include "Libs/GdhAssetLibrary.h"
 
 IMPLEMENT_MODULE(FGdh, Gdh);
 DEFINE_LOG_CATEGORY(LogGdh);
@@ -71,6 +72,13 @@ void FGdh::RegisterCommands()
 			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabWorldOutlinearManager);
 		})
 	);
+	Commands->MapAction(
+		FGdhCommands::Get().Cmd_OpenAssetNamingManagerWindow,
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingManager);
+		})
+	);
 }
 
 void FGdh::RegisterTabs()
@@ -108,6 +116,23 @@ void FGdh::RegisterTabs()
 		.SetDisplayName(FText::FromString(TEXT("World Outlinear Manager")))
 		.SetMenuType(ETabSpawnerMenuType::Hidden)
 		.SetIcon(FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Cmd_OpenWorldOutlinerManagerWindow"));
+
+	FGlobalTabmanager::Get()
+		->RegisterNomadTabSpawner(
+			GdhConstants::TabAssetNamingManager,
+			FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs)
+			{
+				return
+					SNew(SDockTab)
+					.TabRole(MajorTab)
+					[
+						SNew(SGdhAssetNamingManagerWindow)
+					];
+			})
+		)
+		.SetDisplayName(FText::FromString(TEXT("Asset Naming Manager")))
+		.SetMenuType(ETabSpawnerMenuType::Hidden)
+		.SetIcon(FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Cmd_OpenAssetNamingManagerWindow"));
 }
 
 void FGdh::RegisterMainMenu()
@@ -135,6 +160,7 @@ void FGdh::RegisterMainMenu()
 						MenuBuilder.BeginSection("GdhManagersSection", FText::FromString("Managers"));
 						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWindowRenderingManager);
 						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWorldOutlinerManagerWindow);
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenAssetNamingManagerWindow);
 						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleFullName,
@@ -254,4 +280,5 @@ void FGdh::UnregisterTabs()
 {
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabRenderingManager);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabWorldOutlinearManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingManager);
 }

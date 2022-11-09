@@ -16,6 +16,7 @@ namespace GdhConstants
 	static const FName ModuleStylesName{TEXT("GamedevHelperStyle")};
 	static const FName TabRenderingManager{TEXT("TabRenderingManager")};
 	static const FName TabWorldOutlinearManager{TEXT("TabWorldOutlinearManager")};
+	static const FName TabAssetNamingManager{TEXT("TabAssetNamingManager")};
 	static const FString FFmpegJsonCommandsFile{TEXT("ffmpeg_commands.json")};
 	static const FString FFmpegPythonFile{TEXT("ffmpeg_cli_runner.py")};
 

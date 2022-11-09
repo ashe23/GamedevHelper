@@ -24,7 +24,10 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
+	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention", DisplayName = "Asset Formats", meta = (ToolTip = "Asset class and name format mappings"))
+	TMap<UClass*, FGdhAssetFormat> Mappings;
+	
 	FGdhAssetNamingConventionSettingsOnChangeDelegate& OnChange();
 private:
-	FGdhAssetNamingConventionSettingsOnChangeDelegate OnChangeDelegate;;
+	FGdhAssetNamingConventionSettingsOnChangeDelegate OnChangeDelegate;
 };

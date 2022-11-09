@@ -69,6 +69,23 @@ enum class EGdhResolutionPreset : uint8
 	ResCustom UMETA(DisplayName = "Custom", ToolTip = "Custom resolution settings")
 };
 
+USTRUCT(BlueprintType)
+struct FGdhAssetFormat
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Asset Format")
+	FString Prefix;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Asset Format")
+	FString Suffix;
+
+	bool IsEmpty() const
+	{
+		return Prefix.IsEmpty() && Suffix.IsEmpty();
+	}
+};
+
 struct FGdhFFmpegCommand
 {
 	FString SequenceName;

@@ -9,6 +9,7 @@ void FGdhCommands::RegisterCommands()
 	UI_COMMAND(Cmd_RestartEditor, "Restart", "Restart Editor", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_OpenWindowRenderingManager, "Rendering Manager", "Open Rendering Manager Window", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_OpenWorldOutlinerManagerWindow, "World Outlinear Manager", "Open World Outlinear Manager Window", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(Cmd_OpenAssetNamingManagerWindow, "Asset Naming Manager", "Open Asset Naming Manager Window", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_OpenImageDir, "Open Image Directory", "Open selected LevelSequence rendered images directory", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_OpenVideoDir, "Open Video Directory", "Open selected LevelSequence encoded video directory", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_PlayVideoFile, "Play Video", "Plays selected LevelSequence encoded video in external video player", EUserInterfaceActionType::Button, FInputChord());
