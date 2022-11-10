@@ -9,6 +9,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Libs/GdhAssetLibrary.h"
+#include "Libs/GdhStringLibrary.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Widgets/Layout/SScrollBox.h"
 
@@ -21,6 +22,16 @@ void SGdhAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 	check(ConventionSettings.Get());
 	check(ScanSettings.Get());
+
+	ConventionSettings->OnChange().BindLambda([&]()
+	{
+		ListUpdate();
+	});
+
+	ScanSettings->OnChange().BindLambda([&]()
+	{
+		ListUpdate();
+	});
 
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
@@ -73,56 +84,57 @@ void SGdhAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 		]
 		+ SSplitter::Slot()
 		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			  .AutoHeight()
-			  .Padding(FMargin{10.0f})
+			SNew(SScrollBox)
+			.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+			.AnimateWheelScrolling(true)
+			.AllowOverscroll(EAllowOverscroll::No)
+			+ SScrollBox::Slot()
 			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				  .FillWidth(1.0)
-				  .HAlign(HAlign_Left)
-				  .VAlign(VAlign_Center)
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				  .AutoHeight()
+				  .Padding(FMargin{10.0f})
 				[
-					SNew(SButton)
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					  .FillWidth(1.0)
+					  .HAlign(HAlign_Left)
+					  .VAlign(VAlign_Center)
+					[
+						SNew(SButton)
 					.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
 					.ContentPadding(FMargin{5})
 					// .OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnOutputDirOpenClick)
 					// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnOutputDirOpenEnabled)
 					.ToolTipText(FText::FromString(TEXT("Refresh assets list")))
-					[
-						SNew(SImage)
-						.Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Refresh"))
+						[
+							SNew(SImage)
+							.Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Refresh"))
+						]
 					]
-				]
-				+ SHorizontalBox::Slot()
-				  .AutoWidth()
-				  .HAlign(HAlign_Right)
-				  .VAlign(VAlign_Center)
-				[
-					SNew(SButton)
+					+ SHorizontalBox::Slot()
+					  .AutoWidth()
+					  .HAlign(HAlign_Right)
+					  .VAlign(VAlign_Center)
+					[
+						SNew(SButton)
 					// .ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
 					.ContentPadding(FMargin{5})
+					.ButtonColorAndOpacity(FLinearColor{FColor::FromHex(TEXT("#45d94d"))})
 					// .OnClicked_Raw(this, &SGdhRenderingManagerWindow::OnBtnOutputDirOpenClick)
 					// .IsEnabled_Raw(this, &SGdhRenderingManagerWindow::IsBtnOutputDirOpenEnabled)
 					.ToolTipText(FText::FromString(TEXT("Rename assets")))
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString(TEXT("Rename All")))
-						// SNew(SImage)
-						// .Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Render")) // todo:ashe23 find appropriate button icon for rename assets
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString(TEXT("Rename All")))
+							// SNew(SImage)
+							// .Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Render")) // todo:ashe23 find appropriate button icon for rename assets
+						]
 					]
 				]
-			]
-			+ SVerticalBox::Slot()
-			  .AutoHeight()
-			  .Padding(FMargin{10.0f})
-			[
-				SNew(SScrollBox)
-				.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
-				.AnimateWheelScrolling(true)
-				.AllowOverscroll(EAllowOverscroll::No)
-				+ SScrollBox::Slot()
+				+ SVerticalBox::Slot()
+				  .AutoHeight()
+				  .Padding(FMargin{10.0f})
 				[
 					SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhAssetNamingManagerListItem>>)
 						.ListItemsSource(&ListItems)
@@ -196,7 +208,45 @@ void SGdhAssetNamingManagerWindow::Construct(const FArguments& InArgs)
 
 void SGdhAssetNamingManagerWindow::ListUpdate()
 {
+	TArray<FAssetData> Assets;
+
+	FARFilter Filter;
+	Filter.PackagePaths.Add(FName{*ScanSettings->ScanPath.Path});
+	Filter.bRecursivePaths = ScanSettings->bScanRecursive;
+	Filter.bRecursiveClasses = true;
+	Filter.RecursiveClassesExclusionSet.Add(UMapBuildDataRegistry::StaticClass()->GetFName());
 	
+	UGdhAssetLibrary::GetAssetsByFilter(Filter, Assets);
+
+	if (Assets.Num() == 0) return;
+
+	ListItems.Reset();
+	ListItems.Reserve(Assets.Num());
+
+	FScopedSlowTask SlowTask(
+		Assets.Num(),
+		FText::FromString("Scanning...")
+	);
+	SlowTask.MakeDialog(false, false);
+
+	for (const auto& Asset : Assets)
+	{
+		SlowTask.EnterProgressFrame(1.0f);
+
+		if (!Asset.GetAsset()) continue;
+
+		TWeakObjectPtr<UGdhAssetNamingManagerListItem> NewItem = NewObject<UGdhAssetNamingManagerListItem>();
+		if (!NewItem.Get()) continue;
+
+		NewItem->AssetData = Asset;
+		NewItem->OldName = Asset.GetAsset()->GetName();
+		NewItem->NewName = UGdhStringLibrary::Normalize(NewItem->OldName);
+		NewItem->Note = TEXT("OK"); // todo:ashe23
+		NewItem->RenameStatus = EGdhRenameStatus::Ok; // todo:ashe23
+
+		ListItems.Add(NewItem);
+	}
+
 	if (ListView.IsValid())
 	{
 		ListView->RebuildList();
@@ -208,7 +258,7 @@ void SGdhAssetNamingManagerWindow::ListSort()
 	if (CurrentSortMode == EColumnSortMode::Ascending)
 	{
 		ListItems.Sort([&](const TWeakObjectPtr<UGdhAssetNamingManagerListItem>& Data1,
-						   const TWeakObjectPtr<UGdhAssetNamingManagerListItem>& Data2)
+		                   const TWeakObjectPtr<UGdhAssetNamingManagerListItem>& Data2)
 		{
 			if (SortColumn.IsEqual(TEXT("Result")))
 			{
@@ -232,7 +282,7 @@ void SGdhAssetNamingManagerWindow::ListSort()
 	if (CurrentSortMode == EColumnSortMode::Descending)
 	{
 		ListItems.Sort([&](const TWeakObjectPtr<UGdhAssetNamingManagerListItem>& Data1,
-						   const TWeakObjectPtr<UGdhAssetNamingManagerListItem>& Data2)
+		                   const TWeakObjectPtr<UGdhAssetNamingManagerListItem>& Data2)
 		{
 			if (SortColumn.IsEqual(TEXT("Result")))
 			{
@@ -273,12 +323,12 @@ void SGdhAssetNamingManagerWindow::UpdateRenamePreviews(const TArray<FAssetData>
 	{
 		if (!Asset.IsValid()) continue;
 
-		
+		FGdhRenamePreview RenamePreview;
+		RenamePreview.SetAssetData(Asset);
 	}
-	
 }
 
-FGdhAssetFormat SGdhAssetNamingManagerWindow::GetNameFormatByAssetData(const FAssetData& Asset) const
+FGdhAssetAppendix SGdhAssetNamingManagerWindow::GetNameFormatByAssetData(const FAssetData& Asset) const
 {
 	// if (!Asset.IsValid())
 	// {
@@ -303,9 +353,10 @@ FGdhAssetFormat SGdhAssetNamingManagerWindow::GetNameFormatByAssetData(const FAs
 	// }
 	//
 	// return NameFormat;
+	return {};
 }
 
-FGdhAssetFormat SGdhAssetNamingManagerWindow::GetNameFormatByClass(const UClass* SearchClass) const
+FGdhAssetAppendix SGdhAssetNamingManagerWindow::GetNameFormatByClass(const UClass* SearchClass) const
 {
 	// if (!SearchClass)
 	// {
@@ -322,6 +373,7 @@ FGdhAssetFormat SGdhAssetNamingManagerWindow::GetNameFormatByClass(const UClass*
 	// }
 	//
 	// return FGamedevHelperAssetNameFormat{};
+	return {};
 }
 
 TSharedRef<ITableRow> SGdhAssetNamingManagerWindow::OnGenerateRow(TWeakObjectPtr<UGdhAssetNamingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const

@@ -7,6 +7,8 @@
 #include "Widgets/SCompoundWidget.h"
 #include "GdhAssetNamingManagerWindow.generated.h"
 
+DECLARE_DELEGATE(FGdhAssetNamingManagerScanSettingsOnChangeDelegate);
+
 class UGdhAssetNamingManagerListItem;
 struct FGdhRenamePreview;
 
@@ -22,17 +24,29 @@ public:
 		Super::PostEditChangeProperty(PropertyChangedEvent);
 
 		SaveConfig();
+
+		if (OnChangeDelegate.IsBound())
+		{
+			OnChangeDelegate.Execute();
+		}
 	}
 #endif
+
+	FGdhAssetNamingManagerScanSettingsOnChangeDelegate& OnChange()
+	{
+		return OnChangeDelegate;
+	}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="Settings", meta = (ContentDir))
-	FDirectoryPath ScanPath;
+	FDirectoryPath ScanPath{TEXT("/Game")};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="Settings", meta = (ToolTip = "Scan folder recursively"))
 	bool bScanRecursive = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category="Settings", meta = (ToolTip = "If enabled will show assets whose classes are missing in naming convention list"))
 	bool bShowMissingTypes = false;
+private:
+	FGdhAssetNamingManagerScanSettingsOnChangeDelegate OnChangeDelegate;
 };
 
 class SGdhAssetNamingManagerWindow : public SCompoundWidget
@@ -47,8 +61,8 @@ private:
 	void ListSort();
 	void OnListSort(EColumnSortPriority::Type SortPriority, const FName& Name, EColumnSortMode::Type SortMode);
 	void UpdateRenamePreviews(const TArray<FAssetData>& Assets);
-	FGdhAssetFormat GetNameFormatByAssetData(const FAssetData& Asset) const;
-	FGdhAssetFormat GetNameFormatByClass(const UClass* SearchClass) const;
+	FGdhAssetAppendix GetNameFormatByAssetData(const FAssetData& Asset) const;
+	FGdhAssetAppendix GetNameFormatByClass(const UClass* SearchClass) const;
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhAssetNamingManagerListItem> InItem, const TSharedRef<STableViewBase>& OwnerTable) const;
 
 	

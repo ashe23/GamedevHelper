@@ -80,14 +80,14 @@ enum class EGdhRenameStatus : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FGdhAssetFormat
+struct FGdhAssetAppendix
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Asset Format")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Asset Appendix")
 	FString Prefix;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Asset Format")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Asset Appendix")
 	FString Suffix;
 
 	bool IsEmpty() const
@@ -96,8 +96,11 @@ struct FGdhAssetFormat
 	}
 };
 
+USTRUCT(BlueprintType)
 struct FGdhAssetNameParts
 {
+	GENERATED_BODY()
+	
 	FString Prefix;
 	FString BaseName;
 	FString Variation;

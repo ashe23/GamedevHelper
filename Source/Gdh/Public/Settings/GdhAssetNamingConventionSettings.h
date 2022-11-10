@@ -25,7 +25,7 @@ public:
 #endif
 
 	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention", DisplayName = "Asset Formats", meta = (ToolTip = "Asset class and name format mappings"))
-	TMap<UClass*, FGdhAssetFormat> Mappings;
+	TMap<UClass*, FGdhAssetAppendix> Mappings;
 	
 	FGdhAssetNamingConventionSettingsOnChangeDelegate& OnChange();
 private:

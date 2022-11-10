@@ -8,14 +8,36 @@
 #include "ContentBrowserModule.h"
 #include "EditorAssetLibrary.h"
 #include "IContentBrowserSingleton.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Libs/GdhStringLibrary.h"
 #include "Misc/FeedbackContext.h"
 
-void UGdhAssetLibrary::GetSelectedAssets(TArray<FAssetData>& Assets)
+void UGdhAssetLibrary::GetAssetsSelected(TArray<FAssetData>& Assets)
 {
 	const FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
 
 	ContentBrowserModule.Get().GetSelectedAssets(Assets);
+}
+
+void UGdhAssetLibrary::GetAssetsAll(TArray<FAssetData>& Assets)
+{
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
+
+	AssetRegistryModule.Get().GetAllAssets(Assets);
+}
+
+void UGdhAssetLibrary::GetAssetsInPath(const FString& Path, TArray<FAssetData>& Assets, const bool bRecursiveSearch)
+{
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
+
+	AssetRegistryModule.Get().GetAssetsByPath(FName{*Path}, Assets, bRecursiveSearch);
+}
+
+void UGdhAssetLibrary::GetAssetsByFilter(const FARFilter& Filter, TArray<FAssetData>& Assets)
+{
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
+
+	AssetRegistryModule.Get().GetAssets(Filter, Assets);
 }
 
 bool UGdhAssetLibrary::VertexAnimConfigureTexture(UTexture2D* Texture, const EGdhVertexAnimTextureType TextureType)
@@ -197,11 +219,29 @@ UClass* UGdhAssetLibrary::GetBlueprintParentClass(const FAssetData& AssetData)
 	return BlueprintAsset->ParentClass;
 }
 
+FGdhAssetNameParts UGdhAssetLibrary::GetAssetNameParts(const FAssetData& AssetData)
+{
+	if (!AssetData.IsValid()) return FGdhAssetNameParts{};
+	if (!AssetData.GetAsset()) return FGdhAssetNameParts{};
+
+	const FString OldAssetName = AssetData.GetAsset()->GetName();
+	const FString NormalizedName = UGdhStringLibrary::Normalize(OldAssetName);
+
+	TArray<FString> Parts;
+	NormalizedName.ParseIntoArray(Parts, TEXT("_"), true);
+
+	FGdhAssetNameParts NameParts;
+	NameParts.Prefix = Parts[0];
+	NameParts.Suffix = Parts.Last();
+
+	return NameParts;
+}
+
 template <class A>
 void UGdhAssetLibrary::GetSelectedAssetsFiltered(TArray<A*>& Assets)
 {
 	TArray<FAssetData> SelectedAssets;
-	GetSelectedAssets(SelectedAssets);
+	GetAssetsSelected(SelectedAssets);
 
 	Assets.Reset();
 	Assets.Reserve(SelectedAssets.Num());
