@@ -19,4 +19,7 @@ public:
 
 	// main menu bar
 	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
+	TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManager;
+	TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinearManager;
+	TSharedPtr<FUICommandInfo> Cmd_OpenMrqBatchRenderManager;
 };

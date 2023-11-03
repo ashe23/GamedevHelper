@@ -13,8 +13,8 @@ void FGdh::StartupModule()
 
 	FGdhStyles::Initialize();
 	FGdhStyles::ReloadTextures();
-
 	FGdhCommands::Register();
+
 	Commands = MakeShareable(new FUICommandList);
 	Commands->MapAction(
 		FGdhCommands::Get().Cmd_RestartEditor,
@@ -40,8 +40,14 @@ void FGdh::StartupModule()
 					FText::FromString("Open GamedevHelper Main Menu"),
 					FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
 					{
-						MenuBuilder.BeginSection("GdhEditorSection", FText::FromString("Editor"));
+						MenuBuilder.BeginSection("GdhSectionEditor", FText::FromString("Editor"));
 						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_RestartEditor);
+						MenuBuilder.EndSection();
+
+						MenuBuilder.BeginSection("GdhSectionManager", FText::FromString("Managers"));
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenAssetNamingManager);
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWorldOutlinearManager);
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenMrqBatchRenderManager);
 						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleName,
