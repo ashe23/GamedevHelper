@@ -24,23 +24,5 @@
         "Win64"
       ]
     }
-  ],
-  "Plugins": [
-    {
-      "Name": "EditorScriptingUtilities",
-      "Enabled": true
-    },
-    {
-      "Name": "Niagara",
-      "Enabled": true
-    },
-    {
-      "Name": "EditorScriptingUtilities",
-      "Enabled": true
-    },
-    {
-      "Name": "Paper2D",
-      "Enabled": true
-    }
   ]
 }

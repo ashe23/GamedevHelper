@@ -25,8 +25,9 @@ public class Gdh : ModuleRules
 				"SlateCore",
 				"UnrealEd",
 				"Projects",
+				"AssetRegistry",
+				"EditorSubsystem"
 				// "NetCore",
-				// "AssetRegistry",
 				// "AssetTools",
 				// "ContentBrowser",
 				// "RenderCore",
