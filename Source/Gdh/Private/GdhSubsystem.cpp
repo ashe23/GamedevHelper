@@ -35,3 +35,8 @@ FAssetRegistryModule& UGdhSubsystem::GetModuleAssetRegistry()
 {
 	return FModuleManager::LoadModuleChecked<FAssetRegistryModule>(GdhConstants::ModuleAssetRegistry);
 }
+
+FPropertyEditorModule& UGdhSubsystem::GetModulePropertyEditor()
+{
+	return FModuleManager::LoadModuleChecked<FPropertyEditorModule>(GdhConstants::ModulePropertyEditor);
+}

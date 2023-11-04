@@ -14,9 +14,13 @@ namespace GdhConstants
 	static const FName ModuleName{TEXT("Gdh")}; // Gdh - GamedevHelper
 	static const FName ModuleStylesName{TEXT("GamedevHelperStyle")};
 	static const FName ModuleAssetRegistry{TEXT("AssetRegistry")};
+	static const FName ModulePropertyEditor{TEXT("PropertyEditor")};
 
 	// paths
 	static const FName PathRoot{TEXT("/Game")};
+
+	// tabs
+	static const FName TabAssetNamingManager{TEXT("TabGdhAssetNamingManager")};
 }
 
 class FGdh final : public IModuleInterface

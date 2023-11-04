@@ -22,4 +22,14 @@ public:
 	TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManager;
 	TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinearManager;
 	TSharedPtr<FUICommandInfo> Cmd_OpenMrqBatchRenderManager;
+
+	// asset naming manager
+	TSharedPtr<FUICommandInfo> Cmd_ScanAssets;
+	TSharedPtr<FUICommandInfo> Cmd_RenameAssets;
+	TSharedPtr<FUICommandInfo> Cmd_ClearSelection;
+
+	// world outlinear manager
+	TSharedPtr<FUICommandInfo> Cmd_OrganizeActors;
+	TSharedPtr<FUICommandInfo> Cmd_Undo;
+	
 };

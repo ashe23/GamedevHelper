@@ -28,4 +28,5 @@ public:
 	static void GetAssetsAll(TArray<FAssetData>& Assets);
 
 	static FAssetRegistryModule& GetModuleAssetRegistry();
+	static FPropertyEditorModule& GetModulePropertyEditor();
 };

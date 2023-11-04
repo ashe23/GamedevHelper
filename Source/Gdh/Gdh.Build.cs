@@ -26,7 +26,9 @@ public class Gdh : ModuleRules
 				"UnrealEd",
 				"Projects",
 				"AssetRegistry",
-				"EditorSubsystem"
+				"EditorSubsystem",
+				"EditorStyle",
+				"InputCore",
 				// "NetCore",
 				// "AssetTools",
 				// "ContentBrowser",
@@ -34,7 +36,6 @@ public class Gdh : ModuleRules
 				// "EditorScriptingUtilities",
 				// "ToolMenus",
 				// "EditorStyle",
-				// "InputCore",
 				// "MediaAssets",
 				// "LevelSequence",
 				// "Foliage",

@@ -4,6 +4,7 @@
 #include "GdhCmds.h"
 #include "GdhStyles.h"
 #include "LevelEditor.h"
+#include "Slate/SGdhManagerAssetNaming.h"
 
 DEFINE_LOG_CATEGORY(LogGdh);
 
@@ -23,6 +24,29 @@ void FGdh::StartupModule()
 			FUnrealEdMisc::Get().RestartEditor(true);
 		})
 	);
+	Commands->MapAction(
+		FGdhCommands::Get().Cmd_OpenAssetNamingManager,
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingManager);
+		})
+	);
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        GdhConstants::TabAssetNamingManager,
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+		                        {
+			                        return
+				                        SNew(SDockTab)
+				                        .TabRole(MajorTab)
+				                        [
+					                        SNew(SGdhManagerAssetNaming)
+				                        ];
+		                        })
+	                        )
+	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingManager"))
+	                        .SetDisplayName(FText::FromName(TEXT("Asset Naming Manager")))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 
 	if (!IsRunningCommandlet())
 	{
@@ -64,6 +88,8 @@ void FGdh::ShutdownModule()
 {
 	FGdhStyles::Shutdown();
 	FGdhCommands::Unregister();
+
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingManager);
 
 	IModuleInterface::ShutdownModule();
 }
