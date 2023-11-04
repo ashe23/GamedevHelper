@@ -16,7 +16,7 @@ public:
 #endif
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category="ScanSettings", meta=(ContentDir))
-	FDirectoryPath ScanPath;
+	FDirectoryPath ScanPath = FDirectoryPath{TEXT("/Game")};
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category="ScanSettings")
 	bool bScanRecursive = false;

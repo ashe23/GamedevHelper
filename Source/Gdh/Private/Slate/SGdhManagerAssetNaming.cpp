@@ -6,6 +6,7 @@
 #include "GdhSubsystem.h"
 #include "GdhTypes.h"
 #include "Settings/GdhAssetScanSettings.h"
+#include "Settings/GdhAssetNamingConvention.h"
 #include "Slate/SGdhManagerAssetNamingItem.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
@@ -13,6 +14,7 @@
 void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 {
 	ScanSettings = GetMutableDefault<UGdhAssetScanSettings>();
+	AssetNamingConvention = GetMutableDefault<UGdhAssetNamingConvention>();
 
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
@@ -26,6 +28,11 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 
 	const TSharedPtr<IDetailsView> SettingsProperty = UGdhSubsystem::GetModulePropertyEditor().CreateDetailView(ViewArgs);
 	SettingsProperty->SetObject(ScanSettings.Get());
+
+	ViewArgs.bAllowSearch = true;
+	ViewArgs.ViewIdentifier = "GdhAssetNamingConvention";
+	const TSharedPtr<IDetailsView> AssetNamingConventionProperty = UGdhSubsystem::GetModulePropertyEditor().CreateDetailView(ViewArgs);
+	AssetNamingConventionProperty->SetObject(AssetNamingConvention.Get());
 
 	Cmds = MakeShareable(new FUICommandList);
 	Cmds->MapAction(
@@ -43,7 +50,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 		FUIAction(
 			FExecuteAction::CreateLambda([&]()
 			{
-				// todo:ashe23 if anything selected rename only selected, if not then all assets
+				
 			})
 		)
 	);
@@ -75,7 +82,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 			+ SSplitter::Slot().Value(0.3f)
 			[
 				SNew(SVerticalBox)
-				+ SVerticalBox::Slot().FillHeight(1.0f).Padding(3.0f)
+				+ SVerticalBox::Slot().AutoHeight().Padding(3.0f)
 				[
 					SNew(SBox)
 					[
@@ -86,6 +93,24 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 						+ SScrollBox::Slot()
 						[
 							SettingsProperty.ToSharedRef()
+						]
+					]
+				]
+				+ SVerticalBox::Slot().AutoHeight().Padding(3.0f)
+				[
+					SNew(SSeparator).Thickness(5.0f)
+				]
+				+ SVerticalBox::Slot().FillHeight(1.0f).Padding(3.0f)
+				[
+					SNew(SBox)
+					[
+						SNew(SScrollBox)
+						.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+						.AnimateWheelScrolling(true)
+						.AllowOverscroll(EAllowOverscroll::No)
+						+ SScrollBox::Slot()
+						[
+							AssetNamingConventionProperty.ToSharedRef()
 						]
 					]
 				]
@@ -123,6 +148,10 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 
 void SGdhManagerAssetNaming::UpdateListData()
 {
+	if (UGdhSubsystem::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
+	
+	// todo:ashe23 fixup redirectors
+	
 	TArray<FAssetData> AssetsAll;
 	UGdhSubsystem::GetAssetsAll(AssetsAll);
 
@@ -135,7 +164,7 @@ void SGdhManagerAssetNaming::UpdateListData()
 
 		NewItem->AssetData = Asset;
 		NewItem->OldName = Asset.AssetName.ToString();
-		NewItem->NewName = Asset.AssetName.ToString(); // todo:ashe23 make rename preview and get new name and note if there is one
+		NewItem->NewName = UGdhSubsystem::GetAssetRenamePreview(Asset);
 		NewItem->Note = TEXT("Some Note");
 
 		ListItems.Emplace(NewItem);

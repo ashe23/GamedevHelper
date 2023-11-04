@@ -3,7 +3,7 @@
 #include "Settings/GdhAssetScanSettings.h"
 
 #if WITH_EDITOR
-void UGdhAssetScanSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
+void UGdhAssetScanSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 

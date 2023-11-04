@@ -15,12 +15,18 @@ namespace GdhConstants
 	static const FName ModuleStylesName{TEXT("GamedevHelperStyle")};
 	static const FName ModuleAssetRegistry{TEXT("AssetRegistry")};
 	static const FName ModulePropertyEditor{TEXT("PropertyEditor")};
+	static const FName ModuleAssetTools{TEXT("AssetTools")};
 
 	// paths
 	static const FName PathRoot{TEXT("/Game")};
 
 	// tabs
 	static const FName TabAssetNamingManager{TEXT("TabGdhAssetNamingManager")};
+
+	template <typename EnumType> static EnumType GetEnumValueFromString(const FString& String)
+	{
+		return static_cast<EnumType>(StaticEnum<EnumType>()->GetValueByName(FName(*String)));
+	}
 }
 
 class FGdh final : public IModuleInterface

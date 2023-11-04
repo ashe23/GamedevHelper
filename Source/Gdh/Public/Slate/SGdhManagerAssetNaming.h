@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
+class UGdhAssetNamingConvention;
 class UGdhManagerAssetNamingItem;
 class UGdhAssetScanSettings;
 
@@ -26,6 +27,7 @@ private:
 
 	TSharedPtr<FUICommandList> Cmds;
 	TWeakObjectPtr<UGdhAssetScanSettings> ScanSettings;
+	TWeakObjectPtr<UGdhAssetNamingConvention> AssetNamingConvention;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhManagerAssetNamingItem>>> ListView;
 	TArray<TWeakObjectPtr<UGdhManagerAssetNamingItem>> ListItems;
 };

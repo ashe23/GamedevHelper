@@ -24,5 +24,11 @@
         "Win64"
       ]
     }
+  ],
+  "Plugins": [
+    {
+      "Name": "Niagara",
+      "Enabled": true
+    }
   ]
 }
