@@ -17,6 +17,7 @@ public:
 	virtual FName GetContainerName() const override;
 	virtual FName GetCategoryName() const override;
 	virtual FText GetSectionText() const override;
+	FGdhSettingsChanged& OnSettingsChanged();
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -42,4 +43,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention", DisplayName="Asset Namings", meta=(ToolTip="Asset class and name format mappings"))
 	TMap<UClass*, FGdhAssetNamingInfo> Mappings;
+
+private:
+	FGdhSettingsChanged DelegateSettingsChanged;
 };

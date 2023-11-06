@@ -2,7 +2,9 @@
 
 #include "Slate/SGdhManagerAssetNamingItem.h"
 #include "GdhStyles.h"
+#include "GdhSubsystem.h"
 #include "GdhTypes.h"
+#include "Widgets/Input/SHyperlink.h"
 
 void SGdhManagerAssetNamingItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
@@ -87,18 +89,23 @@ TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FN
 
 	if (InColumnName == TEXT("Path"))
 	{
-		return SNew(STextBlock).Justification(ETextJustify::Left).Text(FText::FromString(RowItem->AssetData.PackagePath.ToString()));
+		return
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(FMargin{5.0f, 0.0f})
+			[
+				SNew(SHyperlink)
+				.Text(FText::FromString(RowItem->AssetData.PackagePath.ToString()))
+				.OnNavigate_Lambda([&]() { UGdhSubsystem::OpenAssetInContentBrowser(RowItem->AssetData); })
+			];
 	}
 
 	if (InColumnName == TEXT("Note"))
 	{
-		// const FSlateColor Color = RowItem->Status == EGamedevHelperRenameStatus::OkToRename
-		// 	                          ? FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Green"))
-		// 	                          : FGamedevHelperEditorStyle::GetColor(TEXT("GamedevHelper.Color.Red"));
-
-		return SNew(STextBlock).Justification(ETextJustify::Center)
-		                       // .ColorAndOpacity(Color)
-		                       .Text(FText::FromString(RowItem->Note));
+		return
+			SNew(STextBlock)
+			.Justification(ETextJustify::Center)
+            .ColorAndOpacity(RowItem->NoteColor)
+            .Text(FText::FromString(RowItem->Note));
 	}
 
 	return SNew(STextBlock).Text(FText::FromString(TEXT("")));

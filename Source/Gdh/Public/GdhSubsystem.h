@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "AssetToolsModule.h"
+#include "ContentBrowserModule.h"
 #include "GdhTypes.h"
 #include "EditorSubsystem.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Widgets/Notifications/SNotificationList.h"
 #include "GdhSubsystem.generated.h"
 
 class UGdhAssetNamingConvention;
@@ -26,17 +28,71 @@ public:
 
 	/**
 	 * @brief Returns all assets in project (particularly Content folder)
-	 * @param Assets TArray<FAssetData>
+	 * @param OutAssets TArray<FAssetData>
 	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
-	static void GetAssetsAll(TArray<FAssetData>& Assets);
+	static void GetAssetsAll(TArray<FAssetData>& OutAssets);
 
+	/**
+	 * @brief Returns all asset in given path
+	 * @param InPath FString
+	 * @param bRecursive bool
+	 * @param OutAssets TArray<FAssetData>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static void GetAssetsByPath(const FString& InPath, const bool bRecursive, TArray<FAssetData>& OutAssets);
+
+	/**
+	 * @brief Returns asset by given object path
+	 * @param InPath FString
+	 * @return FAssetData
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static FAssetData GetAssetByObjectPath(const FString& InPath);
+
+	/**
+	 * @brief Returns all redirectors in project
+	 * @param Redirectors TArray<FAssetData>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static void GetProjectRedirectors(TArray<FAssetData>& Redirectors);
+
+	/**
+	 * @brief Checks if project contains any redirector asset
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static bool ProjectHasRedirectors();
+
+	/**
+	 * @brief Fixup given redirector assets
+	 * @param Redirectors TArray<FAssetData>
+	 * @param bShowSlowTask bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static void FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask = true);
+
+	/**
+	 * @brief Returns new asset name preview based on asset naming convention settings
+	 * @param InAssetData FAssetData
+	 * @return FString
+	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
 	static FString GetAssetRenamePreview(const FAssetData& InAssetData);
 
+	/**
+	 * @brief Returns asset naming info by given asset data
+	 * @param InAssetData FAssetData
+	 * @return FGdhAssetNamingInfo
+	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
 	static FGdhAssetNamingInfo GetAssetNamingInfoByAsset(const FAssetData& InAssetData);
 
+	/**
+	 * @brief Return asset naming info by given asset class
+	 * @param InAssetClass UClass*
+	 * @return FGdhAssetNamingInfo
+	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
 	static FGdhAssetNamingInfo GetAssetNamingInfoByAssetClass(const UClass* InAssetClass);
 
@@ -45,7 +101,7 @@ public:
 	 * @param InAssetData FAssetData
 	 * @return EGdhBlueprintType
 	 */
-	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
 	static EGdhBlueprintType GetBlueprintType(const FAssetData& InAssetData);
 
 
@@ -54,8 +110,22 @@ public:
 	 * @param InAssetData FAssetData
 	 * @return UClass*
 	 */
-	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Asset")
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
 	static UClass* GetBlueprintParentClass(const FAssetData& InAssetData);
+
+	/**
+	 * @brief Opens editor for given asset
+	 * @param InAssetData FAssetData
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static void OpenAssetEditor(const FAssetData& InAssetData);
+
+	/**
+	 * @brief Opens given asset in content browser
+	 * @param InAssetData FAssetData
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static void OpenAssetInContentBrowser(const FAssetData& InAssetData);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 
@@ -114,9 +184,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
 	static FString ConvertToSnakeCase(const FString& OriginalString);
 
+	static void ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
+	static void ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
+
 	static FAssetRegistryModule& GetModuleAssetRegistry();
 	static FPropertyEditorModule& GetModulePropertyEditor();
 	static FAssetToolsModule& GetModuleAssetTools();
+	static FContentBrowserModule& GetModuleContentBrowser();
 
 private:
 	/**

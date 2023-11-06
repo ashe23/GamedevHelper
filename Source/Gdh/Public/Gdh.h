@@ -16,6 +16,7 @@ namespace GdhConstants
 	static const FName ModuleAssetRegistry{TEXT("AssetRegistry")};
 	static const FName ModulePropertyEditor{TEXT("PropertyEditor")};
 	static const FName ModuleAssetTools{TEXT("AssetTools")};
+	static const FName ModuleContentBrowser{TEXT("ContentBrowser")};
 
 	// paths
 	static const FName PathRoot{TEXT("/Game")};

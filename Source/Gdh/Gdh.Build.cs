@@ -43,7 +43,8 @@ public class Gdh : ModuleRules
 				"PhysicsCore",
 				"UMG",
 				"IntroTutorials",
-				"AssetTools"
+				"AssetTools",
+				"ContentBrowser" 
 			}
 		);
 	}

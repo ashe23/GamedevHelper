@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GdhTypes.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FGdhSettingsChanged);
+
 UENUM(BlueprintType)
 enum class EGdhBlueprintType : uint8
 {
@@ -41,6 +43,9 @@ public:
 
 	UPROPERTY()
 	FString Note;
+
+	UPROPERTY()
+	FLinearColor NoteColor = FLinearColor::White;
 };
 
 USTRUCT(BlueprintType)

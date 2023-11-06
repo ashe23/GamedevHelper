@@ -20,10 +20,13 @@ public:
 private:
 	void UpdateListData();
 	void UpdateListView() const;
+	void OnSettingsChanged();
 
 	TSharedRef<SWidget> CreateToolbarMain() const;
 	TSharedRef<SHeaderRow> GetHeaderRow();
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhManagerAssetNamingItem> Item, const TSharedRef<STableViewBase>& OwnerTable) const;
+	void OnListRowMouseDoubleClick(TWeakObjectPtr<UGdhManagerAssetNamingItem> Item);
+	FText GetListSummaryTxt() const;
 
 	TSharedPtr<FUICommandList> Cmds;
 	TWeakObjectPtr<UGdhAssetScanSettings> ScanSettings;

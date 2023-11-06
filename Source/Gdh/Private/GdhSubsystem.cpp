@@ -2,8 +2,12 @@
 
 #include "GdhSubsystem.h"
 #include "Gdh.h"
-#include "Kismet/KismetStringLibrary.h"
 #include "Settings/GdhAssetNamingConvention.h"
+// Engine Headers
+#include "IContentBrowserSingleton.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Misc/ScopedSlowTask.h"
 
 void UGdhSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -24,13 +28,75 @@ void UGdhSubsystem::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 }
 #endif
 
-void UGdhSubsystem::GetAssetsAll(TArray<FAssetData>& Assets)
+void UGdhSubsystem::GetAssetsAll(TArray<FAssetData>& OutAssets)
 {
 	if (GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
 
-	Assets.Reset();
+	OutAssets.Reset();
 
-	GetModuleAssetRegistry().Get().GetAssetsByPath(GdhConstants::PathRoot, Assets, true);
+	GetModuleAssetRegistry().Get().GetAssetsByPath(GdhConstants::PathRoot, OutAssets, true);
+}
+
+void UGdhSubsystem::GetAssetsByPath(const FString& InPath, const bool bRecursive, TArray<FAssetData>& OutAssets)
+{
+	if (GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
+
+	OutAssets.Reset();
+
+	GetModuleAssetRegistry().Get().GetAssetsByPath(FName{*InPath}, OutAssets, bRecursive);
+}
+
+FAssetData UGdhSubsystem::GetAssetByObjectPath(const FString& InPath)
+{
+	if (GetModuleAssetRegistry().Get().IsLoadingAssets()) return {};
+
+	return GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*InPath});
+}
+
+void UGdhSubsystem::GetProjectRedirectors(TArray<FAssetData>& Redirectors)
+{
+	FARFilter Filter;
+	Filter.bRecursivePaths = true;
+	Filter.PackagePaths.Emplace(GdhConstants::PathRoot);
+	Filter.ClassNames.Emplace(UObjectRedirector::StaticClass()->GetFName());
+
+	Redirectors.Reset();
+	GetModuleAssetRegistry().Get().GetAssets(Filter, Redirectors);
+}
+
+bool UGdhSubsystem::ProjectHasRedirectors()
+{
+	TArray<FAssetData> Redirectors;
+	GetProjectRedirectors(Redirectors);
+
+	return Redirectors.Num() > 0;
+}
+
+void UGdhSubsystem::FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask)
+{
+	if (Redirectors.Num() == 0) return;
+
+	FScopedSlowTask SlowTask{
+		static_cast<float>(Redirectors.Num()),
+		FText::FromString(TEXT("Fixing redirectors...")),
+		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	};
+	SlowTask.MakeDialog(false, false);
+
+	TArray<UObjectRedirector*> RedirectorObjects;
+	RedirectorObjects.Reserve(Redirectors.Num());
+
+	for (const auto& Redirector : Redirectors)
+	{
+		SlowTask.EnterProgressFrame(1.0f, FText::FromString(Redirector.GetFullName()));
+
+		UObjectRedirector* RedirectorObject = CastChecked<UObjectRedirector>(Redirector.GetAsset());
+		if (!RedirectorObject) continue;
+
+		RedirectorObjects.Emplace(RedirectorObject);
+	}
+
+	GetModuleAssetTools().Get().FixupReferencers(RedirectorObjects, false);
 }
 
 FString UGdhSubsystem::GetAssetRenamePreview(const FAssetData& InAssetData)
@@ -55,53 +121,23 @@ FString UGdhSubsystem::GetAssetRenamePreview(const FAssetData& InAssetData)
 	{
 		const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
 		const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
-		
+
 		FinalName = FString::Printf(
-			TEXT("%s_%s_%s"),
-			*ConvertNamingCase(Prefix, NamingConvention->NamingCase),
+			TEXT("%s%s%s"),
+			Prefix.IsEmpty() ? TEXT("") : *(ConvertNamingCase(Prefix, NamingConvention->NamingCase) + TEXT("_")),
 			*ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, NamingConvention->NamingCase),
-			*ConvertNamingCase(Suffix, NamingConvention->NamingCase)
+			Suffix.IsEmpty() ? TEXT("") : *(TEXT("_") + ConvertNamingCase(Suffix, NamingConvention->NamingCase))
 		);
 	}
 	else
 	{
 		const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
 		const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
-		
+
 		FinalName = Prefix + ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, NamingConvention->NamingCase) + Suffix;
 	}
 
-	// const FString NewObjectPath = InAssetData.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *FinalName, *FinalName);
-
 	return FinalName;
-	// if old name and new name have same name => OK 
-	// if other asset with exactly same name exists in content browser => DuplicateNameContentBrowser
-	// if other preview with exactly same and path exists => DuplicateNamePreview
-	// else => OkToRename
-
-	// if (OldName.Equals(NewName, ESearchCase::CaseSensitive))
-	// {
-	// 	RenamePreview.SetStatus(EGamedevHelperRenameStatus::Ok);
-	// 	Previews.Add(RenamePreview);
-	// 	continue;
-	// }
-	//
-	// if (UEditorAssetLibrary::DoesAssetExist(NewObjectPath) && OldName.Equals(NewName, ESearchCase::CaseSensitive))
-	// {
-	// 	RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNameContentBrowser);
-	// 	Previews.Add(RenamePreview);
-	// 	continue;
-	// }
-	//
-	// if (OtherPreviewWithSameName)
-	// {
-	// 	OtherPreviewWithSameName->SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
-	// 	RenamePreview.SetStatus(EGamedevHelperRenameStatus::DuplicateNamePreview);
-	// 	Previews.Add(RenamePreview);
-	// 	continue;
-	// }
-	//
-	// RenamePreview.SetStatus(EGamedevHelperRenameStatus::OkToRename);
 }
 
 FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAsset(const FAssetData& InAssetData)
@@ -201,6 +237,25 @@ UClass* UGdhSubsystem::GetBlueprintParentClass(const FAssetData& InAssetData)
 	if (!BlueprintAsset) return nullptr;
 
 	return BlueprintAsset->ParentClass;
+}
+
+void UGdhSubsystem::OpenAssetEditor(const FAssetData& InAssetData)
+{
+	if (!InAssetData.IsValid()) return;
+	if (!GEditor) return;
+
+	TArray<FName> AssetNames;
+	AssetNames.Add(InAssetData.ToSoftObjectPath().GetAssetPathName());
+
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorsForAssets(AssetNames);
+}
+
+void UGdhSubsystem::OpenAssetInContentBrowser(const FAssetData& InAssetData)
+{
+	if (!InAssetData.IsValid()) return;
+
+	GetModuleContentBrowser().Get().FocusPrimaryContentBrowser(true);
+	GetModuleContentBrowser().Get().SyncBrowserToAssets(TArray<FAssetData>{InAssetData});
 }
 
 FString UGdhSubsystem::Normalize(const FString& OriginalString)
@@ -305,6 +360,8 @@ FString UGdhSubsystem::ConvertToPascalCase(const FString& OriginalString)
 	TArray<FString> CapitalizedParts;
 	CapitalizedParts.Reserve(Parts.Num());
 
+	// todo:ashe23 add reserved keywords check here
+
 	for (const auto& Part : Parts)
 	{
 		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
@@ -326,6 +383,8 @@ FString UGdhSubsystem::ConvertToPascalSnakeCase(const FString& OriginalString)
 	TArray<FString> CapitalizedParts;
 	CapitalizedParts.Reserve(Parts.Num());
 
+	// todo:ashe23 add reserved keywords check here
+
 	for (const auto& Part : Parts)
 	{
 		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
@@ -343,6 +402,35 @@ FString UGdhSubsystem::ConvertToSnakeCase(const FString& OriginalString)
 	return Tokenize(OriginalString);
 }
 
+void UGdhSubsystem::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)
+{
+	FNotificationInfo Info{FText::FromString(Msg)};
+	Info.Text = FText::FromString(Msg);
+	Info.ExpireDuration = Duration;
+
+	const auto NotificationPtr = FSlateNotificationManager::Get().AddNotification(Info);
+	if (!NotificationPtr.IsValid()) return;
+
+	NotificationPtr.Get()->SetCompletionState(State);
+}
+
+void UGdhSubsystem::ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)
+{
+	FNotificationInfo Info{FText::FromString(Msg)};
+	Info.Text = FText::FromString(Msg);
+	Info.ExpireDuration = Duration;
+	Info.Hyperlink = FSimpleDelegate::CreateLambda([]()
+	{
+		FGlobalTabmanager::Get()->TryInvokeTab(FName{TEXT("OutputLog")});
+	});
+	Info.HyperlinkText = FText::FromString(TEXT("Show OutputLog..."));
+
+	const auto NotificationPtr = FSlateNotificationManager::Get().AddNotification(Info);
+	if (!NotificationPtr.IsValid()) return;
+
+	NotificationPtr.Get()->SetCompletionState(State);
+}
+
 FAssetRegistryModule& UGdhSubsystem::GetModuleAssetRegistry()
 {
 	return FModuleManager::LoadModuleChecked<FAssetRegistryModule>(GdhConstants::ModuleAssetRegistry);
@@ -356,6 +444,11 @@ FPropertyEditorModule& UGdhSubsystem::GetModulePropertyEditor()
 FAssetToolsModule& UGdhSubsystem::GetModuleAssetTools()
 {
 	return FModuleManager::LoadModuleChecked<FAssetToolsModule>(GdhConstants::ModuleAssetTools);
+}
+
+FContentBrowserModule& UGdhSubsystem::GetModuleContentBrowser()
+{
+	return FModuleManager::LoadModuleChecked<FContentBrowserModule>(GdhConstants::ModuleContentBrowser);
 }
 
 FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName, const UGdhAssetNamingConvention* NamingConvention)

@@ -249,10 +249,20 @@ FText UGdhAssetNamingConvention::GetSectionText() const
 	return FText::FromString(TEXT("GamedevHelper"));
 }
 
+FGdhSettingsChanged& UGdhAssetNamingConvention::OnSettingsChanged()
+{
+	return DelegateSettingsChanged;
+}
+
 #if WITH_EDITOR
 void UGdhAssetNamingConvention::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (DelegateSettingsChanged.IsBound())
+	{
+		DelegateSettingsChanged.Broadcast();
+	}
 
 	SaveConfig();
 }

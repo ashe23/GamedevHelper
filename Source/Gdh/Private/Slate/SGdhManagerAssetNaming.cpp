@@ -16,6 +16,10 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 	ScanSettings = GetMutableDefault<UGdhAssetScanSettings>();
 	AssetNamingConvention = GetMutableDefault<UGdhAssetNamingConvention>();
 
+	if (!ScanSettings.IsValid() || !AssetNamingConvention.IsValid()) return;
+
+	ScanSettings->OnSettingsChanged().AddRaw(this, &SGdhManagerAssetNaming::OnSettingsChanged);
+
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
 	ViewArgs.bLockable = false;
@@ -29,7 +33,6 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 	const TSharedPtr<IDetailsView> SettingsProperty = UGdhSubsystem::GetModulePropertyEditor().CreateDetailView(ViewArgs);
 	SettingsProperty->SetObject(ScanSettings.Get());
 
-	ViewArgs.bAllowSearch = true;
 	ViewArgs.ViewIdentifier = "GdhAssetNamingConvention";
 	const TSharedPtr<IDetailsView> AssetNamingConventionProperty = UGdhSubsystem::GetModulePropertyEditor().CreateDetailView(ViewArgs);
 	AssetNamingConventionProperty->SetObject(AssetNamingConvention.Get());
@@ -48,10 +51,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 	Cmds->MapAction(
 		FGdhCommands::Get().Cmd_RenameAssets,
 		FUIAction(
-			FExecuteAction::CreateLambda([&]()
-			{
-				
-			})
+			FExecuteAction::CreateLambda([&]() { })
 		)
 	);
 	Cmds->MapAction(
@@ -138,7 +138,16 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 						.ListItemsSource(&ListItems)
 						.SelectionMode(ESelectionMode::Multi)
 						.OnGenerateRow(this, &SGdhManagerAssetNaming::OnGenerateRow)
+						.OnMouseButtonDoubleClick(this, &SGdhManagerAssetNaming::OnListRowMouseDoubleClick)
 						.HeaderRow(GetHeaderRow())
+					]
+				]
+				+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(3.0f, 0.0f, 0.0f, 0.0f)
+					[
+						SNew(STextBlock).Text_Raw(this, &SGdhManagerAssetNaming::GetListSummaryTxt)
 					]
 				]
 			]
@@ -149,26 +158,83 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 void SGdhManagerAssetNaming::UpdateListData()
 {
 	if (UGdhSubsystem::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
-	
-	// todo:ashe23 fixup redirectors
-	
+
+	TArray<FAssetData> Redirectors;
+	UGdhSubsystem::GetProjectRedirectors(Redirectors);
+
+	if (Redirectors.Num() > 0)
+	{
+		UGdhSubsystem::FixProjectRedirectors(Redirectors, true);
+	}
+
+	if (UGdhSubsystem::ProjectHasRedirectors())
+	{
+		UGdhSubsystem::ShowNotificationWithOutputLog(TEXT("Project contains redirectors that cant be fixed automatically. Please fix them manually and try again"), SNotificationItem::CS_Fail, 5.0f);
+		return;
+	}
+
 	TArray<FAssetData> AssetsAll;
-	UGdhSubsystem::GetAssetsAll(AssetsAll);
+
+	if (ScanSettings->ScanPath.Path.IsEmpty())
+	{
+		UGdhSubsystem::GetAssetsAll(AssetsAll);
+	}
+	else
+	{
+		UGdhSubsystem::GetAssetsByPath(ScanSettings->ScanPath.Path, ScanSettings->bScanRecursive, AssetsAll);
+	}
 
 	ListItems.Reset(AssetsAll.Num());
+
+	TMap<FName, TSet<FString>> RenamePreviews;
+	RenamePreviews.Reserve(AssetsAll.Num());
 
 	for (const auto& Asset : AssetsAll)
 	{
 		UGdhManagerAssetNamingItem* NewItem = NewObject<UGdhManagerAssetNamingItem>();
 		if (!NewItem) continue;
 
+		// todo:ashe23 refactor logic here
+		const FString AssetNameOriginal = Asset.AssetName.ToString();
+		const FString AssetNamePreview = UGdhSubsystem::GetAssetRenamePreview(Asset);
+		const FString AssetPreviewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *AssetNamePreview, *AssetNamePreview);
+		const FAssetData AssetData = UGdhSubsystem::GetAssetByObjectPath(AssetPreviewObjectPath);
+		TSet<FString>& AssetsInPath = RenamePreviews.FindOrAdd(Asset.PackagePath);
+
 		NewItem->AssetData = Asset;
-		NewItem->OldName = Asset.AssetName.ToString();
-		NewItem->NewName = UGdhSubsystem::GetAssetRenamePreview(Asset);
-		NewItem->Note = TEXT("Some Note");
+		NewItem->OldName = AssetNameOriginal;
+		NewItem->NewName = AssetNamePreview;
+
+		if (AssetNameOriginal.Equals(AssetNamePreview, ESearchCase::CaseSensitive))
+		{
+			continue;
+		}
+		
+		if (AssetData.IsValid())
+		{
+			NewItem->Note = TEXT("Asset with same name already exists at this path");
+			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
+		}
+		else if (AssetsInPath.Contains(AssetNamePreview))
+		{
+			NewItem->Note = TEXT("Asset with same name already exists in previews");
+			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
+		}
+		
+		AssetsInPath.Add(AssetNamePreview);
+
+		// if old name and new name have same name => OK 
+		// if other asset with exactly same name exists in content browser => DuplicateNameContentBrowser
+		// if other preview with exactly same and path exists => DuplicateNamePreview
+		// else => OkToRename
 
 		ListItems.Emplace(NewItem);
 	}
+	
+	RenamePreviews.Shrink();
+
+	UE_LOG(LogGdh, Warning, TEXT("Num: %d"), RenamePreviews.Num());
+
 }
 
 void SGdhManagerAssetNaming::UpdateListView() const
@@ -178,6 +244,12 @@ void SGdhManagerAssetNaming::UpdateListView() const
 	ListView->ClearHighlightedItems();
 	ListView->ClearSelection();
 	ListView->RequestListRefresh();
+}
+
+void SGdhManagerAssetNaming::OnSettingsChanged()
+{
+	UpdateListData();
+	UpdateListView();
 }
 
 TSharedRef<SWidget> SGdhManagerAssetNaming::CreateToolbarMain() const
@@ -263,4 +335,24 @@ TSharedRef<SHeaderRow> SGdhManagerAssetNaming::GetHeaderRow()
 TSharedRef<ITableRow> SGdhManagerAssetNaming::OnGenerateRow(TWeakObjectPtr<UGdhManagerAssetNamingItem> Item, const TSharedRef<STableViewBase>& OwnerTable) const
 {
 	return SNew(SGdhManagerAssetNamingItem, OwnerTable).RowItem(Item);
+}
+
+void SGdhManagerAssetNaming::OnListRowMouseDoubleClick(TWeakObjectPtr<UGdhManagerAssetNamingItem> Item)
+{
+	if (!Item.IsValid()) return;
+
+	UGdhSubsystem::OpenAssetEditor(Item->AssetData);
+}
+
+FText SGdhManagerAssetNaming::GetListSummaryTxt() const
+{
+	if (ListView.IsValid())
+	{
+		const auto& SelectedItems = ListView->GetSelectedItems();
+		if (SelectedItems.Num() > 0)
+		{
+			return FText::FromString(FString::Printf(TEXT("Total %d assets (Selected %d assets)"), ListItems.Num(), SelectedItems.Num()));
+		}
+	}
+	return FText::FromString(FString::Printf(TEXT("Total %d assets"), ListItems.Num()));
 }
