@@ -5,6 +5,7 @@
 #include "GdhStyles.h"
 #include "GdhSubsystem.h"
 #include "GdhTypes.h"
+#include "Misc/ScopedSlowTask.h"
 #include "Settings/GdhAssetScanSettings.h"
 #include "Settings/GdhAssetNamingConvention.h"
 #include "Slate/SGdhManagerAssetNamingItem.h"
@@ -51,7 +52,62 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 	Cmds->MapAction(
 		FGdhCommands::Get().Cmd_RenameAssets,
 		FUIAction(
-			FExecuteAction::CreateLambda([&]() { })
+			FExecuteAction::CreateLambda([&]()
+			{
+				if (ListItems.Num() == 0)
+				{
+					UGdhSubsystem::ShowNotification(TEXT("No Asset to Rename"), SNotificationItem::CS_Fail, 5.0f);
+					return;
+				}
+
+				const FText Title = FText::FromString(TEXT("Rename Assets"));
+				const FText Context = FText::FromString(TEXT("Are you sure you want to rename selected assets?"));
+
+				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+
+				FScopedSlowTask SlowTask(
+					ListItems.Num(),
+					FText::FromString("Renaming assets")
+				);
+				SlowTask.MakeDialog(true);
+
+				TArray<FAssetRenameData> RenameDatas;
+				RenameDatas.Reserve(ListItems.Num());
+
+				TArray<TWeakObjectPtr<UGdhManagerAssetNamingItem>> SelectedItems = ListView.IsValid() && ListView->GetSelectedItems().Num() > 0 ? ListView->GetSelectedItems() : ListItems;
+
+				for (const auto& Item : SelectedItems)
+				{
+					SlowTask.EnterProgressFrame(1.0f);
+
+					if (!Item.IsValid()) continue;
+
+					RenameDatas.Emplace(
+						FAssetRenameData{
+							Item->AssetData.GetAsset(),
+							Item->AssetData.PackagePath.ToString(),
+							Item->NewName
+						});
+				}
+
+				if (UGdhSubsystem::GetModuleAssetTools().Get().RenameAssets(RenameDatas))
+				{
+					UGdhSubsystem::ShowNotification(FString::Printf(TEXT("Renamed %d of %d assets"), ListItems.Num(), ListItems.Num()), SNotificationItem::CS_Success, 5.0f);
+
+					TArray<FAssetData> Redirectors;
+					UGdhSubsystem::GetProjectRedirectors(Redirectors);
+
+					UGdhSubsystem::FixProjectRedirectors(Redirectors, true);
+				}
+				else
+				{
+					UGdhSubsystem::ShowNotificationWithOutputLog(TEXT("Failed to rename some assets"), SNotificationItem::CS_Fail, 5.0f);
+				}
+
+				UpdateListData();
+				UpdateListView();
+			})
 		)
 	);
 	Cmds->MapAction(
@@ -194,9 +250,10 @@ void SGdhManagerAssetNaming::UpdateListData()
 		UGdhManagerAssetNamingItem* NewItem = NewObject<UGdhManagerAssetNamingItem>();
 		if (!NewItem) continue;
 
-		// todo:ashe23 refactor logic here
 		const FString AssetNameOriginal = Asset.AssetName.ToString();
 		const FString AssetNamePreview = UGdhSubsystem::GetAssetRenamePreview(Asset);
+		if (AssetNamePreview.IsEmpty()) continue;
+
 		const FString AssetPreviewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *AssetNamePreview, *AssetNamePreview);
 		const FAssetData AssetData = UGdhSubsystem::GetAssetByObjectPath(AssetPreviewObjectPath);
 		TSet<FString>& AssetsInPath = RenamePreviews.FindOrAdd(Asset.PackagePath);
@@ -207,20 +264,22 @@ void SGdhManagerAssetNaming::UpdateListData()
 
 		if (AssetNameOriginal.Equals(AssetNamePreview, ESearchCase::CaseSensitive))
 		{
+			AssetsInPath.Add(AssetNamePreview);
 			continue;
 		}
-		
-		if (AssetData.IsValid())
+
+		if (AssetData.IsValid() && AssetNameOriginal.Equals(AssetNamePreview, ESearchCase::CaseSensitive))
 		{
 			NewItem->Note = TEXT("Asset with same name already exists at this path");
 			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
 		}
-		else if (AssetsInPath.Contains(AssetNamePreview))
+
+		if (AssetsInPath.Contains(AssetNamePreview))
 		{
 			NewItem->Note = TEXT("Asset with same name already exists in previews");
 			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
 		}
-		
+
 		AssetsInPath.Add(AssetNamePreview);
 
 		// if old name and new name have same name => OK 
@@ -230,11 +289,6 @@ void SGdhManagerAssetNaming::UpdateListData()
 
 		ListItems.Emplace(NewItem);
 	}
-	
-	RenamePreviews.Shrink();
-
-	UE_LOG(LogGdh, Warning, TEXT("Num: %d"), RenamePreviews.Num());
-
 }
 
 void SGdhManagerAssetNaming::UpdateListView() const
