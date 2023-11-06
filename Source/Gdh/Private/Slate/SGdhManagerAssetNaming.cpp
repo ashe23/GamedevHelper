@@ -1,6 +1,8 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "Slate/SGdhManagerAssetNaming.h"
+
+#include "FileHelpers.h"
 #include "GdhCmds.h"
 #include "GdhStyles.h"
 #include "GdhSubsystem.h"
@@ -44,6 +46,26 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 		FUIAction(
 			FExecuteAction::CreateLambda([&]()
 			{
+				if (!FEditorFileUtils::SaveDirtyPackages(true, true, true, false, false, false))
+				{
+					UGdhSubsystem::ShowNotificationWithOutputLog(TEXT("Failed to scan assets, because not all assets have been saved."), SNotificationItem::CS_Fail, 5.0f);
+					return;
+				}
+
+				TArray<FAssetData> Redirectors;
+				UGdhSubsystem::GetProjectRedirectors(Redirectors);
+
+				if (Redirectors.Num() > 0)
+				{
+					UGdhSubsystem::FixProjectRedirectors(Redirectors, true);
+
+					if (UGdhSubsystem::ProjectHasRedirectors())
+					{
+						UGdhSubsystem::ShowNotificationWithOutputLog(TEXT("Project contains redirectors that cant be fixed automatically. Please fix them manually and try again"), SNotificationItem::CS_Fail, 5.0f);
+						return;
+					}
+				}
+
 				UpdateListData();
 				UpdateListView();
 			})
@@ -82,6 +104,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 					SlowTask.EnterProgressFrame(1.0f);
 
 					if (!Item.IsValid()) continue;
+					if (!Item->Note.IsEmpty()) continue;
 
 					RenameDatas.Emplace(
 						FAssetRenameData{
@@ -93,12 +116,11 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 
 				if (UGdhSubsystem::GetModuleAssetTools().Get().RenameAssets(RenameDatas))
 				{
-					UGdhSubsystem::ShowNotification(FString::Printf(TEXT("Renamed %d of %d assets"), ListItems.Num(), ListItems.Num()), SNotificationItem::CS_Success, 5.0f);
-
 					TArray<FAssetData> Redirectors;
 					UGdhSubsystem::GetProjectRedirectors(Redirectors);
-
 					UGdhSubsystem::FixProjectRedirectors(Redirectors, true);
+
+					UGdhSubsystem::ShowNotification(FString::Printf(TEXT("Renamed %d of %d assets"), ListItems.Num(), ListItems.Num()), SNotificationItem::CS_Success, 5.0f);
 				}
 				else
 				{
@@ -215,20 +237,6 @@ void SGdhManagerAssetNaming::UpdateListData()
 {
 	if (UGdhSubsystem::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
 
-	TArray<FAssetData> Redirectors;
-	UGdhSubsystem::GetProjectRedirectors(Redirectors);
-
-	if (Redirectors.Num() > 0)
-	{
-		UGdhSubsystem::FixProjectRedirectors(Redirectors, true);
-	}
-
-	if (UGdhSubsystem::ProjectHasRedirectors())
-	{
-		UGdhSubsystem::ShowNotificationWithOutputLog(TEXT("Project contains redirectors that cant be fixed automatically. Please fix them manually and try again"), SNotificationItem::CS_Fail, 5.0f);
-		return;
-	}
-
 	TArray<FAssetData> AssetsAll;
 
 	if (ScanSettings->ScanPath.Path.IsEmpty())
@@ -251,6 +259,7 @@ void SGdhManagerAssetNaming::UpdateListData()
 		if (!NewItem) continue;
 
 		const FString AssetNameOriginal = Asset.AssetName.ToString();
+		// todo:ashe23 if preview is empty then its missing current class is missing => show as note
 		const FString AssetNamePreview = UGdhSubsystem::GetAssetRenamePreview(Asset);
 		if (AssetNamePreview.IsEmpty()) continue;
 
@@ -280,11 +289,14 @@ void SGdhManagerAssetNaming::UpdateListData()
 			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
 		}
 
+		// todo:ashe23 add check for indirect assets, for them show separate ui where they used
+
 		AssetsInPath.Add(AssetNamePreview);
 
 		// if old name and new name have same name => OK 
 		// if other asset with exactly same name exists in content browser => DuplicateNameContentBrowser
 		// if other preview with exactly same and path exists => DuplicateNamePreview
+		// if asset used indirectly => Asset Has External usage
 		// else => OkToRename
 
 		ListItems.Emplace(NewItem);

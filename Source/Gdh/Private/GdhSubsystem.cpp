@@ -353,6 +353,9 @@ FString UGdhSubsystem::ConvertToPascalCase(const FString& OriginalString)
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
+	const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
+	if (!NamingConvention) return OriginalString;
+
 	const FString Tokenized = Tokenize(OriginalString);
 	TArray<FString> Parts;
 	Tokenized.ParseIntoArray(Parts, TEXT("_"));
@@ -360,13 +363,18 @@ FString UGdhSubsystem::ConvertToPascalCase(const FString& OriginalString)
 	TArray<FString> CapitalizedParts;
 	CapitalizedParts.Reserve(Parts.Num());
 
-	// todo:ashe23 add reserved keywords check here
-
 	for (const auto& Part : Parts)
 	{
-		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
-		CapitalizedParts.Add(FirstLetter + RestOfStr);
+		if (NamingConvention->ReservedKeywords.Contains(Part))
+		{
+			CapitalizedParts.Add(Part);
+		}
+		else
+		{
+			const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
+			const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+			CapitalizedParts.Add(FirstLetter + RestOfStr);
+		}
 	}
 
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
@@ -376,6 +384,9 @@ FString UGdhSubsystem::ConvertToPascalSnakeCase(const FString& OriginalString)
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
+	const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
+	if (!NamingConvention) return OriginalString;
+
 	const FString Tokenized = Tokenize(OriginalString);
 	TArray<FString> Parts;
 	Tokenized.ParseIntoArray(Parts, TEXT("_"));
@@ -383,13 +394,18 @@ FString UGdhSubsystem::ConvertToPascalSnakeCase(const FString& OriginalString)
 	TArray<FString> CapitalizedParts;
 	CapitalizedParts.Reserve(Parts.Num());
 
-	// todo:ashe23 add reserved keywords check here
-
 	for (const auto& Part : Parts)
 	{
-		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
-		CapitalizedParts.Add(FirstLetter + RestOfStr);
+		if (NamingConvention->ReservedKeywords.Contains(Part))
+		{
+			CapitalizedParts.Add(Part);
+		}
+		else
+		{
+			const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
+			const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+			CapitalizedParts.Add(FirstLetter + RestOfStr);
+		}
 	}
 
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT("_"));

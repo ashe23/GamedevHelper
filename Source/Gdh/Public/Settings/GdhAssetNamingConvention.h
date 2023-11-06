@@ -23,7 +23,7 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention", meta=(ToolTip="Keywords that must be never changed"))
+	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention", meta=(ToolTip="Keywords that must never be changed"))
 	TArray<FString> ReservedKeywords;
 
 	UPROPERTY(EditAnywhere, Config, Category="Asset Naming Convention")
