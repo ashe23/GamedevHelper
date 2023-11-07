@@ -20,10 +20,10 @@ public:
 private:
 	void UpdateListData();
 	void UpdateListView() const;
+	void UpdateListSort(const FName& ColumnName);
 	void OnSettingsChanged();
-
+	void OnListSort(EColumnSortPriority::Type SortPriority, const FName& ColumnName, EColumnSortMode::Type InSortMode);
 	int32 GetWidgetIndex() const;
-
 	TSharedRef<SWidget> CreateToolbarMain() const;
 	TSharedRef<SHeaderRow> GetHeaderRow();
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhManagerAssetNamingItem> Item, const TSharedRef<STableViewBase>& OwnerTable) const;
@@ -40,4 +40,7 @@ private:
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhManagerAssetNamingItem>>> ListView;
 	TArray<TWeakObjectPtr<UGdhManagerAssetNamingItem>> ListItems;
 	TSharedPtr<SComboButton> ListOptionsBtn;
+
+	EColumnSortMode::Type ColumnSortModeClass = EColumnSortMode::None;
+	EColumnSortMode::Type ColumnSortModePath = EColumnSortMode::None;
 };

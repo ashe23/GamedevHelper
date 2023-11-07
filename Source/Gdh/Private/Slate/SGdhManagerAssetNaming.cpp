@@ -69,6 +69,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 				}
 
 				UpdateListData();
+				UpdateListSort(TEXT("Preview"));
 				UpdateListView();
 			})
 		)
@@ -121,7 +122,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 					UGdhSubsystem::GetProjectRedirectors(Redirectors);
 					UGdhSubsystem::FixProjectRedirectors(Redirectors, true);
 
-					UGdhSubsystem::ShowNotification(FString::Printf(TEXT("Renamed %d of %d assets"), ListItems.Num(), ListItems.Num()), SNotificationItem::CS_Success, 5.0f);
+					UGdhSubsystem::ShowNotification(FString::Printf(TEXT("Renamed %d of %d assets"), SelectedItems.Num(), SelectedItems.Num()), SNotificationItem::CS_Success, 5.0f);
 				}
 				else
 				{
@@ -130,6 +131,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 
 				UpdateListData();
 				UpdateListView();
+				UpdateListSort(TEXT("Preview"));
 			}),
 			FCanExecuteAction::CreateLambda([&]()
 			{
@@ -153,6 +155,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 
 	UpdateListData();
 	UpdateListView();
+	UpdateListSort(TEXT("Preview"));
 
 	ChildSlot
 	[
@@ -334,13 +337,19 @@ void SGdhManagerAssetNaming::UpdateListData()
 		const FString AssetNameOriginal = Asset.AssetName.ToString();
 		const FString AssetNamePreview = UGdhSubsystem::GetAssetRenamePreview(Asset);
 		const FString AssetPreviewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *AssetNamePreview, *AssetNamePreview);
-		const FAssetData AssetData = UGdhSubsystem::GetAssetByObjectPath(AssetPreviewObjectPath);
-		const bool bShouldRenameAsset = !AssetNameOriginal.Equals(AssetNamePreview);
-		const bool bCanRenameAsset = !(AssetNamePreview.IsEmpty() || AssetsIndirect.Contains(Asset) || AssetData.IsValid() || AssetNamingConvention->AssetsIgnore.Contains(Asset.GetAsset()));
+		const FAssetData ExistingAssetData = UGdhSubsystem::GetAssetByObjectPath(AssetPreviewObjectPath);
 
-		if (!bShouldRenameAsset) continue;
+		// Determine if the asset should and can be renamed.
+		const bool ShouldRenameAsset = !AssetNameOriginal.Equals(AssetNamePreview);
+		const bool AssetNameIsNotEmpty = !AssetNamePreview.IsEmpty();
+		const bool AssetIsNotIndirectlyReferenced = !AssetsIndirect.Contains(Asset);
+		const bool AssetHasNoNamingConflict = !ExistingAssetData.IsValid() || Asset.ObjectPath.ToString().Equals(ExistingAssetData.ObjectPath.ToString());
+		const bool AssetIsNotIgnored = !AssetNamingConvention->AssetsIgnore.Contains(Asset.GetAsset());
+		const bool CanRenameAsset = AssetNameIsNotEmpty && AssetIsNotIndirectlyReferenced && AssetHasNoNamingConflict && AssetIsNotIgnored;
 
-		if (bShowUnconfiguredAssets != bCanRenameAsset)
+		if (!ShouldRenameAsset) continue;
+
+		if (bShowUnconfiguredAssets != CanRenameAsset)
 		{
 			NewItem->AssetData = Asset;
 			NewItem->OldName = AssetNameOriginal;
@@ -360,10 +369,48 @@ void SGdhManagerAssetNaming::UpdateListView() const
 	ListView->RequestListRefresh();
 }
 
+void SGdhManagerAssetNaming::UpdateListSort(const FName& ColumnName)
+{
+	if (!ListView.IsValid()) return;
+
+	auto SortListItems = [&](auto& SortMode, auto SortFunc)
+	{
+		SortMode = SortMode == EColumnSortMode::Ascending ? EColumnSortMode::Descending : EColumnSortMode::Ascending;
+
+		ListItems.Sort(SortFunc);
+	};
+
+	if (ColumnName.IsEqual(TEXT("Preview")) || ColumnName.IsEqual(TEXT("AssetClass")))
+	{
+		SortListItems(ColumnSortModeClass, [&](const TWeakObjectPtr<UGdhManagerAssetNamingItem>& Item1, const TWeakObjectPtr<UGdhManagerAssetNamingItem>& Item2)
+		{
+			return ColumnSortModeClass == EColumnSortMode::Ascending ? Item1->AssetData.GetClass()->GetName() < Item2->AssetData.GetClass()->GetName() : Item1->AssetData.GetClass()->GetName() > Item2->AssetData.GetClass()->GetName();
+		});
+	}
+
+	if (ColumnName.IsEqual(TEXT("Path")))
+	{
+		SortListItems(ColumnSortModeClass, [&](const TWeakObjectPtr<UGdhManagerAssetNamingItem>& Item1, const TWeakObjectPtr<UGdhManagerAssetNamingItem>& Item2)
+		{
+			return ColumnSortModeClass == EColumnSortMode::Ascending
+				       ? Item1->AssetData.ToSoftObjectPath().GetAssetPathString() < Item2->AssetData.ToSoftObjectPath().GetAssetPathString()
+				       : Item1->AssetData.ToSoftObjectPath().GetAssetPathString() > Item2->AssetData.ToSoftObjectPath().GetAssetPathString();
+		});
+	}
+
+	ListView->RebuildList();
+}
+
 void SGdhManagerAssetNaming::OnSettingsChanged()
 {
 	UpdateListData();
 	UpdateListView();
+	UpdateListSort(TEXT("Preview"));
+}
+
+void SGdhManagerAssetNaming::OnListSort(EColumnSortPriority::Type SortPriority, const FName& ColumnName, EColumnSortMode::Type InSortMode)
+{
+	UpdateListSort(ColumnName);
 }
 
 int32 SGdhManagerAssetNaming::GetWidgetIndex() const
@@ -398,6 +445,7 @@ TSharedRef<SHeaderRow> SGdhManagerAssetNaming::GetHeaderRow()
 		  .HeaderContentPadding(FMargin{10.0f})
 		  .FillWidth(0.1f)
 		  .FixedWidth(50.0f)
+		  .OnSort_Raw(this, &SGdhManagerAssetNaming::OnListSort)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(TEXT("#")))
@@ -410,6 +458,7 @@ TSharedRef<SHeaderRow> SGdhManagerAssetNaming::GetHeaderRow()
 		  .FillWidth(0.4f)
 		  .HeaderContentPadding(FMargin{5.0f})
 		  .FixedWidth(200.0f)
+		  .OnSort_Raw(this, &SGdhManagerAssetNaming::OnListSort)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(TEXT("Type")))
@@ -432,6 +481,7 @@ TSharedRef<SHeaderRow> SGdhManagerAssetNaming::GetHeaderRow()
 		  .VAlignHeader(VAlign_Center)
 		  .FillWidth(0.4f)
 		  .HeaderContentPadding(FMargin{5.0f})
+		  .OnSort_Raw(this, &SGdhManagerAssetNaming::OnListSort)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(TEXT("Path")))
@@ -491,6 +541,7 @@ TSharedRef<SWidget> SGdhManagerAssetNaming::GetListOptionsBtnContent()
 
 				UpdateListData();
 				UpdateListView();
+				UpdateListSort(TEXT("Preview"));
 			}),
 			FCanExecuteAction::CreateLambda([&]()
 			{
