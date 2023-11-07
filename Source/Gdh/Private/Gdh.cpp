@@ -5,6 +5,7 @@
 #include "GdhStyles.h"
 #include "LevelEditor.h"
 #include "Slate/SGdhManagerAssetNaming.h"
+#include "Slate/SGdhManagerWorldOutlinear.h"
 
 DEFINE_LOG_CATEGORY(LogGdh);
 
@@ -32,6 +33,14 @@ void FGdh::StartupModule()
 		})
 	);
 
+	Commands->MapAction(
+		FGdhCommands::Get().Cmd_OpenWorldOutlinearManager,
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabWorldOutlinearManager);
+		})
+	);
+
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 		                        GdhConstants::TabAssetNamingManager,
 		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
@@ -47,6 +56,23 @@ void FGdh::StartupModule()
 	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingManager"))
 	                        .SetDisplayName(FText::FromName(TEXT("Asset Naming Manager")))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        GdhConstants::TabWorldOutlinearManager,
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+		                        {
+			                        return
+				                        SNew(SDockTab)
+				                        .TabRole(MajorTab)
+				                        [
+					                        SNew(SGdhManagerWorldOutlinear)
+				                        ];
+		                        })
+	                        )
+	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.WorldOutlinearManager"))
+	                        .SetDisplayName(FText::FromName(TEXT("World Outlinear Manager")))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+
 
 	if (!IsRunningCommandlet())
 	{
@@ -90,6 +116,7 @@ void FGdh::ShutdownModule()
 	FGdhCommands::Unregister();
 
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabWorldOutlinearManager);
 
 	IModuleInterface::ShutdownModule();
 }

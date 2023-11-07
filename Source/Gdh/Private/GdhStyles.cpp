@@ -92,6 +92,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 
 	// tabs
 	Style->Set("GamedevHelper.Tab.AssetNamingManager", new IMAGE_BRUSH(TEXT("IconRename16"), FVector2D{16.0f, 16.0f}));
+	Style->Set("GamedevHelper.Tab.WorldOutlinearManager", new IMAGE_BRUSH(TEXT("IconStructure16"), FVector2D{16.0f, 16.0f}));
 
 	// icons
 	Style->Set("GamedevHelper.Icon.Arrow", new IMAGE_BRUSH(TEXT("IconArrow64"), FVector2D{16.0f, 16.0f}));
