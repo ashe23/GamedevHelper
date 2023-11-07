@@ -34,6 +34,15 @@ public:
 	static void GetAssetsAll(TArray<FAssetData>& OutAssets);
 
 	/**
+	 * @brief Returns list of indirectly used assets
+	 * @param OutAssets TArray<FAssetData>
+	 * @param AssetIndirectInfos TArray<FGdhAssetIndirectInfo>
+	 * @param bShowSlowTask bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	static void GetAssetsIndirect(TArray<FAssetData>& OutAssets, TArray<FGdhAssetIndirectInfo>& AssetIndirectInfos, const bool bShowSlowTask);
+
+	/**
 	 * @brief Returns all asset in given path
 	 * @param InPath FString
 	 * @param bRecursive bool
@@ -176,13 +185,41 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
 	static FString ConvertToPascalSnakeCase(const FString& OriginalString);
 
-	/**
-	 * @brief Converts string to snake_case
-	 * @param OriginalString FString
-	 * @return FString
-	 */
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
-	static FString ConvertToSnakeCase(const FString& OriginalString);
+	static FString PathNormalize(const FString& InPath);
+
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString PathConvertToObjectPath(const FString& InPath);
+
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString PathConvertToRelative(const FString& InPath);
+
+	/**
+	 * @brief Returns list of folders by given settings
+	 * @param InSearchPath FString
+	 * @param bSearchRecursive bool
+	 * @param OutFolders TArray<FString>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Fs")
+	static void GetFolders(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders);
+
+	/**
+	 * @brief Returns list of files by given extensions
+	 * @param InSearchPath FString
+	 * @param bSearchRecursive bool
+	 * @param bExtSearchInvert bool
+	 * @param InExtensions TSet<FString>
+	 * @param OutFiles TArray<FString>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Fs")
+	static void GetFilesByExt(const FString& InSearchPath, const bool bSearchRecursive, const bool bExtSearchInvert, const TSet<FString>& InExtensions, TArray<FString>& OutFiles);
+
+	/**
+	 * @brief Returns list of projects config and source files
+	 * @param OutFiles TSet<FString>
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Fs")
+	static void GetSourceAndConfigFiles(TSet<FString>& OutFiles);
 
 	static void ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
 	static void ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
@@ -196,8 +233,7 @@ private:
 	/**
 	 * @brief Removes old prefixes and suffixes from old asset name. Asset name must be normalized.
 	 * @param OldAssetName FString
-	 * @param NamingConvention UGamedevHelperAssetNamingConvention
 	 * @return FString
 	 */
-	static FString RemoveOldPrefixAndSuffix(const FString& OldAssetName, const UGdhAssetNamingConvention* NamingConvention);
+	static FString RemoveOldPrefixAndSuffix(const FString& OldAssetName);
 };

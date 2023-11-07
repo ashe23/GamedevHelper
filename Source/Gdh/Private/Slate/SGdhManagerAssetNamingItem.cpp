@@ -99,14 +99,5 @@ TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FN
 			];
 	}
 
-	if (InColumnName == TEXT("Note"))
-	{
-		return
-			SNew(STextBlock)
-			.Justification(ETextJustify::Center)
-            .ColorAndOpacity(RowItem->NoteColor)
-            .Text(FText::FromString(RowItem->Note));
-	}
-
 	return SNew(STextBlock).Text(FText::FromString(TEXT("")));
 }

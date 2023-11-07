@@ -6,7 +6,9 @@
 // Engine Headers
 #include "IContentBrowserSingleton.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "Internationalization/Regex.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
 
 void UGdhSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -35,6 +37,63 @@ void UGdhSubsystem::GetAssetsAll(TArray<FAssetData>& OutAssets)
 	OutAssets.Reset();
 
 	GetModuleAssetRegistry().Get().GetAssetsByPath(GdhConstants::PathRoot, OutAssets, true);
+}
+
+void UGdhSubsystem::GetAssetsIndirect(TArray<FAssetData>& OutAssets, TArray<FGdhAssetIndirectInfo>& AssetIndirectInfos, const bool bShowSlowTask)
+{
+	if (GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
+
+	OutAssets.Reset();
+	AssetIndirectInfos.Reset();
+
+	TSet<FString> ScanFiles;
+	GetSourceAndConfigFiles(ScanFiles);
+
+	FScopedSlowTask SlowTask{
+		static_cast<float>(ScanFiles.Num()),
+		FText::FromString(TEXT("Searching Indirectly used assets...")),
+		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	};
+	SlowTask.MakeDialog(false, false);
+
+	for (const auto& File : ScanFiles)
+	{
+		SlowTask.EnterProgressFrame(1.0f, FText::FromString(File));
+
+		FString FileContent;
+		FFileHelper::LoadFileToString(FileContent, *File);
+
+		if (FileContent.IsEmpty()) continue;
+
+		static FRegexPattern Pattern(TEXT(R"(\/Game([A-Za-z0-9_.\/]+)\b)"));
+		FRegexMatcher Matcher(Pattern, FileContent);
+		while (Matcher.FindNext())
+		{
+			FString FoundedAssetObjectPath = Matcher.GetCaptureGroup(0);
+
+			const FString ObjectPath = PathConvertToObjectPath(FoundedAssetObjectPath);
+			if (ObjectPath.IsEmpty()) continue;
+
+			const FAssetData AssetData = GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*ObjectPath});
+			if (!AssetData.IsValid()) continue;
+
+			// if founded asset is ok, we loading file lines to determine on what line its used
+			TArray<FString> Lines;
+			FFileHelper::LoadFileToStringArray(Lines, *File);
+
+			for (int32 i = 0; i < Lines.Num(); ++i)
+			{
+				if (!Lines.IsValidIndex(i)) continue;
+				if (!Lines[i].Contains(FoundedAssetObjectPath)) continue;
+
+				const FString FilePathAbs = FPaths::ConvertRelativePathToFull(File);
+				const int32 FileLine = i + 1;
+
+				AssetIndirectInfos.AddUnique(FGdhAssetIndirectInfo{AssetData, FilePathAbs, FileLine});
+				OutAssets.AddUnique(AssetData);
+			}
+		}
+	}
 }
 
 void UGdhSubsystem::GetAssetsByPath(const FString& InPath, const bool bRecursive, TArray<FAssetData>& OutAssets)
@@ -111,33 +170,11 @@ FString UGdhSubsystem::GetAssetRenamePreview(const FAssetData& InAssetData)
 
 	const FString OldName = InAssetData.AssetName.ToString();
 	const FString TokenizedName = Tokenize(OldName);
-	const FString BaseNameWithoutPrefixAndSuffix = RemoveOldPrefixAndSuffix(TokenizedName, NamingConvention);
-	// const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
-	// const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
+	const FString BaseNameWithoutPrefixAndSuffix = RemoveOldPrefixAndSuffix(TokenizedName);
+	const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
+	const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
 
-	FString FinalName;
-
-	if (NamingConvention->bApplyNamingCaseOnPrefixAndSuffix)
-	{
-		const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
-		const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
-
-		FinalName = FString::Printf(
-			TEXT("%s%s%s"),
-			Prefix.IsEmpty() ? TEXT("") : *(ConvertNamingCase(Prefix, NamingConvention->NamingCase) + TEXT("_")),
-			*ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, NamingConvention->NamingCase),
-			Suffix.IsEmpty() ? TEXT("") : *(TEXT("_") + ConvertNamingCase(Suffix, NamingConvention->NamingCase))
-		);
-	}
-	else
-	{
-		const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
-		const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
-
-		FinalName = Prefix + ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, NamingConvention->NamingCase) + Suffix;
-	}
-
-	return FinalName;
+	return Prefix + ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, NamingConvention->NamingCase) + Suffix;
 }
 
 FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAsset(const FAssetData& InAssetData)
@@ -154,17 +191,18 @@ FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAsset(const FAssetData& I
 
 	const UClass* ParentClass = GetBlueprintParentClass(InAssetData);
 	const UClass* SearchClass = ParentClass ? ParentClass : UBlueprint::StaticClass();
-	FGdhAssetNamingInfo NameFormat = GetAssetNamingInfoByAssetClass(SearchClass);
+	const EGdhBlueprintType BlueprintType = GetBlueprintType(InAssetData);
+	const FGdhAssetNamingInfo NamingInfo = GetAssetNamingInfoByAssetClass(SearchClass);
+	const FGdhAssetNamingInfo* BlueprintNamingInfo = NamingConvention->BlueprintPrefixes.Find(BlueprintType);
 
-	if (NameFormat.Prefix.IsEmpty())
+	if (NamingInfo.Prefix.IsEmpty() && BlueprintNamingInfo && BlueprintNamingInfo->Prefix.IsEmpty()) return {};
+	
+	if (BlueprintNamingInfo && (BlueprintType != EGdhBlueprintType::None && BlueprintType != EGdhBlueprintType::Normal))
 	{
-		const auto BlueprintType = GetBlueprintType(InAssetData);
-		const auto BlueprintTypePrefix = NamingConvention->BlueprintPrefixes.Find(BlueprintType);
-		const FString BlueprintPrefix = BlueprintTypePrefix ? *BlueprintTypePrefix->Prefix : TEXT("BP");
-		NameFormat.Prefix = BlueprintPrefix;
+		return FGdhAssetNamingInfo{BlueprintNamingInfo->Prefix, NamingInfo.Suffix};
 	}
 
-	return NameFormat;
+	return NamingInfo;
 }
 
 FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAssetClass(const UClass* InAssetClass)
@@ -336,11 +374,6 @@ FString UGdhSubsystem::ConvertNamingCase(const FString& OriginalString, const EG
 		return ConvertToPascalCase(OriginalString);
 	}
 
-	if (NamingCase == EGdhNamingCase::SnakeCase)
-	{
-		return ConvertToSnakeCase(OriginalString);
-	}
-
 	if (NamingCase == EGdhNamingCase::PascalSnakeCase)
 	{
 		return ConvertToPascalSnakeCase(OriginalString);
@@ -365,16 +398,9 @@ FString UGdhSubsystem::ConvertToPascalCase(const FString& OriginalString)
 
 	for (const auto& Part : Parts)
 	{
-		if (NamingConvention->ReservedKeywords.Contains(Part))
-		{
-			CapitalizedParts.Add(Part);
-		}
-		else
-		{
-			const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-			const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
-			CapitalizedParts.Add(FirstLetter + RestOfStr);
-		}
+		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
+		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+		CapitalizedParts.Add(FirstLetter + RestOfStr);
 	}
 
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
@@ -396,26 +422,230 @@ FString UGdhSubsystem::ConvertToPascalSnakeCase(const FString& OriginalString)
 
 	for (const auto& Part : Parts)
 	{
-		if (NamingConvention->ReservedKeywords.Contains(Part))
-		{
-			CapitalizedParts.Add(Part);
-		}
-		else
-		{
-			const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-			const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
-			CapitalizedParts.Add(FirstLetter + RestOfStr);
-		}
+		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
+		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+		CapitalizedParts.Add(FirstLetter + RestOfStr);
 	}
 
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT("_"));
 }
 
-FString UGdhSubsystem::ConvertToSnakeCase(const FString& OriginalString)
+FString UGdhSubsystem::PathNormalize(const FString& InPath)
 {
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (InPath.IsEmpty()) return {};
 
-	return Tokenize(OriginalString);
+	// Ensure the path dont starts with a slash or a disk drive letter
+	if (!(InPath.StartsWith(TEXT("/")) || InPath.StartsWith(TEXT("\\")) || (InPath.Len() > 2 && InPath[1] == ':')))
+	{
+		return {};
+	}
+
+	FString Path = FPaths::ConvertRelativePathToFull(InPath).TrimStartAndEnd();
+	FPaths::RemoveDuplicateSlashes(Path);
+
+	// Collapse any ".." or "." references in the path
+	FPaths::CollapseRelativeDirectories(Path);
+
+	if (FPaths::GetExtension(Path).IsEmpty())
+	{
+		FPaths::NormalizeDirectoryName(Path);
+	}
+	else
+	{
+		FPaths::NormalizeFilename(Path);
+	}
+
+	// Ensure the path does not end with a trailing slash
+	if (Path.EndsWith(TEXT("/")) || Path.EndsWith(TEXT("\\")))
+	{
+		Path = Path.LeftChop(1);
+	}
+
+	return Path;
+}
+
+FString UGdhSubsystem::PathConvertToObjectPath(const FString& InPath)
+{
+	if (FPaths::FileExists(InPath))
+	{
+		const FString FileName = FPaths::GetBaseFilename(InPath);
+		const FString AssetPath = PathConvertToRelative(FPaths::GetPath(InPath));
+
+		return FString::Printf(TEXT("%s/%s.%s"), *AssetPath, *FileName, *FileName);
+	}
+
+	FString ObjectPath = FPackageName::ExportTextPathToObjectPath(InPath);
+	ObjectPath.RemoveFromEnd(TEXT("_C")); // we should remove _C prefix if its blueprint asset
+
+	if (!ObjectPath.StartsWith(GdhConstants::PathRoot.ToString())) return {};
+
+	TArray<FString> Parts;
+	ObjectPath.ParseIntoArray(Parts, TEXT("/"), true);
+
+	if (Parts.Num() > 0)
+	{
+		FString Left;
+		FString Right;
+		Parts.Last().Split(TEXT("."), &Left, &Right);
+
+		if (!Left.IsEmpty() && !Right.IsEmpty() && Left.Equals(*Right))
+		{
+			return ObjectPath;
+		}
+	}
+
+	return {};
+}
+
+FString UGdhSubsystem::PathConvertToRelative(const FString& InPath)
+{
+	const FString PathNormalized = PathNormalize(InPath);
+	const FString PathProjectContent = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()).LeftChop(1);
+
+	if (PathNormalized.IsEmpty()) return {};
+	if (PathNormalized.StartsWith(GdhConstants::PathRoot.ToString())) return PathNormalized;
+	if (PathNormalized.StartsWith(PathProjectContent))
+	{
+		FString Path = PathNormalized;
+		Path.RemoveFromStart(PathProjectContent);
+
+		return Path.IsEmpty() ? GdhConstants::PathRoot.ToString() : GdhConstants::PathRoot.ToString() / Path;
+	}
+
+	return {};
+}
+
+void UGdhSubsystem::GetFolders(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders)
+{
+	OutFolders.Empty();
+
+	struct FFindFoldersVisitor : IPlatformFile::FDirectoryVisitor
+	{
+		TArray<FString>& Folders;
+
+		explicit FFindFoldersVisitor(TArray<FString>& InFolders) : Folders(InFolders) { }
+
+		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
+		{
+			if (bIsDirectory)
+			{
+				Folders.Emplace(FPaths::ConvertRelativePathToFull(FilenameOrDirectory));
+			}
+
+			return true;
+		}
+	};
+
+	FFindFoldersVisitor FindFoldersVisitor{OutFolders};
+	if (bSearchRecursive)
+	{
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(*InSearchPath, FindFoldersVisitor);
+	}
+	else
+	{
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*InSearchPath, FindFoldersVisitor);
+	}
+}
+
+void UGdhSubsystem::GetFilesByExt(const FString& InSearchPath, const bool bSearchRecursive, const bool bExtSearchInvert, const TSet<FString>& InExtensions, TArray<FString>& OutFiles)
+{
+	OutFiles.Empty();
+
+	struct FFindFilesVisitor : IPlatformFile::FDirectoryVisitor
+	{
+		const bool bSearchInvert;
+		TArray<FString>& Files;
+		const TSet<FString>& Extensions;
+
+		explicit FFindFilesVisitor(const bool bInSearchInvert, TArray<FString>& InFiles, const TSet<FString>& InExtensions)
+			: bSearchInvert(bInSearchInvert),
+			  Files(InFiles),
+			  Extensions(InExtensions) { }
+
+		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
+		{
+			if (!bIsDirectory)
+			{
+				const FString FullPath = FPaths::ConvertRelativePathToFull(FilenameOrDirectory);
+
+				if (Extensions.Num() == 0)
+				{
+					Files.Emplace(FullPath);
+					return true;
+				}
+
+				const FString Ext = FPaths::GetExtension(FullPath, false);
+				const bool bExistsInSearchList = Extensions.Contains(Ext);
+
+				if (
+					bExistsInSearchList && !bSearchInvert ||
+					!bExistsInSearchList && bSearchInvert
+				)
+				{
+					Files.Emplace(FullPath);
+				}
+			}
+
+			return true;
+		}
+	};
+
+	TSet<FString> ExtensionsNormalized;
+	ExtensionsNormalized.Reserve(InExtensions.Num());
+
+	for (const auto& Ext : InExtensions)
+	{
+		const FString ExtNormalized = Ext.Replace(TEXT("."), TEXT(""));
+		ExtensionsNormalized.Emplace(ExtNormalized);
+	}
+
+	FFindFilesVisitor FindFilesVisitor{bExtSearchInvert, OutFiles, ExtensionsNormalized};
+	if (bSearchRecursive)
+	{
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(*InSearchPath, FindFilesVisitor);
+	}
+	else
+	{
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*InSearchPath, FindFilesVisitor);
+	}
+}
+
+void UGdhSubsystem::GetSourceAndConfigFiles(TSet<FString>& OutFiles)
+{
+	const FString DirSrc = FPaths::ConvertRelativePathToFull(FPaths::GameSourceDir());
+	const FString DirCfg = FPaths::ConvertRelativePathToFull(FPaths::ProjectConfigDir());
+	const FString DirPlg = FPaths::ConvertRelativePathToFull(FPaths::ProjectPluginsDir());
+
+	TArray<FString> SourceFiles;
+	TArray<FString> ConfigFiles;
+
+	GetFilesByExt(DirSrc, true, false, GdhConstants::SourceFileExtensions, SourceFiles);
+	GetFilesByExt(DirCfg, true, false, GdhConstants::ConfigFileExtensions, ConfigFiles);
+
+	TArray<FString> InstalledPlugins;
+	GetFolders(DirPlg, false, InstalledPlugins);
+
+	const FString ProjectCleanerPluginPath = DirPlg / GdhConstants::ModuleName.ToString();
+	TArray<FString> PluginFiles;
+	for (const auto& InstalledPlugin : InstalledPlugins)
+	{
+		// ignore ProjectCleaner plugin
+		if (InstalledPlugin.Equals(ProjectCleanerPluginPath)) continue;
+
+		GetFilesByExt(InstalledPlugin / TEXT("Source"), true, false, GdhConstants::SourceFileExtensions, PluginFiles);
+		SourceFiles.Append(PluginFiles);
+
+		PluginFiles.Reset();
+
+		GetFilesByExt(InstalledPlugin / TEXT("Config"), true, false, GdhConstants::ConfigFileExtensions, PluginFiles);
+		ConfigFiles.Append(PluginFiles);
+
+		PluginFiles.Reset();
+	}
+
+	OutFiles.Reset();
+	OutFiles.Append(SourceFiles);
+	OutFiles.Append(ConfigFiles);
 }
 
 void UGdhSubsystem::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)
@@ -467,10 +697,9 @@ FContentBrowserModule& UGdhSubsystem::GetModuleContentBrowser()
 	return FModuleManager::LoadModuleChecked<FContentBrowserModule>(GdhConstants::ModuleContentBrowser);
 }
 
-FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName, const UGdhAssetNamingConvention* NamingConvention)
+FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName)
 {
 	if (OldAssetName.IsEmpty()) return OldAssetName;
-	if (!NamingConvention) return OldAssetName;
 
 	const auto NamingManagerSettings = GetDefault<UGdhAssetNamingConvention>();
 	if (!NamingManagerSettings)
@@ -495,7 +724,7 @@ FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName, con
 		BaseName.RemoveFromEnd(TEXT("_") + OldSuffix);
 	}
 
-	for (const auto& Naming : NamingConvention->Mappings)
+	for (const auto& Naming : NamingManagerSettings->Mappings)
 	{
 		if (Naming.Key)
 		{
@@ -508,6 +737,19 @@ FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName, con
 			{
 				BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
 			}
+		}
+	}
+
+	for (const auto& Naming : NamingManagerSettings->BlueprintPrefixes)
+	{
+		if (!Naming.Value.Prefix.IsEmpty())
+		{
+			BaseName.RemoveFromStart(Naming.Value.Prefix + TEXT("_"));
+		}
+
+		if (!Naming.Value.Suffix.IsEmpty())
+		{
+			BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
 		}
 	}
 

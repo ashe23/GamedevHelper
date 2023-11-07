@@ -24,7 +24,14 @@ namespace GdhConstants
 	// tabs
 	static const FName TabAssetNamingManager{TEXT("TabGdhAssetNamingManager")};
 
-	template <typename EnumType> static EnumType GetEnumValueFromString(const FString& String)
+	// misc
+	static const TSet<FString> SourceFileExtensions{TEXT("cpp"), TEXT("h"), TEXT("cs")};
+	static const TSet<FString> ConfigFileExtensions{TEXT("ini")};
+	static constexpr int32 WidgetIndexIdle = 0;
+	static constexpr int32 WidgetIndexWorking = 1;
+
+	template <typename EnumType>
+	static EnumType GetEnumValueFromString(const FString& String)
 	{
 		return static_cast<EnumType>(StaticEnum<EnumType>()->GetValueByName(FName(*String)));
 	}

@@ -13,6 +13,7 @@
 #include "Slate/SGdhManagerAssetNamingItem.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
 
 void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 {
@@ -22,6 +23,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 	if (!ScanSettings.IsValid() || !AssetNamingConvention.IsValid()) return;
 
 	ScanSettings->OnSettingsChanged().AddRaw(this, &SGdhManagerAssetNaming::OnSettingsChanged);
+	AssetNamingConvention->OnSettingsChanged().AddRaw(this, &SGdhManagerAssetNaming::OnSettingsChanged);
 
 	FDetailsViewArgs ViewArgs;
 	ViewArgs.bUpdatesFromSelection = false;
@@ -92,7 +94,7 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 					ListItems.Num(),
 					FText::FromString("Renaming assets")
 				);
-				SlowTask.MakeDialog(true);
+				SlowTask.MakeDialog(false, false);
 
 				TArray<FAssetRenameData> RenameDatas;
 				RenameDatas.Reserve(ListItems.Num());
@@ -104,7 +106,6 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 					SlowTask.EnterProgressFrame(1.0f);
 
 					if (!Item.IsValid()) continue;
-					if (!Item->Note.IsEmpty()) continue;
 
 					RenameDatas.Emplace(
 						FAssetRenameData{
@@ -129,6 +130,10 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 
 				UpdateListData();
 				UpdateListView();
+			}),
+			FCanExecuteAction::CreateLambda([&]()
+			{
+				return ListItems.Num() > 0 && !bShowUnconfiguredAssets;
 			})
 		)
 	);
@@ -206,26 +211,76 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 				]
 				+ SVerticalBox::Slot().FillHeight(1.0f).Padding(3.0f)
 				[
-					SNew(SScrollBox)
-					.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
-					.AnimateWheelScrolling(true)
-					.AllowOverscroll(EAllowOverscroll::No)
-					+ SScrollBox::Slot()
+					SNew(SWidgetSwitcher)
+					.WidgetIndex_Raw(this, &SGdhManagerAssetNaming::GetWidgetIndex)
+					+ SWidgetSwitcher::Slot()
 					[
-						SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhManagerAssetNamingItem>>)
-						.ListItemsSource(&ListItems)
-						.SelectionMode(ESelectionMode::Multi)
-						.OnGenerateRow(this, &SGdhManagerAssetNaming::OnGenerateRow)
-						.OnMouseButtonDoubleClick(this, &SGdhManagerAssetNaming::OnListRowMouseDoubleClick)
-						.HeaderRow(GetHeaderRow())
+						SNew(SScrollBox)
+						.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+						.AnimateWheelScrolling(true)
+						.AllowOverscroll(EAllowOverscroll::No)
+						+ SScrollBox::Slot()
+						[
+							SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhManagerAssetNamingItem>>)
+							.ListItemsSource(&ListItems)
+							.SelectionMode(ESelectionMode::Multi)
+							.OnGenerateRow(this, &SGdhManagerAssetNaming::OnGenerateRow)
+							.OnMouseButtonDoubleClick(this, &SGdhManagerAssetNaming::OnListRowMouseDoubleClick)
+							.HeaderRow(GetHeaderRow())
+						]
+					]
+					+ SWidgetSwitcher::Slot()
+					[
+						SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Right).VAlign(VAlign_Center)
+						[
+							SNew(SBox).WidthOverride(32.0f).HeightOverride(32.0f)
+							[
+								SNew(SImage).Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Check").GetIcon())
+							]
+						]
+						+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(FMargin{5.0f, 2.0f, 0.0f, 0.0f}).HAlign(HAlign_Left).VAlign(VAlign_Center)
+						[
+							SNew(STextBlock)
+							.Justification(ETextJustify::Center)
+							.ShadowOffset(FVector2D{1.5f, 1.5f})
+							.ShadowColorAndOpacity(FLinearColor::Black)
+							.Font(FGdhStyles::GetFont("Bold", 18))
+							.Text(FText::FromString(TEXT("No assets to rename")))
+							.ColorAndOpacity(FGdhStyles::Get().GetColor("GamedevHelper.Color.Grey"))
+						]
 					]
 				]
 				+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
 				[
 					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(3.0f, 0.0f, 0.0f, 0.0f)
+					+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Left).VAlign(VAlign_Center)
 					[
 						SNew(STextBlock).Text_Raw(this, &SGdhManagerAssetNaming::GetListSummaryTxt)
+					]
+					+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Center).VAlign(VAlign_Center)
+					[
+						SNew(STextBlock).Text_Raw(this, &SGdhManagerAssetNaming::GetListSelectionTxt)
+					]
+					+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Right).VAlign(VAlign_Center)
+					[
+						SNew(SComboButton)
+						.ContentPadding(0)
+						.ForegroundColor_Raw(this, &SGdhManagerAssetNaming::GetListOptionsBtnForegroundColor)
+						.ButtonStyle(FEditorStyle::Get(), "ToggleButton")
+						.OnGetMenuContent(this, &SGdhManagerAssetNaming::GetListOptionsBtnContent)
+						.ButtonContent()
+						[
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+							[
+								SNew(SImage).Image(FEditorStyle::GetBrush("GenericViewButton"))
+							]
+							+ SHorizontalBox::Slot().AutoWidth().Padding(2.0f, 0.0f, 0.0f, 0.0f).VAlign(VAlign_Center)
+							[
+								SNew(STextBlock).Text(FText::FromString(TEXT("View Options")))
+							]
+						]
 					]
 				]
 			]
@@ -236,6 +291,13 @@ void SGdhManagerAssetNaming::Construct(const FArguments& InArgs)
 void SGdhManagerAssetNaming::UpdateListData()
 {
 	if (UGdhSubsystem::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
+
+	FScopedSlowTask SlowTask(
+		2.0f,
+		FText::FromString("Scanning assets")
+	);
+	SlowTask.MakeDialog(false, false);
+	SlowTask.EnterProgressFrame(1.0f);
 
 	TArray<FAssetData> AssetsAll;
 
@@ -248,58 +310,44 @@ void SGdhManagerAssetNaming::UpdateListData()
 		UGdhSubsystem::GetAssetsByPath(ScanSettings->ScanPath.Path, ScanSettings->bScanRecursive, AssetsAll);
 	}
 
+	TArray<FAssetData> AssetsIndirect;
+	TArray<FGdhAssetIndirectInfo> AssetIndirectInfos;
+	UGdhSubsystem::GetAssetsIndirect(AssetsIndirect, AssetIndirectInfos, true);
+
 	ListItems.Reset(AssetsAll.Num());
 
-	TMap<FName, TSet<FString>> RenamePreviews;
-	RenamePreviews.Reserve(AssetsAll.Num());
+	SlowTask.EnterProgressFrame(1.0f);
+
+	FScopedSlowTask SlowTaskAssets(
+		AssetsAll.Num(),
+		FText::FromString("")
+	);
+	SlowTaskAssets.MakeDialog(false, false);
 
 	for (const auto& Asset : AssetsAll)
 	{
+		SlowTaskAssets.EnterProgressFrame(1.0f);
+
 		UGdhManagerAssetNamingItem* NewItem = NewObject<UGdhManagerAssetNamingItem>();
 		if (!NewItem) continue;
 
 		const FString AssetNameOriginal = Asset.AssetName.ToString();
-		// todo:ashe23 if preview is empty then its missing current class is missing => show as note
 		const FString AssetNamePreview = UGdhSubsystem::GetAssetRenamePreview(Asset);
-		if (AssetNamePreview.IsEmpty()) continue;
-
 		const FString AssetPreviewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *AssetNamePreview, *AssetNamePreview);
 		const FAssetData AssetData = UGdhSubsystem::GetAssetByObjectPath(AssetPreviewObjectPath);
-		TSet<FString>& AssetsInPath = RenamePreviews.FindOrAdd(Asset.PackagePath);
+		const bool bShouldRenameAsset = !AssetNameOriginal.Equals(AssetNamePreview);
+		const bool bCanRenameAsset = !(AssetNamePreview.IsEmpty() || AssetsIndirect.Contains(Asset) || AssetData.IsValid() || AssetNamingConvention->AssetsIgnore.Contains(Asset.GetAsset()));
 
-		NewItem->AssetData = Asset;
-		NewItem->OldName = AssetNameOriginal;
-		NewItem->NewName = AssetNamePreview;
+		if (!bShouldRenameAsset) continue;
 
-		if (AssetNameOriginal.Equals(AssetNamePreview, ESearchCase::CaseSensitive))
+		if (bShowUnconfiguredAssets != bCanRenameAsset)
 		{
-			AssetsInPath.Add(AssetNamePreview);
-			continue;
+			NewItem->AssetData = Asset;
+			NewItem->OldName = AssetNameOriginal;
+			NewItem->NewName = AssetNamePreview;
+
+			ListItems.Emplace(NewItem);
 		}
-
-		if (AssetData.IsValid() && AssetNameOriginal.Equals(AssetNamePreview, ESearchCase::CaseSensitive))
-		{
-			NewItem->Note = TEXT("Asset with same name already exists at this path");
-			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
-		}
-
-		if (AssetsInPath.Contains(AssetNamePreview))
-		{
-			NewItem->Note = TEXT("Asset with same name already exists in previews");
-			NewItem->NoteColor = FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Red")).GetSpecifiedColor();
-		}
-
-		// todo:ashe23 add check for indirect assets, for them show separate ui where they used
-
-		AssetsInPath.Add(AssetNamePreview);
-
-		// if old name and new name have same name => OK 
-		// if other asset with exactly same name exists in content browser => DuplicateNameContentBrowser
-		// if other preview with exactly same and path exists => DuplicateNamePreview
-		// if asset used indirectly => Asset Has External usage
-		// else => OkToRename
-
-		ListItems.Emplace(NewItem);
 	}
 }
 
@@ -316,6 +364,11 @@ void SGdhManagerAssetNaming::OnSettingsChanged()
 {
 	UpdateListData();
 	UpdateListView();
+}
+
+int32 SGdhManagerAssetNaming::GetWidgetIndex() const
+{
+	return ListItems.Num() == 0 ? GdhConstants::WidgetIndexWorking : GdhConstants::WidgetIndexIdle;
 }
 
 TSharedRef<SWidget> SGdhManagerAssetNaming::CreateToolbarMain() const
@@ -377,22 +430,11 @@ TSharedRef<SHeaderRow> SGdhManagerAssetNaming::GetHeaderRow()
 		+ SHeaderRow::Column(TEXT("Path"))
 		  .HAlignHeader(HAlign_Center)
 		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.3f)
+		  .FillWidth(0.4f)
 		  .HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(TEXT("Path")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-		]
-		+ SHeaderRow::Column(TEXT("Note"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.3f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Note")))
 			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		];
@@ -412,13 +454,56 @@ void SGdhManagerAssetNaming::OnListRowMouseDoubleClick(TWeakObjectPtr<UGdhManage
 
 FText SGdhManagerAssetNaming::GetListSummaryTxt() const
 {
-	if (ListView.IsValid())
-	{
-		const auto& SelectedItems = ListView->GetSelectedItems();
-		if (SelectedItems.Num() > 0)
-		{
-			return FText::FromString(FString::Printf(TEXT("Total %d assets (Selected %d assets)"), ListItems.Num(), SelectedItems.Num()));
-		}
-	}
 	return FText::FromString(FString::Printf(TEXT("Total %d assets"), ListItems.Num()));
+}
+
+FText SGdhManagerAssetNaming::GetListSelectionTxt() const
+{
+	if (!ListView.IsValid()) return {};
+
+	return FText::FromString(FString::Printf(TEXT("Selected %d"), ListView->GetSelectedItems().Num()));
+}
+
+FSlateColor SGdhManagerAssetNaming::GetListOptionsBtnForegroundColor() const
+{
+	static const FName InvertedForegroundName("InvertedForeground");
+	static const FName DefaultForegroundName("DefaultForeground");
+
+	if (!ListOptionsBtn.IsValid()) return FEditorStyle::GetSlateColor(DefaultForegroundName);
+
+	return ListOptionsBtn->IsHovered() ? FEditorStyle::GetSlateColor(InvertedForegroundName) : FEditorStyle::GetSlateColor(DefaultForegroundName);
+}
+
+TSharedRef<SWidget> SGdhManagerAssetNaming::GetListOptionsBtnContent()
+{
+	const TSharedPtr<FExtender> Extender;
+	FMenuBuilder MenuBuilder(true, Cmds, Extender, true);
+
+	MenuBuilder.AddMenuEntry(
+		FText::FromString(TEXT("Show Unconfigured Assets")),
+		FText::FromString(TEXT("Show assets that dont have naming settings specified")),
+		FSlateIcon(),
+		FUIAction
+		(
+			FExecuteAction::CreateLambda([&]
+			{
+				bShowUnconfiguredAssets = !bShowUnconfiguredAssets;
+
+				UpdateListData();
+				UpdateListView();
+			}),
+			FCanExecuteAction::CreateLambda([&]()
+			{
+				return true;
+			}),
+			FGetActionCheckState::CreateLambda([&]()
+			{
+				return bShowUnconfiguredAssets ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+		),
+		NAME_None,
+		EUserInterfaceActionType::ToggleButton
+	);
+
+	return MenuBuilder.MakeWidget();
 }

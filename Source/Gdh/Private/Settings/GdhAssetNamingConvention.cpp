@@ -121,7 +121,7 @@ UGdhAssetNamingConvention::UGdhAssetNamingConvention()
 	BlueprintPrefixes.Add(EGdhBlueprintType::MacroLibrary, FGdhAssetNamingInfo{TEXT("BPML")});
 
 	// Level/Maps
-	Mappings.Add(UWorld::StaticClass(), FGdhAssetNamingInfo{TEXT("LVL")});
+	// Mappings.Add(UWorld::StaticClass(), FGdhAssetNamingInfo{TEXT("LVL")});
 
 	// blueprints
 	Mappings.Add(UBlueprint::StaticClass(), FGdhAssetNamingInfo{TEXT("BP")});
@@ -133,8 +133,8 @@ UGdhAssetNamingConvention::UGdhAssetNamingConvention()
 	Mappings.Add(AGameModeBase::StaticClass(), FGdhAssetNamingInfo{TEXT("BP"), TEXT("GM")});
 	Mappings.Add(UWidgetBlueprint::StaticClass(), FGdhAssetNamingInfo{TEXT("BPW")});
 	Mappings.Add(UEditorTutorial::StaticClass(), FGdhAssetNamingInfo{TEXT("BP"), TEXT("Tut")});
-	Mappings.Add(UEditorUtilityBlueprint::StaticClass(), FGdhAssetNamingInfo{TEXT("BP"), TEXT("EUB")});
-	Mappings.Add(UEditorUtilityWidgetBlueprint::StaticClass(), FGdhAssetNamingInfo{TEXT("BP"), TEXT("EUW")});
+	Mappings.Add(UEditorUtilityBlueprint::StaticClass(), FGdhAssetNamingInfo{TEXT("EUB"), TEXT("")});
+	Mappings.Add(UEditorUtilityWidgetBlueprint::StaticClass(), FGdhAssetNamingInfo{TEXT("EUW"), TEXT("")});
 
 	// animations
 	Mappings.Add(UAnimSequence::StaticClass(), FGdhAssetNamingInfo{TEXT("AN")});
@@ -259,9 +259,13 @@ void UGdhAssetNamingConvention::PostEditChangeProperty(FPropertyChangedEvent& Pr
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	if (DelegateSettingsChanged.IsBound())
+	const FName PropName = PropertyChangedEvent.GetPropertyName();
+	if (PropName.IsEqual(TEXT("NamingCase")))
 	{
-		DelegateSettingsChanged.Broadcast();
+		if (DelegateSettingsChanged.IsBound())
+		{
+			DelegateSettingsChanged.Broadcast();
+		}
 	}
 
 	SaveConfig();

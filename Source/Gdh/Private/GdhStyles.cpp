@@ -96,6 +96,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	// icons
 	Style->Set("GamedevHelper.Icon.Arrow", new IMAGE_BRUSH(TEXT("IconArrow64"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Icon.Bg", new IMAGE_BRUSH(TEXT("IconBg16"), FVector2D{16.0f, 16.0f}));
+	Style->Set("GamedevHelper.Icon.Check", new IMAGE_BRUSH(TEXT("IconCheck32"), FVector2D{32.0f, 32.0f}));
 
 	// colors
 	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#C62828"))}});
