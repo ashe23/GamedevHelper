@@ -2,29 +2,7 @@
 
 #include "Settings/GdhAssetNamingConvention.h"
 // Engine Headers
-// #include "Engine/DirectionalLight.h"
-// #include "Engine/PointLight.h"
-// #include "Engine/RectLight.h"
-// #include "Engine/SpotLight.h"
-// #include "Engine/SkyLight.h"
-// #include "Engine/StaticMeshActor.h"
-// #include "Engine/TriggerBox.h"
-// #include "Engine/TriggerSphere.h"
-// #include "Engine/TriggerVolume.h"
-// #include "Engine/PostProcessVolume.h"
-// #include "Engine/ExponentialHeightFog.h"
-// #include "Engine/SphereReflectionCapture.h"
-// #include "Engine/BoxReflectionCapture.h"
-// #include "Engine/PlaneReflectionCapture.h"
-// #include "Engine/DecalActor.h"
-// #include "GameFramework/PlayerStart.h"
 #include "GameFramework/Character.h"
-// #include "CameraRig_Crane.h"
-// #include "CameraRig_Rail.h"
-// #include "CineCameraActor.h"
-// #include "LevelSequenceActor.h"
-// #include "Components/SkyAtmosphereComponent.h"
-// #include "Components/VolumetricCloudComponent.h"
 // Blueprint classes
 #include "EditorUtilityWidgetBlueprint.h"
 #include "Blutility/Classes/EditorUtilityBlueprint.h"
@@ -246,7 +224,7 @@ FName UGdhAssetNamingConvention::GetCategoryName() const
 
 FText UGdhAssetNamingConvention::GetSectionText() const
 {
-	return FText::FromString(TEXT("GamedevHelper"));
+	return FText::FromString(TEXT("GamedevHelper | AssetNamingConvention"));
 }
 
 FGdhSettingsChanged& UGdhAssetNamingConvention::OnSettingsChanged()

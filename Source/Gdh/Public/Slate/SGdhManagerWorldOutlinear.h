@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
+class UGdhWorldOutlinearSettings;
+
 class SGdhManagerWorldOutlinear final : public SCompoundWidget
 {
 public:
@@ -12,4 +14,10 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
+
+private:
+	TSharedRef<SWidget> CreateToolbarMain() const;
+	
+	TSharedPtr<FUICommandList> Cmds;
+	TWeakObjectPtr<UGdhWorldOutlinearSettings> WorldOutlinearSettings;
 };

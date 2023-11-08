@@ -21,7 +21,7 @@ public:
 	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
 	TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManager;
 	TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinearManager;
-	TSharedPtr<FUICommandInfo> Cmd_OpenMrqBatchRenderManager;
+	TSharedPtr<FUICommandInfo> Cmd_OpenMrqBatchRenderingManager;
 
 	// asset naming manager
 	TSharedPtr<FUICommandInfo> Cmd_ScanAssets;
@@ -31,5 +31,6 @@ public:
 	// world outlinear manager
 	TSharedPtr<FUICommandInfo> Cmd_OrganizeActors;
 	TSharedPtr<FUICommandInfo> Cmd_Undo;
+	TSharedPtr<FUICommandInfo> Cmd_DeleteEmptyFolders;
 	
 };

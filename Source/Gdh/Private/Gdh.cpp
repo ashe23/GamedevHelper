@@ -63,14 +63,14 @@ void FGdh::StartupModule()
 		                        {
 			                        return
 				                        SNew(SDockTab)
-				                        .TabRole(MajorTab)
+				                        .TabRole(NomadTab)
 				                        [
 					                        SNew(SGdhManagerWorldOutlinear)
 				                        ];
 		                        })
 	                        )
 	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.WorldOutlinearManager"))
-	                        .SetDisplayName(FText::FromName(TEXT("World Outlinear Manager")))
+	                        .SetDisplayName(FText::FromName(TEXT("World Outliner Manager")))
 	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 
 
@@ -97,7 +97,7 @@ void FGdh::StartupModule()
 						MenuBuilder.BeginSection("GdhSectionManager", FText::FromString("Managers"));
 						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenAssetNamingManager);
 						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWorldOutlinearManager);
-						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenMrqBatchRenderManager);
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenMrqBatchRenderingManager);
 						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleName,

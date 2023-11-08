@@ -44,7 +44,8 @@ public class Gdh : ModuleRules
 				"UMG",
 				"IntroTutorials",
 				"AssetTools",
-				"ContentBrowser" 
+				"ContentBrowser", 
+				"EditorScriptingUtilities",
 			}
 		);
 	}
