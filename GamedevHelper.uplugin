@@ -23,6 +23,11 @@
       "WhitelistPlatforms": [
         "Win64"
       ]
+    },
+    {
+      "Name": "GdhEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [
