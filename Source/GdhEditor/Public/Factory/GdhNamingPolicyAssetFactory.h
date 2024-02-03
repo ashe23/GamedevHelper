@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "GdhAssetNamingSettingsFactory.generated.h"
+#include "GdhNamingPolicyAssetFactory.generated.h"
 
 UCLASS()
-class UGdhAssetNamingSettingsFactory : public UFactory
+class UGdhNamingPolicyAssetFactory : public UFactory
 {
 	GENERATED_BODY()
 
 public:
-	UGdhAssetNamingSettingsFactory();
+	UGdhNamingPolicyAssetFactory();
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };

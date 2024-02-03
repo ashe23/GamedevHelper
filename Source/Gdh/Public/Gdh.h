@@ -22,6 +22,7 @@ namespace GdhConstants
 	static const FName PathRoot{TEXT("/Game")};
 
 	// tabs
+	static const FName TabAssetNamingTool{TEXT("TabAssetNamingTool")};
 	static const FName TabAssetNamingManager{TEXT("TabGdhAssetNamingManager")};
 	static const FName TabWorldOutlinearManager{TEXT("TabGdhWorldOutlinearManager")};
 

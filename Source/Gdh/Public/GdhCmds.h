@@ -18,6 +18,9 @@ public:
 	virtual void RegisterCommands() override;
 
 	// main menu bar
+	TSharedPtr<FUICommandInfo> RestartEditor;
+	TSharedPtr<FUICommandInfo> OpenAssetNamingTool;
+	
 	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
 	TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManager;
 	TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinearManager;

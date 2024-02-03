@@ -6,6 +6,10 @@
 
 void FGdhCommands::RegisterCommands()
 {
+	UI_COMMAND(RestartEditor, "Restart", "Restart Editor", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(OpenAssetNamingTool, "Asset Naming Tool", "Open Asset Naming Tool Editor", EUserInterfaceActionType::Button, FInputChord());
+
+
 	UI_COMMAND(Cmd_RestartEditor, "Restart", "Restart Editor", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_OpenAssetNamingManager, "Asset Naming Manager", "Open Asset Naming Manager Window", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(Cmd_OpenWorldOutlinearManager, "World Outlinear Manager", "Open World Outlinear Manager Window", EUserInterfaceActionType::Button, FInputChord());

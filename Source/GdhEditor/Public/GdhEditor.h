@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AssetTypeCategories.h"
 #include "Modules/ModuleInterface.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGdhEditor, Log, All);
 
-class FGdhAssetNamingSettingsActions;
+class FGdhNamingPolicyAssetActions;
 
 class FGdhEditor final : public IModuleInterface
 {
@@ -17,6 +18,8 @@ public:
 	virtual bool SupportsDynamicReloading() override;
 	virtual bool IsGameModule() const override;
 
+	static EAssetTypeCategories::Type NamingPolicyAssetCategory;
+
 private:
-	TSharedPtr<FGdhAssetNamingSettingsActions> AssetNamingSettingsActions;
+	TSharedPtr<FGdhNamingPolicyAssetActions> NamingPolicyAssetActions;
 };

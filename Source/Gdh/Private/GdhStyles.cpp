@@ -75,6 +75,11 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 
 	// cmds
 	Style->Set("GamedevHelper.TabMain", new IMAGE_BRUSH(TEXT("Icon40"), FVector2D{40.0f, 40.0f}));
+	Style->Set("GamedevHelper.RestartEditor", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D{32.0f, 32.0f}));
+	Style->Set("GamedevHelper.RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D{20.0f, 20.0f}));
+	Style->Set("GamedevHelper.OpenAssetNamingTool", new IMAGE_BRUSH(TEXT("IconRename32"), FVector2D{32.0f, 32.0f}));
+	Style->Set("GamedevHelper.OpenAssetNamingTool.Small", new IMAGE_BRUSH(TEXT("IconRename20"), FVector2D{20.0f, 20.0f}));
+	
 	Style->Set("GamedevHelper.Cmd_RestartEditor", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.Cmd_RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.Cmd_OpenAssetNamingManager", new IMAGE_BRUSH(TEXT("IconRename32"), FVector2D{32.0f, 32.0f}));

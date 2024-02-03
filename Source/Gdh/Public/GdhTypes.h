@@ -20,8 +20,27 @@ enum class EGdhBlueprintType : uint8
 UENUM(BlueprintType)
 enum class EGdhNamingCase : uint8
 {
+	None UMETA(Hidden),
+	SnakeCase UMETA(DisplayName="snake_case"),
 	PascalCase UMETA(DisplayName="PascalCase"),
-	PascalSnakeCase UMETA(DisplayName="Pascal_Snake_Case")
+	PascalSnakeCase UMETA(DisplayName="Pascal_Snake_Case"),
+	CamelCase UMETA(DisplayName="camelCase"),
+	KebabCase UMETA(DisplayName="kebab-case"),
+};
+
+USTRUCT(BlueprintType)
+struct FGdhAssetNameFormat : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh", meta=(ShowTreeView, AllowAbstract))
+	TSoftClassPtr<UObject> AssetClass;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh")
+	FString Prefix;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh")
+	FString Suffix;
 };
 
 UCLASS(Transient)

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "AssetTypeActions_Base.h"
 
-class FGdhAssetNamingSettingsActions final : public FAssetTypeActions_Base
+class FGdhNamingPolicyAssetActions final : public FAssetTypeActions_Base
 {
 public:
 	virtual UClass* GetSupportedClass() const override;

@@ -8,25 +8,26 @@ public class GdhEditor : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(
-			new[]
-			{
-				"Core"
-			}
-		);
+		PublicDependencyModuleNames.AddRange(new[]
+		{
+			"Gdh",
+			"Core"
+		});
 
 
-		PrivateDependencyModuleNames.AddRange(
-			new[]
-			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
-				"UnrealEd",
-				"Gdh",
-				"AssetTools"
-			}
-		);
+		PrivateDependencyModuleNames.AddRange(new[]
+		{
+			"CoreUObject",
+			"Engine",
+			"Slate",
+			"SlateCore",
+			"UnrealEd",
+			"AssetTools"
+		});
+
+		PublicIncludePathModuleNames.AddRange(new[]
+		{
+			"Gdh"
+		});
 	}
 }

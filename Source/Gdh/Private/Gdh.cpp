@@ -4,8 +4,8 @@
 #include "GdhCmds.h"
 #include "GdhStyles.h"
 #include "LevelEditor.h"
-#include "Slate/SGdhManagerAssetNaming.h"
-#include "Slate/SGdhManagerWorldOutlinear.h"
+// #include "Slate/SGdhManagerAssetNaming.h"
+// #include "Slate/SGdhManagerWorldOutlinear.h"
 
 DEFINE_LOG_CATEGORY(LogGdh);
 
@@ -19,59 +19,60 @@ void FGdh::StartupModule()
 
 	Commands = MakeShareable(new FUICommandList);
 	Commands->MapAction(
-		FGdhCommands::Get().Cmd_RestartEditor,
+		FGdhCommands::Get().RestartEditor,
 		FExecuteAction::CreateLambda([]()
 		{
 			FUnrealEdMisc::Get().RestartEditor(true);
 		})
 	);
 	Commands->MapAction(
-		FGdhCommands::Get().Cmd_OpenAssetNamingManager,
+		FGdhCommands::Get().OpenAssetNamingTool,
 		FExecuteAction::CreateLambda([]()
 		{
-			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingManager);
+			// FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingManager);
+			UE_LOG(LogGdh, Warning, TEXT("Hello"));
 		})
 	);
 
-	Commands->MapAction(
-		FGdhCommands::Get().Cmd_OpenWorldOutlinearManager,
-		FExecuteAction::CreateLambda([]()
-		{
-			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabWorldOutlinearManager);
-		})
-	);
-
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        GdhConstants::TabAssetNamingManager,
-		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
-		                        {
-			                        return
-				                        SNew(SDockTab)
-				                        .TabRole(MajorTab)
-				                        [
-					                        SNew(SGdhManagerAssetNaming)
-				                        ];
-		                        })
-	                        )
-	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingManager"))
-	                        .SetDisplayName(FText::FromName(TEXT("Asset Naming Manager")))
-	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
-
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        GdhConstants::TabWorldOutlinearManager,
-		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
-		                        {
-			                        return
-				                        SNew(SDockTab)
-				                        .TabRole(NomadTab)
-				                        [
-					                        SNew(SGdhManagerWorldOutlinear)
-				                        ];
-		                        })
-	                        )
-	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.WorldOutlinearManager"))
-	                        .SetDisplayName(FText::FromName(TEXT("World Outliner Manager")))
-	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+	// Commands->MapAction(
+	// 	FGdhCommands::Get().Cmd_OpenWorldOutlinearManager,
+	// 	FExecuteAction::CreateLambda([]()
+	// 	{
+	// 		FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabWorldOutlinearManager);
+	// 	})
+	// );
+	//
+	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+	// 	                        GdhConstants::TabAssetNamingManager,
+	// 	                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+	// 	                        {
+	// 		                        return
+	// 			                        SNew(SDockTab)
+	// 			                        .TabRole(MajorTab)
+	// 			                        [
+	// 				                        SNew(SGdhManagerAssetNaming)
+	// 			                        ];
+	// 	                        })
+	//                         )
+	//                         .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingManager"))
+	//                         .SetDisplayName(FText::FromName(TEXT("Asset Naming Manager")))
+	//                         .SetMenuType(ETabSpawnerMenuType::Hidden);
+	//
+	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+	// 	                        GdhConstants::TabWorldOutlinearManager,
+	// 	                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+	// 	                        {
+	// 		                        return
+	// 			                        SNew(SDockTab)
+	// 			                        .TabRole(NomadTab)
+	// 			                        [
+	// 				                        SNew(SGdhManagerWorldOutlinear)
+	// 			                        ];
+	// 	                        })
+	//                         )
+	//                         .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.WorldOutlinearManager"))
+	//                         .SetDisplayName(FText::FromName(TEXT("World Outliner Manager")))
+	//                         .SetMenuType(ETabSpawnerMenuType::Hidden);
 
 
 	if (!IsRunningCommandlet())
@@ -80,7 +81,7 @@ void FGdh::StartupModule()
 		LevelEditorMenuExtensibilityManager = LevelEditorModule.GetMenuExtensibilityManager();
 		MenuExtender = MakeShareable(new FExtender);
 		MenuExtender->AddMenuBarExtension(
-			"Help",
+			"Window",
 			EExtensionHook::After,
 			Commands,
 			FMenuBarExtensionDelegate::CreateLambda([&](FMenuBarBuilder& MenuBarBuilder)
@@ -91,13 +92,13 @@ void FGdh::StartupModule()
 					FNewMenuDelegate::CreateLambda([&](FMenuBuilder& MenuBuilder)
 					{
 						MenuBuilder.BeginSection("GdhSectionEditor", FText::FromString("Editor"));
-						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_RestartEditor);
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().RestartEditor);
 						MenuBuilder.EndSection();
 
-						MenuBuilder.BeginSection("GdhSectionManager", FText::FromString("Managers"));
-						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenAssetNamingManager);
-						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWorldOutlinearManager);
-						MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenMrqBatchRenderingManager);
+						MenuBuilder.BeginSection("GdhSectionTools", FText::FromString("Tools"));
+						MenuBuilder.AddMenuEntry(FGdhCommands::Get().OpenAssetNamingTool);
+						// MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenWorldOutlinearManager);
+						// MenuBuilder.AddMenuEntry(FGdhCommands::Get().Cmd_OpenMrqBatchRenderingManager);
 						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleName,
@@ -115,8 +116,8 @@ void FGdh::ShutdownModule()
 	FGdhStyles::Shutdown();
 	FGdhCommands::Unregister();
 
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingManager);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabWorldOutlinearManager);
+	// FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingManager);
+	// FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabWorldOutlinearManager);
 
 	IModuleInterface::ShutdownModule();
 }
