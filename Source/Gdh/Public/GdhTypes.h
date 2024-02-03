@@ -29,12 +29,24 @@ enum class EGdhNamingCase : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FGdhAssetNameFormat : public FTableRowBase
+struct FGdhAssetNameFormatRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh", meta=(ShowTreeView, AllowAbstract))
 	TSoftClassPtr<UObject> AssetClass;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh")
+	FString Prefix;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh")
+	FString Suffix;
+};
+
+USTRUCT(BlueprintType)
+struct FGdhAssetNameFormat
+{
+	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Gdh")
 	FString Prefix;
