@@ -23,7 +23,7 @@ namespace GdhConstants
 
 	// tabs
 	static const FName TabAssetNamingTool{TEXT("TabAssetNamingTool")};
-	static const FName TabAssetNamingManager{TEXT("TabGdhAssetNamingManager")};
+	// static const FName TabAssetNamingManager{TEXT("TabGdhAssetNamingManager")};
 	static const FName TabWorldOutlinearManager{TEXT("TabGdhWorldOutlinearManager")};
 
 	// misc

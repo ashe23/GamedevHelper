@@ -4,6 +4,7 @@
 #include "GdhCmds.h"
 #include "GdhStyles.h"
 #include "LevelEditor.h"
+#include "Slate/SGdhAssetNamingTool.h"
 // #include "Slate/SGdhManagerAssetNaming.h"
 // #include "Slate/SGdhManagerWorldOutlinear.h"
 
@@ -29,8 +30,7 @@ void FGdh::StartupModule()
 		FGdhCommands::Get().OpenAssetNamingTool,
 		FExecuteAction::CreateLambda([]()
 		{
-			// FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingManager);
-			UE_LOG(LogGdh, Warning, TEXT("Hello"));
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingTool);
 		})
 	);
 
@@ -42,21 +42,21 @@ void FGdh::StartupModule()
 	// 	})
 	// );
 	//
-	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-	// 	                        GdhConstants::TabAssetNamingManager,
-	// 	                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
-	// 	                        {
-	// 		                        return
-	// 			                        SNew(SDockTab)
-	// 			                        .TabRole(MajorTab)
-	// 			                        [
-	// 				                        SNew(SGdhManagerAssetNaming)
-	// 			                        ];
-	// 	                        })
-	//                         )
-	//                         .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingManager"))
-	//                         .SetDisplayName(FText::FromName(TEXT("Asset Naming Manager")))
-	//                         .SetMenuType(ETabSpawnerMenuType::Hidden);
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        GdhConstants::TabAssetNamingTool,
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+		                        {
+			                        return
+				                        SNew(SDockTab)
+				                        .TabRole(MajorTab)
+				                        [
+					                        SNew(SGdhAssetNamingTool)
+				                        ];
+		                        })
+	                        )
+	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingTool"))
+	                        .SetDisplayName(FText::FromName(TEXT("Asset Naming Tool")))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 	//
 	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 	// 	                        GdhConstants::TabWorldOutlinearManager,
@@ -116,7 +116,7 @@ void FGdh::ShutdownModule()
 	FGdhStyles::Shutdown();
 	FGdhCommands::Unregister();
 
-	// FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingManager);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingTool);
 	// FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabWorldOutlinearManager);
 
 	IModuleInterface::ShutdownModule();

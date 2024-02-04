@@ -102,7 +102,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.Cmd_DeleteEmptyFolders.Small", new IMAGE_BRUSH(TEXT("IconDeleteFolder20"), FVector2D{20.0f, 20.0f}));
 
 	// tabs
-	Style->Set("GamedevHelper.Tab.AssetNamingManager", new IMAGE_BRUSH(TEXT("IconRename16"), FVector2D{16.0f, 16.0f}));
+	Style->Set("GamedevHelper.Tab.AssetNamingTool", new IMAGE_BRUSH(TEXT("IconRename16"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Tab.WorldOutlinearManager", new IMAGE_BRUSH(TEXT("IconStructure16"), FVector2D{16.0f, 16.0f}));
 
 	// icons
