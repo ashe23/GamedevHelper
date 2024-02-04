@@ -48,7 +48,7 @@ void FGdh::StartupModule()
 		                        {
 			                        return
 				                        SNew(SDockTab)
-				                        .TabRole(MajorTab)
+				                        .TabRole(NomadTab)
 				                        [
 					                        SNew(SGdhAssetNamingTool)
 				                        ];

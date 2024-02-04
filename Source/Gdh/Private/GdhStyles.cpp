@@ -79,21 +79,16 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.OpenAssetNamingTool", new IMAGE_BRUSH(TEXT("IconRename32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.OpenAssetNamingTool.Small", new IMAGE_BRUSH(TEXT("IconRename20"), FVector2D{20.0f, 20.0f}));
-	
-	Style->Set("GamedevHelper.Cmd_RestartEditor", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.Cmd_RestartEditor.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D{20.0f, 20.0f}));
-	Style->Set("GamedevHelper.Cmd_OpenAssetNamingManager", new IMAGE_BRUSH(TEXT("IconRename32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.Cmd_OpenAssetNamingManager.Small", new IMAGE_BRUSH(TEXT("IconRename20"), FVector2D{20.0f, 20.0f}));
+	Style->Set("GamedevHelper.RenameAssets", new IMAGE_BRUSH(TEXT("IconRename32"), FVector2D{32.0f, 32.0f}));
+	Style->Set("GamedevHelper.RenameAssets.Small", new IMAGE_BRUSH(TEXT("IconRename20"), FVector2D{20.0f, 20.0f}));
+	Style->Set("GamedevHelper.ScanAssets", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D{32.0f, 32.0f}));
+	Style->Set("GamedevHelper.ScanAssets.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D{20.0f, 20.0f}));
+	Style->Set("GamedevHelper.ClearSelection", new IMAGE_BRUSH(TEXT("IconClear32"), FVector2D{32.0f, 32.0f}));
+	Style->Set("GamedevHelper.ClearSelection.Small", new IMAGE_BRUSH(TEXT("IconClear20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.Cmd_OpenWorldOutlinearManager", new IMAGE_BRUSH(TEXT("IconStructure32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.Cmd_OpenWorldOutlinearManager.Small", new IMAGE_BRUSH(TEXT("IconStructure20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.Cmd_OpenMrqBatchRenderingManager", new IMAGE_BRUSH(TEXT("IconRender32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.Cmd_OpenMrqBatchRenderingManager.Small", new IMAGE_BRUSH(TEXT("IconRender20"), FVector2D{20.0f, 20.0f}));
-	Style->Set("GamedevHelper.Cmd_ClearSelection", new IMAGE_BRUSH(TEXT("IconClear32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.Cmd_ClearSelection.Small", new IMAGE_BRUSH(TEXT("IconClear20"), FVector2D{20.0f, 20.0f}));
-	Style->Set("GamedevHelper.Cmd_ScanAssets", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.Cmd_ScanAssets.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D{20.0f, 20.0f}));
-	Style->Set("GamedevHelper.Cmd_RenameAssets", new IMAGE_BRUSH(TEXT("IconRename32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.Cmd_RenameAssets.Small", new IMAGE_BRUSH(TEXT("IconRename20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.Cmd_OrganizeActors", new IMAGE_BRUSH(TEXT("IconOrganize32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.Cmd_OrganizeActors.Small", new IMAGE_BRUSH(TEXT("IconOrganize20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.Cmd_Undo", new IMAGE_BRUSH(TEXT("IconUndo32"), FVector2D{32.0f, 32.0f}));

@@ -1,14 +1,13 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "Slate/SGdhManagerAssetNamingItem.h"
+#include "Slate/SGdhAssetNamingToolListItem.h"
 #include "GdhStyles.h"
 #include "GdhSubsystem.h"
-#include "GdhTypes.h"
 #include "Widgets/Input/SHyperlink.h"
 
-void SGdhManagerAssetNamingItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
+void SGdhAssetNamingToolListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
-	RowItem = InArgs._RowItem;
+	ListItem = InArgs._ListItem;
 
 	SMultiColumnTableRow::Construct(
 		SMultiColumnTableRow::FArguments()
@@ -17,11 +16,11 @@ void SGdhManagerAssetNamingItem::Construct(const FArguments& InArgs, const TShar
 	);
 }
 
-TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FName& InColumnName)
+TSharedRef<SWidget> SGdhAssetNamingToolListItem::GenerateWidgetForColumn(const FName& InColumnName)
 {
 	if (InColumnName == TEXT("Preview"))
 	{
-		const TSharedPtr<FAssetThumbnail> AssetThumbnail = MakeShareable(new FAssetThumbnail(RowItem->AssetData, 16, 16, nullptr));
+		const TSharedPtr<FAssetThumbnail> AssetThumbnail = MakeShareable(new FAssetThumbnail(ListItem->AssetData, 16, 16, nullptr));
 		const FAssetThumbnailConfig ThumbnailConfig;
 
 		return
@@ -35,7 +34,7 @@ TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FN
 
 	if (InColumnName == TEXT("AssetClass"))
 	{
-		return SNew(STextBlock).Text(FText::FromString(RowItem->AssetData.AssetClass.ToString()));
+		return SNew(STextBlock).Text(FText::FromString(ListItem->AssetData.AssetClass.ToString()));
 	}
 
 	if (InColumnName == TEXT("Result"))
@@ -58,7 +57,7 @@ TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FN
 					[
 						SNew(STextBlock)
 						.Justification(ETextJustify::Center)
-						.Text(FText::FromString(RowItem->OldName))
+						.Text(FText::FromString(ListItem->OldName))
 					]
 				]
 				+ SHorizontalBox::Slot()
@@ -81,7 +80,7 @@ TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FN
 					[
 						SNew(STextBlock)
 						.Justification(ETextJustify::Center)
-						.Text(FText::FromString(RowItem->NewName))
+						.Text(FText::FromString(ListItem->NewName))
 					]
 				]
 			];
@@ -94,8 +93,8 @@ TSharedRef<SWidget> SGdhManagerAssetNamingItem::GenerateWidgetForColumn(const FN
 			+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(FMargin{5.0f, 0.0f})
 			[
 				SNew(SHyperlink)
-				.Text(FText::FromString(RowItem->AssetData.PackagePath.ToString()))
-				.OnNavigate_Lambda([&]() { UGdhSubsystem::OpenAssetInContentBrowser(RowItem->AssetData); })
+				.Text(FText::FromString(ListItem->AssetData.PackagePath.ToString()))
+				.OnNavigate_Lambda([&]() { UGdhSubsystem::OpenAssetInContentBrowser(ListItem->AssetData); })
 			];
 	}
 

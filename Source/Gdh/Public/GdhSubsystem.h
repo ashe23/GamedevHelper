@@ -11,7 +11,7 @@
 #include "Widgets/Notifications/SNotificationList.h"
 #include "GdhSubsystem.generated.h"
 
-class UGdhAssetNamingConvention;
+// class UGdhAssetNamingConvention;
 
 UCLASS(Config=EditorPerProjectUserSettings, DisplayName="GamedevHelperSubsystem")
 class UGdhSubsystem final : public UEditorSubsystem

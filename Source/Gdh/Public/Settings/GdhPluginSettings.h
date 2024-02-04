@@ -20,7 +20,4 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Naming Policy")
 	TSoftObjectPtr<UGdhNamingPolicyAsset> DefaultNamingPolicyAsset;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Naming Policy")
-	TArray<TSubclassOf<UObject>> OnAssetSavedDelegates;
 };

@@ -18,12 +18,22 @@ enum class EGdhBlueprintType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EGdhRenameMethod : uint8
+{
+	None,
+	FixPrefixAndSuffixOnly UMETA(ToolTip="Rename assets by fixing their prefixes and suffixes only according to data table asset"),
+	SearchAndReplace
+};
+
+UENUM(BlueprintType)
 enum class EGdhNamingCase : uint8
 {
-	None UMETA(Hidden),
-	SnakeCase UMETA(DisplayName="snake_case"),
-	PascalCase UMETA(DisplayName="PascalCase"),
+	None,
 	PascalSnakeCase UMETA(DisplayName="Pascal_Snake_Case"),
+	PascalCase UMETA(DisplayName="PascalCase"),
+	UpperCase UMETA(DisplayName="UPPERCASE"),
+	LowerCase UMETA(DisplayName="lowercase"),
+	SnakeCase UMETA(DisplayName="snake_case"),
 	CamelCase UMETA(DisplayName="camelCase"),
 	KebabCase UMETA(DisplayName="kebab-case"),
 };
@@ -56,7 +66,7 @@ struct FGdhAssetNameFormat
 };
 
 UCLASS(Transient)
-class UGdhManagerAssetNamingItem : public UObject
+class UGdhAssetNamingToolListItem : public UObject
 {
 	GENERATED_BODY()
 

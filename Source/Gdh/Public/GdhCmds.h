@@ -13,27 +13,29 @@ public:
 		GdhConstants::ModuleFullName,
 		FText::FromString("GamedevHelper Plugin"),
 		NAME_None,
-		GdhConstants::ModuleStylesName) { }
+		GdhConstants::ModuleStylesName) {}
 
 	virtual void RegisterCommands() override;
 
 	// main menu bar
 	TSharedPtr<FUICommandInfo> RestartEditor;
 	TSharedPtr<FUICommandInfo> OpenAssetNamingTool;
-	
-	TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
-	TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManager;
-	TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinearManager;
-	TSharedPtr<FUICommandInfo> Cmd_OpenMrqBatchRenderingManager;
+	TSharedPtr<FUICommandInfo> RenameAssets;
+	TSharedPtr<FUICommandInfo> ScanAssets;
+	TSharedPtr<FUICommandInfo> ClearSelection;
 
-	// asset naming manager
-	TSharedPtr<FUICommandInfo> Cmd_ScanAssets;
-	TSharedPtr<FUICommandInfo> Cmd_RenameAssets;
-	TSharedPtr<FUICommandInfo> Cmd_ClearSelection;
-
-	// world outlinear manager
-	TSharedPtr<FUICommandInfo> Cmd_OrganizeActors;
-	TSharedPtr<FUICommandInfo> Cmd_Undo;
-	TSharedPtr<FUICommandInfo> Cmd_DeleteEmptyFolders;
-	
+	// TSharedPtr<FUICommandInfo> Cmd_RestartEditor;
+	// TSharedPtr<FUICommandInfo> Cmd_OpenAssetNamingManager;
+	// TSharedPtr<FUICommandInfo> Cmd_OpenWorldOutlinearManager;
+	// TSharedPtr<FUICommandInfo> Cmd_OpenMrqBatchRenderingManager;
+	//
+	// // asset naming manager
+	// TSharedPtr<FUICommandInfo> Cmd_ScanAssets;
+	// TSharedPtr<FUICommandInfo> Cmd_RenameAssets;
+	// TSharedPtr<FUICommandInfo> Cmd_ClearSelection;
+	//
+	// // world outlinear manager
+	// TSharedPtr<FUICommandInfo> Cmd_OrganizeActors;
+	// TSharedPtr<FUICommandInfo> Cmd_Undo;
+	// TSharedPtr<FUICommandInfo> Cmd_DeleteEmptyFolders;
 };

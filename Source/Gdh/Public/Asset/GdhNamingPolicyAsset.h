@@ -14,9 +14,9 @@ class GDH_API UGdhNamingPolicyAsset : public UObject
 public:
 	UGdhNamingPolicyAsset();
 
-	// Default Asset naming case
-	UPROPERTY(EditAnywhere)
-	EGdhNamingCase NamingCase = EGdhNamingCase::PascalSnakeCase;
+	// // Default Asset naming case
+	// UPROPERTY(EditAnywhere)
+	// EGdhNamingCase NamingCase = EGdhNamingCase::PascalSnakeCase;
 
 	// Naming formats based on blueprint type
 	UPROPERTY(EditAnywhere)
