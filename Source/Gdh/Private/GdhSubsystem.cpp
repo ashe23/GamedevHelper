@@ -181,8 +181,7 @@ FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAsset(const FAssetData& I
 {
 	if (!InAssetData.IsValid()) return {};
 
-	// const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
-	// if (!NamingConvention) return {};
+	
 
 	if (!InAssetData.AssetClass.IsEqual(TEXT("Blueprint")))
 	{
@@ -328,6 +327,8 @@ FString UGdhSubsystem::Tokenize(const FString& OriginalString)
 
 	const FString Normalized = Normalize(OriginalString);
 
+	if (Normalized.IsEmpty()) return {};
+	
 	FString Token;
 	Token.AppendChar(Normalized[0]);
 	const auto Chars = Normalized.GetCharArray();

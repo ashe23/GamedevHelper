@@ -17,9 +17,17 @@ void SGdhAssetNamingTool::Construct(const FArguments& InArgs)
 	if (!AssetNamingToolSettings.IsValid()) return;
 
 	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(FGdhCommands::Get().ScanAssets, FExecuteAction::CreateLambda([]() { UE_LOG(LogTemp, Warning, TEXT("Scan")) }));
+	Cmds->MapAction(FGdhCommands::Get().ScanAssets, FExecuteAction::CreateLambda([&]()
+	{
+		UpdateListData();
+		UpdateListView();
+	}));
+
 	Cmds->MapAction(FGdhCommands::Get().RenameAssets, FExecuteAction::CreateLambda([]() { UE_LOG(LogTemp, Warning, TEXT("Rename")) }));
-	Cmds->MapAction(FGdhCommands::Get().ClearSelection, FExecuteAction::CreateLambda([]() { UE_LOG(LogTemp, Warning, TEXT("Clear")) }));
+	Cmds->MapAction(FGdhCommands::Get().ClearSelection, FExecuteAction::CreateLambda([&]()
+	{
+		UpdateListView();
+	}));
 
 	FPropertyEditorModule& PropertyEditor = UGdhSubsystem::GetModulePropertyEditor();
 
@@ -34,7 +42,7 @@ void SGdhAssetNamingTool::Construct(const FArguments& InArgs)
 	DetailsViewArgs.ViewIdentifier = "GdhAssetNamingToolSettings";
 
 	const auto SettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
-	SettingsProperty->SetObject(GetMutableDefault<UGdhAssetNamingToolSettings>());
+	SettingsProperty->SetObject(AssetNamingToolSettings.Get());
 
 	UpdateListData();
 	UpdateListView();
