@@ -58,6 +58,8 @@ TSharedRef<SWidget> SGdhAssetNamingToolListItem::GenerateWidgetForColumn(const F
 						SNew(STextBlock)
 						.Justification(ETextJustify::Center)
 						.Text(FText::FromString(ListItem->OldName))
+						.HighlightColor(FLinearColor{FColor::Orange})
+						.HighlightText(FText::FromString(TEXT("basic"))) // todo:ashe23 highlight settings as parameter
 					]
 				]
 				+ SHorizontalBox::Slot()

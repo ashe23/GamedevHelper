@@ -89,21 +89,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
 	static FString GetAssetRenamePreview(const FAssetData& InAssetData);
 
-	/**
-	 * @brief Returns asset naming info by given asset data
-	 * @param InAssetData FAssetData
-	 * @return FGdhAssetNamingInfo
-	 */
-	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
-	static FGdhAssetNamingInfo GetAssetNamingInfoByAsset(const FAssetData& InAssetData);
+	// /**
+	//  * @brief Returns asset naming info by given asset data
+	//  * @param InAssetData FAssetData
+	//  * @return FGdhAssetNamingInfo
+	//  */
+	// UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	// static FGdhAssetNamingInfo GetAssetNamingInfoByAsset(const FAssetData& InAssetData);
 
-	/**
-	 * @brief Return asset naming info by given asset class
-	 * @param InAssetClass UClass*
-	 * @return FGdhAssetNamingInfo
-	 */
-	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
-	static FGdhAssetNamingInfo GetAssetNamingInfoByAssetClass(const UClass* InAssetClass);
+	// /**
+	//  * @brief Return asset naming info by given asset class
+	//  * @param InAssetClass UClass*
+	//  * @return FGdhAssetNamingInfo
+	//  */
+	// UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_Asset")
+	// static FGdhAssetNamingInfo GetAssetNamingInfoByAssetClass(const UClass* InAssetClass);
 
 	/**
 	 * @brief Return blueprint type
@@ -178,6 +178,46 @@ public:
 	static FString ConvertToPascalCase(const FString& OriginalString);
 
 	/**
+	 * @brief Converts string to UPPERCASE
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString ConvertToUpperCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to lowercase
+	 * @param OriginalString FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString ConvertToLowerCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to snake_case
+	 * @param OriginalString FString 
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString ConvertToSnakeCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to camelCase
+	 * @param OriginalString FString 
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString ConvertToCamelCase(const FString& OriginalString);
+
+	/**
+	 * @brief Converts string to kebab-case
+	 * @param OriginalString FString 
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FString ConvertToKebabCase(const FString& OriginalString);
+
+	/**
 	 * @brief Converts string to Pascal_Snake_Case
 	 * @param OriginalString FString
 	 * @return FString
@@ -193,6 +233,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
 	static FString PathConvertToRelative(const FString& InPath);
+
+	UFUNCTION(BlueprintCallable, Category="GamedevHelper|Lib_String")
+	static FGdhAssetNameFormatRow GetAssetNameFormat(const TSoftClassPtr<UObject>& InAssetClass);
 
 	/**
 	 * @brief Returns list of folders by given settings
@@ -233,7 +276,9 @@ private:
 	/**
 	 * @brief Removes old prefixes and suffixes from old asset name. Asset name must be normalized.
 	 * @param OldAssetName FString
+	 * @param InPrefix FString
+	 * @param InSuffix FString
 	 * @return FString
 	 */
-	static FString RemoveOldPrefixAndSuffix(const FString& OldAssetName);
+	static FString RemoveOldPrefixAndSuffix(const FString& OldAssetName, const FString& InPrefix, const FString& InSuffix);
 };

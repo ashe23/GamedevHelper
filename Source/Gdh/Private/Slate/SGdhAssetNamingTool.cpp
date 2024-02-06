@@ -203,14 +203,14 @@ void SGdhAssetNamingTool::UpdateListData()
 		// const FAssetData ExistingAssetData = UGdhSubsystem::GetAssetByObjectPath(AssetPreviewObjectPath);
 
 		// Determine if the asset should and can be renamed.
-		// const bool ShouldRenameAsset = !AssetNameOriginal.Equals(AssetNamePreview);
+		const bool ShouldRenameAsset = !AssetNameOriginal.Equals(AssetNamePreview);
 		// const bool AssetNameIsNotEmpty = !AssetNamePreview.IsEmpty();
 		// const bool AssetIsNotIndirectlyReferenced = !AssetsIndirect.Contains(Asset);
 		// const bool AssetHasNoNamingConflict = !ExistingAssetData.IsValid() || Asset.ObjectPath.ToString().Equals(ExistingAssetData.ObjectPath.ToString());
 		// // const bool AssetIsNotIgnored = !AssetNamingConvention->AssetsIgnore.Contains(Asset.GetAsset());
 		// const bool CanRenameAsset = AssetNameIsNotEmpty && AssetIsNotIndirectlyReferenced && AssetHasNoNamingConflict && AssetIsNotIgnored;
 
-		// if (!ShouldRenameAsset) continue;
+		if (!ShouldRenameAsset) continue;
 
 		NewItem->AssetData = Asset;
 		NewItem->OldName = AssetNameOriginal;

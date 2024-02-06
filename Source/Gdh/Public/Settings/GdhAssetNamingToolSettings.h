@@ -36,6 +36,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings")
 	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::UpperCase;
 
+	// What delimiter type to use when gluing prefixes and suffixes
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings")
+	EGdhDelimiter Delimiter = EGdhDelimiter::Underscore;
+
 	// Data Table Asset with Asset Class => (Prefix, Suffix) Mappings. To create new mappings, just create new data table with row struct "GdhAssetNameFormatRow" selected. Or just duplicate existing one.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings", meta=(RequiredAssetDataTags="RowStructure=GdhAssetNameFormatRow"))
 	TSoftObjectPtr<UDataTable> Mappings;
@@ -47,4 +51,19 @@ public:
 	// Specifies the number of leading zeros to append to the number. For example: Name_1, Name_01, Name_001, etc.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings", meta=(EditCondition="bNumerizeAssetOnConflict", EditConditionHides, UIMin="0", ClampMin="0", UIMax="10", ClampMax="10"))
 	int32 NumerizeZeroPadding = 0;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings")
+	bool bCustomReplace = false;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings", meta=(EditCondition="bCustomReplace", EditConditionHides))
+	bool bRegexSearch = false;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings", meta=(EditCondition="bCustomReplace && bRegexSearch", EditConditionHides))
+	FString RegexSearch;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings", meta=(EditCondition="bCustomReplace && !bRegexSearch", EditConditionHides))
+	bool bReplaceCaseSensitive = false;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingSettings", meta=(EditCondition="bCustomReplace && !bRegexSearch", EditConditionHides))
+	TMap<FString, FString> ReplaceMappings;
 };

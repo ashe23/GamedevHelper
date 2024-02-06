@@ -26,6 +26,13 @@ enum class EGdhRenameMethod : uint8
 };
 
 UENUM(BlueprintType)
+enum class EGdhDelimiter : uint8
+{
+	Underscore UMETA(DisplayName="Underscore ( _ )"),
+	Hyphen UMETA(DisplayName="Hyphen ( - )"),
+};
+
+UENUM(BlueprintType)
 enum class EGdhNamingCase : uint8
 {
 	None,

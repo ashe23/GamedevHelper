@@ -9,6 +9,7 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Settings/GdhAssetNamingToolSettings.h"
 
 void UGdhSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -161,67 +162,65 @@ FString UGdhSubsystem::GetAssetRenamePreview(const FAssetData& InAssetData)
 {
 	if (!InAssetData.IsValid()) return {};
 
-	const FGdhAssetNamingInfo NamingInfo = GetAssetNamingInfoByAsset(InAssetData);
-	if (NamingInfo.Prefix.IsEmpty() && NamingInfo.Suffix.IsEmpty()) return {};
+	const UGdhAssetNamingToolSettings* Settings = GetDefault<UGdhAssetNamingToolSettings>();
+	if (!Settings) return {};
 
-	// const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
-	// if (!NamingConvention) return {};
+	const FGdhAssetNameFormatRow NameFormat = GetAssetNameFormat(InAssetData.GetClass());
+	if (NameFormat.Prefix.IsEmpty() && NameFormat.Suffix.IsEmpty()) return {};
 
 	const FString OldName = InAssetData.AssetName.ToString();
-	const FString TokenizedName = Tokenize(OldName);
-	const FString BaseNameWithoutPrefixAndSuffix = RemoveOldPrefixAndSuffix(TokenizedName);
-	const FString Prefix = NamingInfo.Prefix.IsEmpty() ? TEXT("") : NamingInfo.Prefix + TEXT("_");
-	const FString Suffix = NamingInfo.Suffix.IsEmpty() ? TEXT("") : TEXT("_") + NamingInfo.Suffix;
+	const FString BaseNameWithoutPrefixAndSuffix = RemoveOldPrefixAndSuffix(OldName, NameFormat.Prefix, NameFormat.Suffix);
+	const FString PrefixWithCase = ConvertNamingCase(NameFormat.Prefix, Settings->PrefixNamingCase);
+	const FString SuffixWithCase = ConvertNamingCase(NameFormat.Suffix, Settings->SuffixNamingCase);
+	const FString AssetWithCase = ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, Settings->AssetNamingCase);
+	const FString Delimiter = Settings->Delimiter == EGdhDelimiter::Underscore ? TEXT("_") : TEXT("-");
 
-	return {};
-	// return Prefix + ConvertNamingCase(BaseNameWithoutPrefixAndSuffix, NamingConvention->NamingCase) + Suffix;
+	return FString::Printf(TEXT("%s%s%s%s%s"), *PrefixWithCase, *Delimiter, *AssetWithCase, SuffixWithCase.IsEmpty() ? TEXT("") : *Delimiter, *SuffixWithCase);
 }
 
-FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAsset(const FAssetData& InAssetData)
-{
-	if (!InAssetData.IsValid()) return {};
+// FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAsset(const FAssetData& InAssetData)
+// {
+// 	if (!InAssetData.IsValid()) return {};
+// 	
+// 	if (!InAssetData.AssetClass.IsEqual(TEXT("Blueprint")))
+// 	{
+// 		return GetAssetNamingInfoByAssetClass(InAssetData.GetClass());
+// 	}
+//
+// 	const UClass* ParentClass = GetBlueprintParentClass(InAssetData);
+// 	const UClass* SearchClass = ParentClass ? ParentClass : UBlueprint::StaticClass();
+// 	const EGdhBlueprintType BlueprintType = GetBlueprintType(InAssetData);
+// 	const FGdhAssetNamingInfo NamingInfo = GetAssetNamingInfoByAssetClass(SearchClass);
+// 	// const FGdhAssetNamingInfo* BlueprintNamingInfo = NamingConvention->BlueprintPrefixes.Find(BlueprintType);
+//
+// 	// if (NamingInfo.Prefix.IsEmpty() && BlueprintNamingInfo && BlueprintNamingInfo->Prefix.IsEmpty()) return {};
+// 	//
+// 	// if (BlueprintNamingInfo && (BlueprintType != EGdhBlueprintType::None && BlueprintType != EGdhBlueprintType::Normal))
+// 	// {
+// 	// 	return FGdhAssetNamingInfo{BlueprintNamingInfo->Prefix, NamingInfo.Suffix};
+// 	// }
+//
+// 	return NamingInfo;
+// }
 
-	
-
-	if (!InAssetData.AssetClass.IsEqual(TEXT("Blueprint")))
-	{
-		return GetAssetNamingInfoByAssetClass(InAssetData.GetClass());
-	}
-
-	const UClass* ParentClass = GetBlueprintParentClass(InAssetData);
-	const UClass* SearchClass = ParentClass ? ParentClass : UBlueprint::StaticClass();
-	// const EGdhBlueprintType BlueprintType = GetBlueprintType(InAssetData);
-	const FGdhAssetNamingInfo NamingInfo = GetAssetNamingInfoByAssetClass(SearchClass);
-	// const FGdhAssetNamingInfo* BlueprintNamingInfo = NamingConvention->BlueprintPrefixes.Find(BlueprintType);
-
-	// if (NamingInfo.Prefix.IsEmpty() && BlueprintNamingInfo && BlueprintNamingInfo->Prefix.IsEmpty()) return {};
-	//
-	// if (BlueprintNamingInfo && (BlueprintType != EGdhBlueprintType::None && BlueprintType != EGdhBlueprintType::Normal))
-	// {
-	// 	return FGdhAssetNamingInfo{BlueprintNamingInfo->Prefix, NamingInfo.Suffix};
-	// }
-
-	return NamingInfo;
-}
-
-FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAssetClass(const UClass* InAssetClass)
-{
-	if (!InAssetClass) return {};
-
-	// const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
-	// if (!NamingConvention) return {};
-	//
-	// for (const auto& Naming : NamingConvention->Mappings)
-	// {
-	// 	const UClass* NamingClass = Naming.Key;
-	// 	if (NamingClass == InAssetClass)
-	// 	{
-	// 		return Naming.Value;
-	// 	}
-	// }
-
-	return {};
-}
+// FGdhAssetNamingInfo UGdhSubsystem::GetAssetNamingInfoByAssetClass(const UClass* InAssetClass)
+// {
+// 	if (!InAssetClass) return {};
+//
+// 	// const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
+// 	// if (!NamingConvention) return {};
+// 	//
+// 	// for (const auto& Naming : NamingConvention->Mappings)
+// 	// {
+// 	// 	const UClass* NamingClass = Naming.Key;
+// 	// 	if (NamingClass == InAssetClass)
+// 	// 	{
+// 	// 		return Naming.Value;
+// 	// 	}
+// 	// }
+//
+// 	return {};
+// }
 
 EGdhBlueprintType UGdhSubsystem::GetBlueprintType(const FAssetData& InAssetData)
 {
@@ -328,7 +327,7 @@ FString UGdhSubsystem::Tokenize(const FString& OriginalString)
 	const FString Normalized = Normalize(OriginalString);
 
 	if (Normalized.IsEmpty()) return {};
-	
+
 	FString Token;
 	Token.AppendChar(Normalized[0]);
 	const auto Chars = Normalized.GetCharArray();
@@ -370,27 +369,27 @@ FString UGdhSubsystem::ConvertNamingCase(const FString& OriginalString, const EG
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
-	if (NamingCase == EGdhNamingCase::PascalCase)
+	switch (NamingCase)
 	{
-		return ConvertToPascalCase(OriginalString);
+		case EGdhNamingCase::None: return OriginalString;
+		case EGdhNamingCase::PascalSnakeCase: return ConvertToPascalSnakeCase(OriginalString);
+		case EGdhNamingCase::PascalCase: return ConvertToPascalCase(OriginalString);
+		case EGdhNamingCase::UpperCase: return ConvertToUpperCase(OriginalString);
+		case EGdhNamingCase::LowerCase: return ConvertToLowerCase(OriginalString);
+		case EGdhNamingCase::SnakeCase: return ConvertToSnakeCase(OriginalString);
+		case EGdhNamingCase::CamelCase: return ConvertToCamelCase(OriginalString);
+		case EGdhNamingCase::KebabCase: return ConvertToKebabCase(OriginalString);
+		default: return OriginalString;
 	}
-
-	if (NamingCase == EGdhNamingCase::PascalSnakeCase)
-	{
-		return ConvertToPascalSnakeCase(OriginalString);
-	}
-
-	return FString{};
 }
 
 FString UGdhSubsystem::ConvertToPascalCase(const FString& OriginalString)
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
-	// const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
-	// if (!NamingConvention) return OriginalString;
-
 	const FString Tokenized = Tokenize(OriginalString);
+	if (Tokenized.IsEmpty()) return {};
+
 	TArray<FString> Parts;
 	Tokenized.ParseIntoArray(Parts, TEXT("_"));
 
@@ -407,14 +406,65 @@ FString UGdhSubsystem::ConvertToPascalCase(const FString& OriginalString)
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
 }
 
+FString UGdhSubsystem::ConvertToUpperCase(const FString& OriginalString)
+{
+	if (OriginalString.IsEmpty()) return OriginalString;
+
+	const FString Tokenized = Tokenize(OriginalString);
+	if (Tokenized.IsEmpty()) return {};
+
+	return Tokenized.ToUpper();
+}
+
+FString UGdhSubsystem::ConvertToLowerCase(const FString& OriginalString)
+{
+	return Tokenize(OriginalString).ToLower();
+}
+
+FString UGdhSubsystem::ConvertToSnakeCase(const FString& OriginalString)
+{
+	return Tokenize(OriginalString);
+}
+
+FString UGdhSubsystem::ConvertToCamelCase(const FString& OriginalString)
+{
+	if (OriginalString.IsEmpty()) return OriginalString;
+
+	const FString Tokenized = Tokenize(OriginalString);
+	if (Tokenized.IsEmpty()) return {};
+
+	TArray<FString> Parts;
+	Tokenized.ParseIntoArray(Parts, TEXT("_"));
+
+	TArray<FString> CapitalizedParts;
+	CapitalizedParts.Reserve(Parts.Num());
+
+	int32 Index = 0;
+	for (const auto& Part : Parts)
+	{
+		const FString FirstLetter = Index == 0 ? UKismetStringLibrary::GetSubstring(Part, 0, 1).ToLower() : UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
+		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+		CapitalizedParts.Add(FirstLetter + RestOfStr);
+
+		++Index;
+	}
+
+	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
+}
+
+FString UGdhSubsystem::ConvertToKebabCase(const FString& OriginalString)
+{
+	const FString SnakeCase = ConvertToSnakeCase(OriginalString);
+	return SnakeCase.Replace(TEXT("_"), TEXT("-"));
+}
+
 FString UGdhSubsystem::ConvertToPascalSnakeCase(const FString& OriginalString)
 {
 	if (OriginalString.IsEmpty()) return OriginalString;
 
-	// const UGdhAssetNamingConvention* NamingConvention = GetDefault<UGdhAssetNamingConvention>();
-	// if (!NamingConvention) return OriginalString;
-
 	const FString Tokenized = Tokenize(OriginalString);
+	if (Tokenized.IsEmpty()) return {};
+
 	TArray<FString> Parts;
 	Tokenized.ParseIntoArray(Parts, TEXT("_"));
 
@@ -516,6 +566,30 @@ FString UGdhSubsystem::PathConvertToRelative(const FString& InPath)
 	return {};
 }
 
+FGdhAssetNameFormatRow UGdhSubsystem::GetAssetNameFormat(const TSoftClassPtr<UObject>& InAssetClass)
+{
+	const UGdhAssetNamingToolSettings* Settings = GetDefault<UGdhAssetNamingToolSettings>();
+	if (!Settings) return {};
+
+	const auto MappingAsset = Settings->Mappings.LoadSynchronous();
+	if (!MappingAsset) return {};
+
+	TArray<FGdhAssetNameFormatRow*> Rows;
+	MappingAsset->GetAllRows(TEXT(""), Rows);
+
+	for (const auto& Row : Rows)
+	{
+		if (!Row) continue;
+
+		if (Row->AssetClass == InAssetClass)
+		{
+			return *Row;
+		}
+	}
+
+	return {};
+}
+
 void UGdhSubsystem::GetFolders(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders)
 {
 	OutFolders.Empty();
@@ -524,7 +598,7 @@ void UGdhSubsystem::GetFolders(const FString& InSearchPath, const bool bSearchRe
 	{
 		TArray<FString>& Folders;
 
-		explicit FFindFoldersVisitor(TArray<FString>& InFolders) : Folders(InFolders) { }
+		explicit FFindFoldersVisitor(TArray<FString>& InFolders) : Folders(InFolders) {}
 
 		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
 		{
@@ -561,7 +635,7 @@ void UGdhSubsystem::GetFilesByExt(const FString& InSearchPath, const bool bSearc
 		explicit FFindFilesVisitor(const bool bInSearchInvert, TArray<FString>& InFiles, const TSet<FString>& InExtensions)
 			: bSearchInvert(bInSearchInvert),
 			  Files(InFiles),
-			  Extensions(InExtensions) { }
+			  Extensions(InExtensions) {}
 
 		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
 		{
@@ -698,61 +772,11 @@ FContentBrowserModule& UGdhSubsystem::GetModuleContentBrowser()
 	return FModuleManager::LoadModuleChecked<FContentBrowserModule>(GdhConstants::ModuleContentBrowser);
 }
 
-FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName)
+FString UGdhSubsystem::RemoveOldPrefixAndSuffix(const FString& OldAssetName, const FString& InPrefix, const FString& InSuffix)
 {
-	if (OldAssetName.IsEmpty()) return OldAssetName;
+	FString Original = Tokenize(OldAssetName);
+	Original.RemoveFromStart(InPrefix.ToLower());
+	Original.RemoveFromEnd(InSuffix.ToLower());
 
-	// const auto NamingManagerSettings = GetDefault<UGdhAssetNamingConvention>();
-	// if (!NamingManagerSettings)
-	// {
-	// 	UE_LOG(LogGdh, Error, TEXT("Invalid Asset Naming Manager Settings"));
-	// 	return OldAssetName;
-	// }
-
-	FString BaseName = OldAssetName;
-	//
-	// for (const auto& OldPrefix : NamingManagerSettings->OldPrefixes)
-	// {
-	// 	if (OldPrefix.IsEmpty()) continue;
-	//
-	// 	BaseName.RemoveFromStart(OldPrefix + TEXT("_"));
-	// }
-	//
-	// for (const auto& OldSuffix : NamingManagerSettings->OldSuffixes)
-	// {
-	// 	if (OldSuffix.IsEmpty()) continue;
-	//
-	// 	BaseName.RemoveFromEnd(TEXT("_") + OldSuffix);
-	// }
-	//
-	// for (const auto& Naming : NamingManagerSettings->Mappings)
-	// {
-	// 	if (Naming.Key)
-	// 	{
-	// 		if (!Naming.Value.Prefix.IsEmpty())
-	// 		{
-	// 			BaseName.RemoveFromStart(Naming.Value.Prefix + TEXT("_"));
-	// 		}
-	//
-	// 		if (!Naming.Value.Suffix.IsEmpty())
-	// 		{
-	// 			BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
-	// 		}
-	// 	}
-	// }
-	//
-	// for (const auto& Naming : NamingManagerSettings->BlueprintPrefixes)
-	// {
-	// 	if (!Naming.Value.Prefix.IsEmpty())
-	// 	{
-	// 		BaseName.RemoveFromStart(Naming.Value.Prefix + TEXT("_"));
-	// 	}
-	//
-	// 	if (!Naming.Value.Suffix.IsEmpty())
-	// 	{
-	// 		BaseName.RemoveFromEnd(TEXT("_") + Naming.Value.Suffix);
-	// 	}
-	// }
-
-	return BaseName;
+	return Normalize(Original);
 }
