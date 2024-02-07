@@ -17,17 +17,28 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "Gdh",
-      "Type": "Editor",
-      "LoadingPhase": "PostDefault",
+      "Name": "GdhCore",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
       "WhitelistPlatforms": [
         "Win64"
       ]
     },
     {
-      "Name": "GdhEditor",
+      "Name": "GdhUtil",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
+      "WhitelistPlatforms": [
+        "Win64"
+      ]
+    },
+    {
+      "Name": "GdhTools",
       "Type": "Editor",
-      "LoadingPhase": "Default"
+      "LoadingPhase": "Default",
+      "WhitelistPlatforms": [
+        "Win64"
+      ]
     }
   ],
   "Plugins": [
