@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "GdhConstants.h"
 #include "Misc/AutomationTest.h"
 #include "GdhLibString.h"
 
@@ -65,9 +66,46 @@ namespace GdhLibStringTests
 
 		return true;
 	}
+
+	bool RunContainsAsciiTests()
+	{
+		if (!UGdhLibString::ContainsAscii(GdhConstants::AlphaMixed))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ContainsAscii] Expected true got false %d"), __LINE__);
+			return false;
+		}
+
+		if (!UGdhLibString::ContainsAscii(TEXT("ԲարևПривет")))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ContainsAscii] Expected false got true %d"), __LINE__);
+			return false;
+		}
+
+		return true;
+	}
+
+	bool RunContainsUnicodeTests()
+	{
+		if (UGdhLibString::ContainsUnicode(GdhConstants::AlphaMixed))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ContainsUnicode] Expected false got true %d"), __LINE__);
+			return false;
+		}
+
+		if (!UGdhLibString::ContainsUnicode(TEXT("Բարև, Привет")))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ContainsUnicode] Expected true got false %d"), __LINE__);
+			return false;
+		}
+
+		return true;
+	}
 }
 
 bool FGdhLibString::RunTest(const FString& Parameters)
 {
-	return GdhLibStringTests::RunGetRandomStringFromCharsetTests();
+	return
+		GdhLibStringTests::RunGetRandomStringFromCharsetTests() &&
+		GdhLibStringTests::RunContainsAsciiTests() &&
+		GdhLibStringTests::RunContainsUnicodeTests();
 }
