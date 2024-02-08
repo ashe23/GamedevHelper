@@ -22,8 +22,9 @@ namespace GdhConstants
 	static const FName TabAssetNamingTool{TEXT("TabAssetNamingTool")};
 
 	// charsets
-	static const FString AlphaLower = TEXT("abcdefghijklmnopqrstuvwxyz");
-	static const FString AlphaUpper = AlphaLower.ToUpper();
-	static const FString AlphaMixed = AlphaLower + AlphaLower.ToUpper();
 	static const FString Digits = TEXT("0123456789");
+	static const FString AlphaLower = TEXT("abcdefghijklmnopqrstuvwxyz");
+	static const FString AlphaUpper = TEXT("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	static const FString AlphaMixed = TEXT("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	static const FString SpecialChars = TEXT(" !\"#$%&'()*+,-_./:;<?>@=[]\\^`~");
 }

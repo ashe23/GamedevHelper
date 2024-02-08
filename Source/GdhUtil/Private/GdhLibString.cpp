@@ -6,6 +6,46 @@
 #include "GdhEnums.h"
 #include "Kismet/KismetStringLibrary.h"
 
+// STRING CREATION
+
+FString UGdhLibString::Repeat(const FString& Str, const int32 Num)
+{
+	if (Str.IsEmpty() || Num == 0) return Str;
+
+	FString Result;
+	Result.Reserve(Str.Len() * Num);
+
+	for (int32 i = 0; i < Num; ++i)
+	{
+		Result.Append(Str);
+	}
+
+	return Result;
+}
+
+FString UGdhLibString::Random(const int32 Len, const FString& Charset, const int32 Seed)
+{
+	if (Len == 0 || Charset.IsEmpty()) return {};
+
+	FRandomStream RandomStream{Seed};
+	if (Seed == 0)
+	{
+		RandomStream.GenerateNewSeed();
+	}
+	const auto Chars = Charset.GetCharArray();
+
+	FString FinalString;
+	FinalString.Reserve(Len);
+
+	for (int32 Index = 0; Index < Len; ++Index)
+	{
+		const int32 RandIndex = RandomStream.RandRange(0, Chars.Num() - 2); // ignore '\0' char
+		FinalString.AppendChar(Chars[RandIndex]);
+	}
+
+	return FinalString;
+}
+
 FString UGdhLibString::Intersection(const FString& StringA, const FString& StringB)
 {
 	if (StringA.IsEmpty() || StringB.IsEmpty()) return {};
@@ -150,6 +190,8 @@ bool UGdhLibString::ContainsOnlyDigits(const FString& OriginalString)
 
 bool UGdhLibString::ContainsAscii(const FString& OriginalString)
 {
+	const auto Src = StringCast<ANSICHAR>(*OriginalString);
+	const ANSICHAR* Ptr = Src.Get();
 	// todo:ashe23 not sure
 	for (const TCHAR& Char : OriginalString)
 	{
@@ -190,24 +232,24 @@ bool UGdhLibString::ContainsOnlyUnicode(const FString& OriginalString)
 	return !ContainsAscii(OriginalString);
 }
 
-FString UGdhLibString::GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed)
-{
-	if (Len == 0 || Charset.IsEmpty()) return {};
-
-	const FRandomStream RandomStream{Seed};
-	const auto Chars = Charset.GetCharArray();
-
-	FString FinalString;
-	FinalString.Reserve(Len);
-
-	for (int32 Index = 0; Index < Len; ++Index)
-	{
-		const int32 RandIndex = RandomStream.RandRange(0, Chars.Num() - 2); // ignore '\0' element
-		FinalString.AppendChar(Chars[RandIndex]);
-	}
-
-	return FinalString;
-}
+// FString UGdhLibString::GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed)
+// {
+// 	if (Len == 0 || Charset.IsEmpty()) return {};
+//
+// 	const FRandomStream RandomStream{Seed};
+// 	const auto Chars = Charset.GetCharArray();
+//
+// 	FString FinalString;
+// 	FinalString.Reserve(Len);
+//
+// 	for (int32 Index = 0; Index < Len; ++Index)
+// 	{
+// 		const int32 RandIndex = RandomStream.RandRange(0, Chars.Num() - 2); // ignore '\0' element
+// 		FinalString.AppendChar(Chars[RandIndex]);
+// 	}
+//
+// 	return FinalString;
+// }
 
 FString UGdhLibString::Normalize(const FString& OriginalString)
 {

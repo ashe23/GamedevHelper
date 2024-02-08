@@ -15,6 +15,30 @@ class GDHUTIL_API UGdhLibString : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	// STRING CREATION
+
+	/**
+	 * @brief Creates a new string by repeating a string Num times
+	 * @param Str FString
+	 * @param Num int32
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String", meta=(DisplayName="Repeat String"))
+	static FString Repeat(const FString& Str, const int32 Num);
+
+	/**
+	 * @brief Creates a new random string by given Len, Charset and Seed. By default Seed is zero, that will generate new seed every time internally.
+	 * @param Len int32
+	 * @param Charset FString
+	 * @param Seed int32
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String", meta=(DisplayName="Random String"))
+	static FString Random(const int32 Len, const FString& Charset, const int32 Seed = 0);
+
+
+	// STRING MANIPULATION
+
 	/**
 	 * @brief Returns intersection of character sets of given two strings
 	 * - "abc", "abd" => "ab"
@@ -39,7 +63,7 @@ public:
 	static FString Union(const FString& StringA, const FString& StringB);
 
 	/**
-	 * @brief Returns symmetric difference of character sets of given two string
+	 * @brief Returns symmetric difference of character sets of given two string. Returns the elements that are unique to SetA or SetB, but not common to both.
 	 * - "abc", "def" => "abcdef"
 	 * - "abc", "abcdef" => "def"
 	 * - "", "abc" => "abc"
@@ -70,6 +94,9 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
 	static bool IsSubSet(const FString& StringA, const FString& StringB);
+
+
+	// STRING CHECKS
 
 	/**
 	 * @brief Checks if string contains any of characters in given dictionary
@@ -148,22 +175,22 @@ public:
 	static bool ContainsOnlyAscii(const FString& OriginalString);
 
 	/**
-	 * @brief Checks if string contains ONLY ascii characters
+	 * @brief Checks if string contains ONLY unicode characters
 	 * @param OriginalString FString
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
 	static bool ContainsOnlyUnicode(const FString& OriginalString);
 
-	/**
-	 * @brief Returns randomly generated string from given charset and seed
-	 * @param Len int32
-	 * @param Charset FString
-	 * @param Seed int32
-	 * @return FString
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed = 0);
+	// /**
+	//  * @brief Returns randomly generated string from given charset and seed
+	//  * @param Len int32
+	//  * @param Charset FString
+	//  * @param Seed int32
+	//  * @return FString
+	//  */
+	// UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	// static FString GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed = 0);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 
