@@ -85,31 +85,60 @@ public:
 	 * @brief Checks if given Str contains any characters in Charset
 	 * @param Str FString
 	 * @param Charset FString
-	 * @param SearchCase ESearchCase
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool HasAny(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase);
+	static bool HasAny(const FString& Str, const FString& Charset);
 
 	/**
 	 * @brief Checks if given Str does not contain any character in Charset
 	 * @param Str FString
 	 * @param Charset FString
-	 * @param SearchCase ESearchCase
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool HasNone(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase);
+	static bool HasNone(const FString& Str, const FString& Charset);
 
 	/**
 	 * @brief Checks if given Str contains only given Charset characters
 	 * @param Str FString
 	 * @param Charset FString
-	 * @param SearchCase ESearchCase
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool HasOnly(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase);
+	static bool HasOnly(const FString& Str, const FString& Charset);
+
+	/**
+	 * @brief Checks if given Str contains any Ascii charset
+	 * @param Str FString
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasAscii(const FString& Str);
+
+	/**
+	 * @brief Checks if given Str contains only Ascii charset
+	 * @param Str FString
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasOnlyAscii(const FString& Str);
+
+	/**
+	 * @brief Checks if given Str contains any Unicode character
+	 * @param Str FString
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasUnicode(const FString& Str);
+
+	/**
+	 * @brief Checks if given Str contains only Unicode characters
+	 * @param Str FString
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasOnlyUnicode(const FString& Str);
 
 	// STRING MANIPULATION
 
@@ -169,102 +198,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
 	static bool IsSubSet(const FString& StringA, const FString& StringB);
 
-
-	// STRING CHECKS
-
-	/**
-	 * @brief Checks if string contains any of characters in given dictionary
-	 * @param OriginalString FString
-	 * @param Dictionary FString
-	 * @param SearchCase ESearchCase
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool Contains(const FString& OriginalString, const FString& Dictionary, const ESearchCase::Type SearchCase);
-
-	/**
-	 * @brief Similar to Contains, but checks if string contains ONLY characters from given dictionary
-	 * @param OriginalString FString
-	 * @param Dictionary FString
-	 * @param SearchCase ESearchCase
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsOnly(const FString& OriginalString, const FString& Dictionary, const ESearchCase::Type SearchCase);
-
-	/**
-	 * @brief Checks if string contains letters
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsLetters(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains digits
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsDigits(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains only letters
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsOnlyLetters(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains only digits
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsOnlyDigits(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains ascii characters
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsAscii(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains unicode characters
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsUnicode(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains ONLY ascii characters
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsOnlyAscii(const FString& OriginalString);
-
-	/**
-	 * @brief Checks if string contains ONLY unicode characters
-	 * @param OriginalString FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool ContainsOnlyUnicode(const FString& OriginalString);
-
-	// /**
-	//  * @brief Returns randomly generated string from given charset and seed
-	//  * @param Len int32
-	//  * @param Charset FString
-	//  * @param Seed int32
-	//  * @return FString
-	//  */
-	// UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	// static FString GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed = 0);
 
 	/**
 	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 

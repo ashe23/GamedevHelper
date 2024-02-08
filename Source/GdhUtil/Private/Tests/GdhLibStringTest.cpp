@@ -13,6 +13,18 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringRandom, "Gdh.Library.String.Random
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasAny, "Gdh.Library.String.HasAny", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasNone, "Gdh.Library.String.HasNone", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasOnly, "Gdh.Library.String.HasOnly", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasAscii, "Gdh.Library.String.HasAscii", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasOnlyAscii, "Gdh.Library.String.HasOnlyAscii", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasUnicode, "Gdh.Library.String.HasUnicode", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasOnlyUnicode, "Gdh.Library.String.HasOnlyUnicode", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
 
 bool FGdhLibStringRepeat::RunTest(const FString& Parameters)
 {
@@ -59,37 +71,128 @@ bool FGdhLibStringRandom::RunTest(const FString& Parameters)
 
 bool FGdhLibStringHasAny::RunTest(const FString& Parameters)
 {
-	// case insensitive
-	TestFalse(TEXT("[case insensitive] Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT(""), ESearchCase::IgnoreCase));
-	TestFalse(TEXT("[case insensitive] Empty Str And Non Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT("abc"), ESearchCase::IgnoreCase));
-	TestFalse(TEXT("[case insensitive] Non Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT("abc"), TEXT(""), ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Ascii chars #1"), UGdhLibString::HasAny(TEXT("abc"), TEXT("a"), ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Ascii chars #2"), UGdhLibString::HasAny(TEXT("abc"), TEXT("b"), ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Ascii chars #3"), UGdhLibString::HasAny(TEXT("abc"), TEXT("ab"), ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Ascii chars #4"), UGdhLibString::HasAny(TEXT("abc"), TEXT("abc"), ESearchCase::IgnoreCase));
-	TestFalse(TEXT("[case insensitive] Ascii chars #5"), UGdhLibString::HasAny(TEXT("abc"), TEXT("e"), ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Special chars #1"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::SpecialChars, ESearchCase::IgnoreCase));
-	TestFalse(TEXT("[case insensitive] Special chars #2"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::AlphaMixed, ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Unicode chars #1"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ПР"), ESearchCase::IgnoreCase));
-	TestFalse(TEXT("[case insensitive] Unicode chars #2"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ООО"), ESearchCase::IgnoreCase));
-	TestTrue(TEXT("[case insensitive] Unicode chars #3"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("РИВЕТ"), ESearchCase::IgnoreCase));
+	TestFalse(TEXT("Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT("")));
+	TestFalse(TEXT("Empty Str And Non Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT("abc")));
+	TestFalse(TEXT("Non Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT("abc"), TEXT("")));
+	TestTrue(TEXT("Ascii chars #1"), UGdhLibString::HasAny(TEXT("abc"), TEXT("a")));
+	TestTrue(TEXT("Ascii chars #2"), UGdhLibString::HasAny(TEXT("abc"), TEXT("b")));
+	TestTrue(TEXT("Ascii chars #3"), UGdhLibString::HasAny(TEXT("abc"), TEXT("ab")));
+	TestTrue(TEXT("Ascii chars #4"), UGdhLibString::HasAny(TEXT("abc"), TEXT("abc")));
+	TestFalse(TEXT("Ascii chars #5"), UGdhLibString::HasAny(TEXT("abc"), TEXT("e")));
+	TestFalse(TEXT("Ascii chars #6"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("abc")));
+	TestTrue(TEXT("Ascii chars #7"), UGdhLibString::HasAny(TEXT("ABc"), TEXT("abc")));
+	TestTrue(TEXT("Special chars #1"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::SpecialChars));
+	TestFalse(TEXT("Special chars #2"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::AlphaMixed));
+	TestTrue(TEXT("Unicode chars #1"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ПР")));
+	TestFalse(TEXT("Unicode chars #2"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ООО")));
+	TestFalse(TEXT("Unicode chars #3"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("РИВЕТ")));
 
-	// case sensitive
-	TestFalse(TEXT("[case sensitive] Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT(""), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Empty Str And Non Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT("abc"), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Non Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT("abc"), TEXT(""), ESearchCase::CaseSensitive));
-	TestTrue(TEXT("[case sensitive] Ascii chars #1"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("A"), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Ascii chars #2"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("b"), ESearchCase::CaseSensitive));
-	TestTrue(TEXT("[case sensitive] Ascii chars #3"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("Ab"), ESearchCase::CaseSensitive));
-	TestTrue(TEXT("[case sensitive] Ascii chars #4"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("ABC"), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Ascii chars #5"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("E"), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Ascii chars #6"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("e"), ESearchCase::CaseSensitive));
-	TestTrue(TEXT("[case sensitive] Special chars #1"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::SpecialChars, ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Special chars #2"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::AlphaMixed, ESearchCase::CaseSensitive));
-	TestTrue(TEXT("[case sensitive] Unicode chars #1"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ПР"), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Unicode chars #2"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ООО"), ESearchCase::CaseSensitive));
-	TestFalse(TEXT("[case sensitive] Unicode chars #3"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("РИВЕТ"), ESearchCase::CaseSensitive));
-	
+	return true;
+}
+
+bool FGdhLibStringHasNone::RunTest(const FString& Parameters)
+{
+	TestTrue(TEXT("Empty Str And Empty Charset"), UGdhLibString::HasNone(TEXT(""), TEXT("")));
+	TestTrue(TEXT("Empty Str And Non Empty Charset"), UGdhLibString::HasNone(TEXT(""), TEXT("abc")));
+	TestTrue(TEXT("Non Empty Str And Empty Charset"), UGdhLibString::HasNone(TEXT("abc"), TEXT("")));
+	TestFalse(TEXT("Ascii chars #1"), UGdhLibString::HasNone(TEXT("abc"), TEXT("a")));
+	TestFalse(TEXT("Ascii chars #2"), UGdhLibString::HasNone(TEXT("abc"), TEXT("b")));
+	TestFalse(TEXT("Ascii chars #3"), UGdhLibString::HasNone(TEXT("abc"), TEXT("ab")));
+	TestFalse(TEXT("Ascii chars #4"), UGdhLibString::HasNone(TEXT("abc"), TEXT("abc")));
+	TestTrue(TEXT("Ascii chars #5"), UGdhLibString::HasNone(TEXT("abc"), TEXT("e")));
+	TestTrue(TEXT("Ascii chars #6"), UGdhLibString::HasNone(TEXT("ABC"), TEXT("abc")));
+	TestFalse(TEXT("Ascii chars #7"), UGdhLibString::HasNone(TEXT("ABc"), TEXT("abc")));
+	TestFalse(TEXT("Special chars #1"), UGdhLibString::HasNone(TEXT("[]"), GdhConstants::SpecialChars));
+	TestTrue(TEXT("Special chars #2"), UGdhLibString::HasNone(TEXT("[]"), GdhConstants::AlphaMixed));
+	TestFalse(TEXT("Unicode chars #1"), UGdhLibString::HasNone(TEXT("Привет"), TEXT("ПР")));
+	TestTrue(TEXT("Unicode chars #2"), UGdhLibString::HasNone(TEXT("Привет"), TEXT("ООО")));
+	TestTrue(TEXT("Unicode chars #3"), UGdhLibString::HasNone(TEXT("Привет"), TEXT("РИВЕТ")));
+
+
+	return true;
+}
+
+bool FGdhLibStringHasOnly::RunTest(const FString& Parameters)
+{
+	TestFalse(TEXT("Empty Str And Empty Charset"), UGdhLibString::HasOnly(TEXT(""), TEXT("")));
+	TestFalse(TEXT("Empty Str And Non Empty Charset"), UGdhLibString::HasOnly(TEXT(""), TEXT("abc")));
+	TestFalse(TEXT("Non Empty Str And Empty Charset"), UGdhLibString::HasOnly(TEXT(""), TEXT("")));
+	TestTrue(TEXT("Ascii chars #1"), UGdhLibString::HasOnly(TEXT("a"), TEXT("abc")));
+	TestTrue(TEXT("Ascii chars #2"), UGdhLibString::HasOnly(TEXT("ab"), TEXT("abc")));
+	TestTrue(TEXT("Ascii chars #3"), UGdhLibString::HasOnly(TEXT("abc"), TEXT("abc")));
+	TestFalse(TEXT("Ascii chars #4"), UGdhLibString::HasOnly(TEXT("abcd"), TEXT("abc")));
+	TestTrue(TEXT("Ascii chars #5"), UGdhLibString::HasOnly(TEXT("aaa"), TEXT("a")));
+	TestFalse(TEXT("Ascii chars #6"), UGdhLibString::HasOnly(TEXT("ABc"), TEXT("abc")));
+	TestTrue(TEXT("Special chars #1"), UGdhLibString::HasOnly(TEXT("[]"), GdhConstants::SpecialChars));
+	TestFalse(TEXT("Special chars #2"), UGdhLibString::HasOnly(TEXT("[]a"), GdhConstants::SpecialChars));
+	TestTrue(TEXT("Unicode chars #1"), UGdhLibString::HasOnly(TEXT("Привет"), TEXT("Привет")));
+	TestFalse(TEXT("Unicode chars #1"), UGdhLibString::HasOnly(TEXT("Привет"), TEXT("ПРивеот")));
+	TestFalse(TEXT("Unicode chars #2"), UGdhLibString::HasOnly(TEXT("Привет "), TEXT("Привет"))); // Space at the end of Str.
+
+	return true;
+}
+
+bool FGdhLibStringHasAscii::RunTest(const FString& Parameters)
+{
+	TestFalse(TEXT("Empty String"), UGdhLibString::HasAscii(TEXT("")));
+	TestTrue(TEXT("ASCII Only"), UGdhLibString::HasAscii(TEXT("Hello, world!")));
+	TestTrue(TEXT("Mixed With ASCII At Start"), UGdhLibString::HasAscii(TEXT("AПривет")));
+	TestTrue(TEXT("Mixed With ASCII In Middle"), UGdhLibString::HasAscii(TEXT("ПривAет")));
+	TestTrue(TEXT("Mixed With ASCII At End"), UGdhLibString::HasAscii(TEXT("ПриветA")));
+	TestFalse(TEXT("Non-ASCII Only"), UGdhLibString::HasAscii(TEXT("Привет")));
+	TestTrue(TEXT("Numbers"), UGdhLibString::HasAscii(TEXT("12345")));
+	TestTrue(TEXT("Special Characters"), UGdhLibString::HasAscii(TEXT("!@#$%^")));
+	TestFalse(TEXT("Extended ASCII"), UGdhLibString::HasAscii(TEXT("ÿüöäß")));
+	TestTrue(TEXT("Newline Character"), UGdhLibString::HasAscii(TEXT("\n")));
+	TestTrue(TEXT("Tab Character"), UGdhLibString::HasAscii(TEXT("\t")));
+	TestTrue(TEXT("Carriage Return"), UGdhLibString::HasAscii(TEXT("\r")));
+
+	return true;
+}
+
+bool FGdhLibStringHasOnlyAscii::RunTest(const FString& Parameters)
+{
+	TestFalse(TEXT("Empty String"), UGdhLibString::HasOnlyAscii(TEXT("")));
+	TestTrue(TEXT("ASCII Only"), UGdhLibString::HasOnlyAscii(TEXT("Hello, world!")));
+	TestFalse(TEXT("Mixed With ASCII At Start"), UGdhLibString::HasOnlyAscii(TEXT("AПривет")));
+	TestFalse(TEXT("Mixed With ASCII In Middle"), UGdhLibString::HasOnlyAscii(TEXT("ПривAет")));
+	TestFalse(TEXT("Mixed With ASCII At End"), UGdhLibString::HasOnlyAscii(TEXT("ПриветA")));
+	TestFalse(TEXT("Non-ASCII Only"), UGdhLibString::HasOnlyAscii(TEXT("Привет")));
+	TestTrue(TEXT("Numbers"), UGdhLibString::HasOnlyAscii(TEXT("12345")));
+	TestTrue(TEXT("Special Characters"), UGdhLibString::HasOnlyAscii(TEXT("!@#$%^")));
+	TestFalse(TEXT("Extended ASCII"), UGdhLibString::HasOnlyAscii(TEXT("ÿüöäß")));
+
+	return true;
+}
+
+bool FGdhLibStringHasUnicode::RunTest(const FString& Parameters)
+{
+	TestFalse(TEXT("Empty String"), UGdhLibString::HasUnicode(TEXT("")));
+	TestFalse(TEXT("ASCII Only"), UGdhLibString::HasUnicode(TEXT("Hello, world!")));
+	TestTrue(TEXT("Mixed With ASCII At Start"), UGdhLibString::HasUnicode(TEXT("AПривет")));
+	TestTrue(TEXT("Mixed With ASCII In Middle"), UGdhLibString::HasUnicode(TEXT("ПривAет")));
+	TestTrue(TEXT("Mixed With ASCII At End"), UGdhLibString::HasUnicode(TEXT("ПриветA")));
+	TestTrue(TEXT("Non-ASCII Only"), UGdhLibString::HasUnicode(TEXT("Привет")));
+	TestFalse(TEXT("Numbers"), UGdhLibString::HasUnicode(TEXT("12345")));
+	TestFalse(TEXT("Special Characters"), UGdhLibString::HasUnicode(TEXT("!@#$%^")));
+	TestTrue(TEXT("Extended ASCII"), UGdhLibString::HasUnicode(TEXT("ÿüöäß")));
+
+	return true;
+}
+
+
+bool FGdhLibStringHasOnlyUnicode::RunTest(const FString& Parameters)
+{
+	TestFalse(TEXT("Empty String"), UGdhLibString::HasOnlyUnicode(TEXT("")));
+	TestFalse(TEXT("ASCII Only"), UGdhLibString::HasOnlyUnicode(TEXT("Hello, world!")));
+	TestFalse(TEXT("Mixed With ASCII At Start"), UGdhLibString::HasOnlyUnicode(TEXT("AПривет")));
+	TestFalse(TEXT("Mixed With ASCII In Middle"), UGdhLibString::HasOnlyUnicode(TEXT("ПривAет")));
+	TestFalse(TEXT("Mixed With ASCII At End"), UGdhLibString::HasOnlyUnicode(TEXT("ПриветA")));
+	TestTrue(TEXT("Non-ASCII Only"), UGdhLibString::HasOnlyUnicode(TEXT("Привет")));
+	TestFalse(TEXT("Numbers"), UGdhLibString::HasOnlyUnicode(TEXT("12345")));
+	TestFalse(TEXT("Special Characters"), UGdhLibString::HasOnlyUnicode(TEXT("!@#$%^")));
+	TestTrue(TEXT("Extended ASCII"), UGdhLibString::HasOnlyUnicode(TEXT("ÿüöäß")));
+
 	return true;
 }
 

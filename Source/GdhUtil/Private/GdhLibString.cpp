@@ -5,6 +5,7 @@
 #include "GdhConstants.h"
 #include "GdhEnums.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/AsciiSet.h"
 
 // STRING CREATION
 
@@ -76,25 +77,13 @@ FString UGdhLibString::Random(const int32 Len, const FString& Charset, const int
 	return FinalString;
 }
 
-bool UGdhLibString::HasAny(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase)
+bool UGdhLibString::HasAny(const FString& Str, const FString& Charset)
 {
-	for (int32 i = 0; i < Str.Len(); ++i)
+	int32 Index = INDEX_NONE;
+
+	for (const auto& Char : Str)
 	{
-		if (!Str.IsValidIndex(i)) continue;
-
-		const FString Char = UKismetStringLibrary::GetSubstring(Str, i, 1);
-		if (Charset.Contains(Char, SearchCase))
-		{
-			return true;
-		}
-
-		// todo:ashe23 not working correctly for unicode characters if ignore case is active
-
-		const TCHAR CharAtIndex = Str[i];
-		int32 Index = INDEX_NONE;
-		Charset.FindChar(CharAtIndex, Index);
-
-		if (Index != INDEX_NONE)
+		if (Charset.FindChar(Char, Index))
 		{
 			return true;
 		}
@@ -103,14 +92,78 @@ bool UGdhLibString::HasAny(const FString& Str, const FString& Charset, const ESe
 	return false;
 }
 
-bool UGdhLibString::HasNone(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase)
+bool UGdhLibString::HasNone(const FString& Str, const FString& Charset)
 {
+	return !HasAny(Str, Charset);
+}
+
+bool UGdhLibString::HasOnly(const FString& Str, const FString& Charset)
+{
+	if (Str.IsEmpty() || Charset.IsEmpty()) return false;
+
+	int32 Index = INDEX_NONE;
+	for (const auto& Char : Str)
+	{
+		if (!Charset.FindChar(Char, Index))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UGdhLibString::HasAscii(const FString& Str)
+{
+	if (Str.IsEmpty()) return false;
+
+	constexpr FAsciiSet WhitespaceCharacters(" \v\f\t\r\n");
+	
+	for (const auto& Char : Str)
+	{
+		if (WhitespaceCharacters.Contains(Char))
+		{
+			return true;
+		}
+		
+		const uint32 CharValue = TChar<TCHAR>::ToUnsigned(Char);
+		if (CharValue > 0 && CharValue <= 127)
+		{
+			return true;
+		}
+	}
+
 	return false;
 }
 
-bool UGdhLibString::HasOnly(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase)
+bool UGdhLibString::HasOnlyAscii(const FString& Str)
 {
-	return false;
+	if (Str.IsEmpty()) return false;
+	
+	for (const auto& Char : Str)
+	{
+		const uint32 CharValue = TChar<TCHAR>::ToUnsigned(Char);
+		if (CharValue > 127)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UGdhLibString::HasUnicode(const FString& Str)
+{
+	if (Str.IsEmpty()) return false;
+	
+	return !HasOnlyAscii(Str);
+}
+
+bool UGdhLibString::HasOnlyUnicode(const FString& Str)
+{
+	if (Str.IsEmpty()) return false;
+	
+	return !HasAscii(Str);
 }
 
 FString UGdhLibString::Intersection(const FString& StringA, const FString& StringB)
@@ -218,105 +271,6 @@ bool UGdhLibString::IsSubSet(const FString& StringA, const FString& StringB)
 
 	return true;
 }
-
-bool UGdhLibString::Contains(const FString& OriginalString, const FString& Dictionary, const ESearchCase::Type SearchCase)
-{
-	const FString StringA = SearchCase == ESearchCase::CaseSensitive ? OriginalString : OriginalString.ToLower();
-	const FString StringB = SearchCase == ESearchCase::CaseSensitive ? Dictionary : Dictionary.ToLower();
-
-	return Intersection(StringA, StringB).Len() > 0;
-}
-
-bool UGdhLibString::ContainsOnly(const FString& OriginalString, const FString& Dictionary, const ESearchCase::Type SearchCase)
-{
-	const FString StringA = SearchCase == ESearchCase::CaseSensitive ? OriginalString : OriginalString.ToLower();
-	const FString StringB = SearchCase == ESearchCase::CaseSensitive ? Dictionary : Dictionary.ToLower();
-
-	return IsSubSet(StringA, StringB);
-}
-
-bool UGdhLibString::ContainsLetters(const FString& OriginalString)
-{
-	return Contains(OriginalString, GdhConstants::AlphaLower, ESearchCase::IgnoreCase);
-}
-
-bool UGdhLibString::ContainsDigits(const FString& OriginalString)
-{
-	return Contains(OriginalString, GdhConstants::Digits, ESearchCase::IgnoreCase);
-}
-
-bool UGdhLibString::ContainsOnlyLetters(const FString& OriginalString)
-{
-	return ContainsOnly(OriginalString, GdhConstants::AlphaLower, ESearchCase::IgnoreCase);
-}
-
-bool UGdhLibString::ContainsOnlyDigits(const FString& OriginalString)
-{
-	return ContainsOnly(OriginalString, GdhConstants::Digits, ESearchCase::IgnoreCase);
-}
-
-bool UGdhLibString::ContainsAscii(const FString& OriginalString)
-{
-	const auto Src = StringCast<ANSICHAR>(*OriginalString);
-	const ANSICHAR* Ptr = Src.Get();
-	// todo:ashe23 not sure
-	for (const TCHAR& Char : OriginalString)
-	{
-		const unsigned int CharValue = Char;
-
-		if (CharValue > 0 || CharValue <= 255)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool UGdhLibString::ContainsUnicode(const FString& OriginalString)
-{
-	// todo:ashe23 not sure
-	for (const TCHAR& Char : OriginalString)
-	{
-		const unsigned int CharValue = Char;
-
-		if (CharValue > 255)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool UGdhLibString::ContainsOnlyAscii(const FString& OriginalString)
-{
-	return !ContainsUnicode(OriginalString);
-}
-
-bool UGdhLibString::ContainsOnlyUnicode(const FString& OriginalString)
-{
-	return !ContainsAscii(OriginalString);
-}
-
-// FString UGdhLibString::GetRandomStringFromCharset(const int32 Len, const FString& Charset, const int32 Seed)
-// {
-// 	if (Len == 0 || Charset.IsEmpty()) return {};
-//
-// 	const FRandomStream RandomStream{Seed};
-// 	const auto Chars = Charset.GetCharArray();
-//
-// 	FString FinalString;
-// 	FinalString.Reserve(Len);
-//
-// 	for (int32 Index = 0; Index < Len; ++Index)
-// 	{
-// 		const int32 RandIndex = RandomStream.RandRange(0, Chars.Num() - 2); // ignore '\0' element
-// 		FinalString.AppendChar(Chars[RandIndex]);
-// 	}
-//
-// 	return FinalString;
-// }
 
 FString UGdhLibString::Normalize(const FString& OriginalString)
 {
