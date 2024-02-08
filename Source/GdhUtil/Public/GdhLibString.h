@@ -15,6 +15,49 @@ class GDHUTIL_API UGdhLibString : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	/**
+	 * @brief Returns lowercase alpha only characters
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString GetCharsetAlphaLower();
+
+	/**
+	 * @brief Returns uppercase alpha only characters
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString GetCharsetAlphaUpper();
+
+
+	/**
+	 * @brief Returns lowercase and uppercase alpha only characters
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString GetCharsetAlphaLowerAndUpper();
+
+	/**
+	 * @brief Returns digits only characters
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString GetCharsetDigits();
+
+	/**
+	 * @brief Returns alpha lower and upper case + digits
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString GetCharsetMixed();
+
+	/**
+	 * @brief Returns special characters
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString GetCharsetSpecial();
+
 	// STRING CREATION
 
 	/**
@@ -36,6 +79,37 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String", meta=(DisplayName="Random String"))
 	static FString Random(const int32 Len, const FString& Charset, const int32 Seed = 0);
 
+	// STRING CHECKS
+
+	/**
+	 * @brief Checks if given Str contains any characters in Charset
+	 * @param Str FString
+	 * @param Charset FString
+	 * @param SearchCase ESearchCase
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasAny(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase);
+
+	/**
+	 * @brief Checks if given Str does not contain any character in Charset
+	 * @param Str FString
+	 * @param Charset FString
+	 * @param SearchCase ESearchCase
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasNone(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase);
+
+	/**
+	 * @brief Checks if given Str contains only given Charset characters
+	 * @param Str FString
+	 * @param Charset FString
+	 * @param SearchCase ESearchCase
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static bool HasOnly(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase);
 
 	// STRING MANIPULATION
 

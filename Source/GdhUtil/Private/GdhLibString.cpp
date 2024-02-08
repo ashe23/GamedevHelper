@@ -8,6 +8,36 @@
 
 // STRING CREATION
 
+FString UGdhLibString::GetCharsetAlphaLower()
+{
+	return GdhConstants::AlphaLower;
+}
+
+FString UGdhLibString::GetCharsetAlphaUpper()
+{
+	return GdhConstants::AlphaUpper;
+}
+
+FString UGdhLibString::GetCharsetAlphaLowerAndUpper()
+{
+	return GdhConstants::AlphaLower + GdhConstants::AlphaUpper;
+}
+
+FString UGdhLibString::GetCharsetDigits()
+{
+	return GdhConstants::Digits;
+}
+
+FString UGdhLibString::GetCharsetMixed()
+{
+	return GdhConstants::AlphaMixed + GdhConstants::Digits;
+}
+
+FString UGdhLibString::GetCharsetSpecial()
+{
+	return GdhConstants::SpecialChars;
+}
+
 FString UGdhLibString::Repeat(const FString& Str, const int32 Num)
 {
 	if (Str.IsEmpty() || Num == 0) return Str;
@@ -44,6 +74,43 @@ FString UGdhLibString::Random(const int32 Len, const FString& Charset, const int
 	}
 
 	return FinalString;
+}
+
+bool UGdhLibString::HasAny(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase)
+{
+	for (int32 i = 0; i < Str.Len(); ++i)
+	{
+		if (!Str.IsValidIndex(i)) continue;
+
+		const FString Char = UKismetStringLibrary::GetSubstring(Str, i, 1);
+		if (Charset.Contains(Char, SearchCase))
+		{
+			return true;
+		}
+
+		// todo:ashe23 not working correctly for unicode characters if ignore case is active
+
+		const TCHAR CharAtIndex = Str[i];
+		int32 Index = INDEX_NONE;
+		Charset.FindChar(CharAtIndex, Index);
+
+		if (Index != INDEX_NONE)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool UGdhLibString::HasNone(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase)
+{
+	return false;
+}
+
+bool UGdhLibString::HasOnly(const FString& Str, const FString& Charset, const ESearchCase::Type SearchCase)
+{
+	return false;
 }
 
 FString UGdhLibString::Intersection(const FString& StringA, const FString& StringB)

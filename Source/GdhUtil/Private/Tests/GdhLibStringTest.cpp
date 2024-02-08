@@ -11,6 +11,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringRepeat, "Gdh.Library.String.Repeat
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringRandom, "Gdh.Library.String.Random", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringHasAny, "Gdh.Library.String.HasAny", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
 
 bool FGdhLibStringRepeat::RunTest(const FString& Parameters)
 {
@@ -52,6 +54,42 @@ bool FGdhLibStringRandom::RunTest(const FString& Parameters)
 	constexpr int32 Seed = 23;
 	TestEqual(TEXT("Seed version"), UGdhLibString::Random(10, GdhConstants::AlphaMixed, Seed), UGdhLibString::Random(10, GdhConstants::AlphaMixed, Seed));
 
+	return true;
+}
+
+bool FGdhLibStringHasAny::RunTest(const FString& Parameters)
+{
+	// case insensitive
+	TestFalse(TEXT("[case insensitive] Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT(""), ESearchCase::IgnoreCase));
+	TestFalse(TEXT("[case insensitive] Empty Str And Non Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT("abc"), ESearchCase::IgnoreCase));
+	TestFalse(TEXT("[case insensitive] Non Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT("abc"), TEXT(""), ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Ascii chars #1"), UGdhLibString::HasAny(TEXT("abc"), TEXT("a"), ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Ascii chars #2"), UGdhLibString::HasAny(TEXT("abc"), TEXT("b"), ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Ascii chars #3"), UGdhLibString::HasAny(TEXT("abc"), TEXT("ab"), ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Ascii chars #4"), UGdhLibString::HasAny(TEXT("abc"), TEXT("abc"), ESearchCase::IgnoreCase));
+	TestFalse(TEXT("[case insensitive] Ascii chars #5"), UGdhLibString::HasAny(TEXT("abc"), TEXT("e"), ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Special chars #1"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::SpecialChars, ESearchCase::IgnoreCase));
+	TestFalse(TEXT("[case insensitive] Special chars #2"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::AlphaMixed, ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Unicode chars #1"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ПР"), ESearchCase::IgnoreCase));
+	TestFalse(TEXT("[case insensitive] Unicode chars #2"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ООО"), ESearchCase::IgnoreCase));
+	TestTrue(TEXT("[case insensitive] Unicode chars #3"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("РИВЕТ"), ESearchCase::IgnoreCase));
+
+	// case sensitive
+	TestFalse(TEXT("[case sensitive] Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT(""), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Empty Str And Non Empty Charset"), UGdhLibString::HasAny(TEXT(""), TEXT("abc"), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Non Empty Str And Empty Charset"), UGdhLibString::HasAny(TEXT("abc"), TEXT(""), ESearchCase::CaseSensitive));
+	TestTrue(TEXT("[case sensitive] Ascii chars #1"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("A"), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Ascii chars #2"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("b"), ESearchCase::CaseSensitive));
+	TestTrue(TEXT("[case sensitive] Ascii chars #3"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("Ab"), ESearchCase::CaseSensitive));
+	TestTrue(TEXT("[case sensitive] Ascii chars #4"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("ABC"), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Ascii chars #5"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("E"), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Ascii chars #6"), UGdhLibString::HasAny(TEXT("ABC"), TEXT("e"), ESearchCase::CaseSensitive));
+	TestTrue(TEXT("[case sensitive] Special chars #1"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::SpecialChars, ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Special chars #2"), UGdhLibString::HasAny(TEXT("[]"), GdhConstants::AlphaMixed, ESearchCase::CaseSensitive));
+	TestTrue(TEXT("[case sensitive] Unicode chars #1"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ПР"), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Unicode chars #2"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("ООО"), ESearchCase::CaseSensitive));
+	TestFalse(TEXT("[case sensitive] Unicode chars #3"), UGdhLibString::HasAny(TEXT("Привет"), TEXT("РИВЕТ"), ESearchCase::CaseSensitive));
+	
 	return true;
 }
 
