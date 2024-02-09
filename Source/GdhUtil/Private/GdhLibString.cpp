@@ -118,14 +118,14 @@ bool UGdhLibString::HasAscii(const FString& Str)
 	if (Str.IsEmpty()) return false;
 
 	constexpr FAsciiSet WhitespaceCharacters(" \v\f\t\r\n");
-	
+
 	for (const auto& Char : Str)
 	{
 		if (WhitespaceCharacters.Contains(Char))
 		{
 			return true;
 		}
-		
+
 		const uint32 CharValue = TChar<TCHAR>::ToUnsigned(Char);
 		if (CharValue > 0 && CharValue <= 127)
 		{
@@ -139,7 +139,7 @@ bool UGdhLibString::HasAscii(const FString& Str)
 bool UGdhLibString::HasOnlyAscii(const FString& Str)
 {
 	if (Str.IsEmpty()) return false;
-	
+
 	for (const auto& Char : Str)
 	{
 		const uint32 CharValue = TChar<TCHAR>::ToUnsigned(Char);
@@ -155,14 +155,14 @@ bool UGdhLibString::HasOnlyAscii(const FString& Str)
 bool UGdhLibString::HasUnicode(const FString& Str)
 {
 	if (Str.IsEmpty()) return false;
-	
+
 	return !HasOnlyAscii(Str);
 }
 
 bool UGdhLibString::HasOnlyUnicode(const FString& Str)
 {
 	if (Str.IsEmpty()) return false;
-	
+
 	return !HasAscii(Str);
 }
 
@@ -170,44 +170,62 @@ FString UGdhLibString::Intersection(const FString& StringA, const FString& Strin
 {
 	if (StringA.IsEmpty() || StringB.IsEmpty()) return {};
 
-	FString Chars;
-	Chars.Reserve(StringA.Len() + StringB.Len());
+	const TSet<TCHAR> StrASet{StringA.GetCharArray()};
+	const TSet<TCHAR> StrBSet{StringB.GetCharArray()};
+	const TSet<TCHAR> Intersection = StrASet.Intersect(StrBSet);
 
-	for (int32 i = 0; i < StringA.Len(); ++i)
+	FString Final;
+	Final.Reserve(Intersection.Num());
+
+	// Iterate through StringA to maintain the order of characters
+	for (const auto& Char : StringA)
 	{
-		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
-
-		if (StringB.Contains(SingleChar, ESearchCase::CaseSensitive))
+		if (Intersection.Contains(Char))
 		{
-			Chars.Append(SingleChar);
+			Final.Append(FString::Chr(Char));
 		}
 	}
 
-	Chars.Shrink();
+	Final.Shrink();
 
-	return Chars;
+	return Final;
 }
 
 FString UGdhLibString::Union(const FString& StringA, const FString& StringB)
 {
+	if (StringA.IsEmpty() && StringB.IsEmpty()) return {};
+
+	const TSet<TCHAR> StrASet{StringA.GetCharArray()};
+	const TSet<TCHAR> StrBSet{StringB.GetCharArray()};
+	const TSet<TCHAR> Union = StrASet.Union(StrBSet);
+
+	FString Final;
+	Final.Reserve(Union.Num());
+
+	for (const auto& Char : Union)
+	{
+		Final.Append(FString::Chr(Char));
+	}
+
+	Final.Shrink();
+
+	return Final;
+}
+
+FString UGdhLibString::Difference(const FString& StringA, const FString& StringB)
+{
 	FString Chars;
 	Chars.Reserve(StringA.Len() + StringB.Len());
 
-	for (int32 i = 0; i < StringA.Len(); ++i)
-	{
-		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
-		if (!Chars.Contains(SingleChar, ESearchCase::CaseSensitive))
-		{
-			Chars.Append(SingleChar);
-		}
-	}
+	int32 Index = INDEX_NONE;
 
-	for (int32 i = 0; i < StringB.Len(); ++i)
+	for (const auto& Char : StringA)
 	{
-		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringB, i, 1);
-		if (!Chars.Contains(SingleChar, ESearchCase::CaseSensitive))
+		if (Chars.FindChar(Char, Index)) continue;
+
+		if (!StringB.FindChar(Char, Index))
 		{
-			Chars.Append(SingleChar);
+			Chars.Append(FString::Chr(Char));
 		}
 	}
 
@@ -219,67 +237,19 @@ FString UGdhLibString::Union(const FString& StringA, const FString& StringB)
 FString UGdhLibString::SymmetricDifference(const FString& StringA, const FString& StringB)
 {
 	// Symmetric difference = union - intersection
-	const FString UnionSet = Union(StringA, StringB);
-	const FString IntersectionSet = Intersection(StringA, StringB);
-
-	FString Chars;
-	Chars.Reserve(UnionSet.Len());
-
-	for (int32 i = 0; i < UnionSet.Len(); ++i)
-	{
-		const auto SingleChar = UKismetStringLibrary::GetSubstring(UnionSet, i, 1);
-		if (!IntersectionSet.Contains(SingleChar, ESearchCase::CaseSensitive))
-		{
-			Chars.Append(SingleChar);
-		}
-	}
-
-	Chars.Shrink();
-
-	return Chars;
+	const FString Union = UGdhLibString::Union(StringA, StringB);
+	const FString Intersection = UGdhLibString::Intersection(StringA, StringB);
+	return UGdhLibString::Difference(Union, Intersection);
 }
 
-FString UGdhLibString::Difference(const FString& StringA, const FString& StringB)
+FString UGdhLibString::Normalize(const FString& Str)
 {
-	FString Chars;
-	Chars.Reserve(StringA.Len() + StringB.Len());
-
-	for (int32 i = 0; i < StringA.Len(); ++i)
-	{
-		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
-		if (!StringB.Contains(SingleChar, ESearchCase::CaseSensitive))
-		{
-			Chars.Append(SingleChar);
-		}
-	}
-
-	Chars.Shrink();
-
-	return Chars;
-}
-
-bool UGdhLibString::IsSubSet(const FString& StringA, const FString& StringB)
-{
-	for (int32 i = 0; i < StringB.Len(); ++i)
-	{
-		const auto SingleChar = UKismetStringLibrary::GetSubstring(StringA, i, 1);
-		if (!StringB.Contains(SingleChar, ESearchCase::CaseSensitive))
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
-FString UGdhLibString::Normalize(const FString& OriginalString)
-{
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (Str.IsEmpty()) return Str;
 
 	FString CleanedString;
-	CleanedString.Reserve(OriginalString.Len());
+	CleanedString.Reserve(Str.Len());
 
-	const auto Chars = OriginalString.GetCharArray();
+	const auto Chars = Str.GetCharArray();
 	for (const auto Char : Chars)
 	{
 		if (FChar::IsAlnum(Char) || FChar::IsDigit(Char))
@@ -298,11 +268,11 @@ FString UGdhLibString::Normalize(const FString& OriginalString)
 	return UKismetStringLibrary::JoinStringArray(Parts, TEXT("_"));
 }
 
-FString UGdhLibString::Tokenize(const FString& OriginalString)
+FString UGdhLibString::Tokenize(const FString& Str)
 {
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (Str.IsEmpty()) return Str;
 
-	const FString Normalized = Normalize(OriginalString);
+	const FString Normalized = Normalize(Str);
 	if (Normalized.IsEmpty()) return {};
 
 	FString Token;
@@ -342,29 +312,29 @@ FString UGdhLibString::Tokenize(const FString& OriginalString)
 	return UKismetStringLibrary::JoinStringArray(Tokens, TEXT("_")).ToLower();
 }
 
-FString UGdhLibString::ConvertNamingCase(const FString& OriginalString, const EGdhNamingCase NamingCase)
+FString UGdhLibString::ConvertNamingCase(const FString& Str, const EGdhNamingCase NamingCase)
 {
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (Str.IsEmpty()) return Str;
 
 	switch (NamingCase)
 	{
-		case EGdhNamingCase::None: return OriginalString;
-		case EGdhNamingCase::PascalSnakeCase: return ConvertToPascalSnakeCase(OriginalString);
-		case EGdhNamingCase::PascalCase: return ConvertToPascalCase(OriginalString);
-		case EGdhNamingCase::UpperCase: return ConvertToUpperCase(OriginalString);
-		case EGdhNamingCase::LowerCase: return ConvertToLowerCase(OriginalString);
-		case EGdhNamingCase::SnakeCase: return ConvertToSnakeCase(OriginalString);
-		case EGdhNamingCase::CamelCase: return ConvertToCamelCase(OriginalString);
-		case EGdhNamingCase::KebabCase: return ConvertToKebabCase(OriginalString);
-		default: return OriginalString;
+		case EGdhNamingCase::None: return Str;
+		case EGdhNamingCase::PascalSnakeCase: return ConvertToPascalSnakeCase(Str);
+		case EGdhNamingCase::PascalCase: return ConvertToPascalCase(Str);
+		case EGdhNamingCase::UpperCase: return ConvertToUpperCase(Str);
+		case EGdhNamingCase::LowerCase: return ConvertToLowerCase(Str);
+		case EGdhNamingCase::SnakeCase: return ConvertToSnakeCase(Str);
+		case EGdhNamingCase::CamelCase: return ConvertToCamelCase(Str);
+		case EGdhNamingCase::KebabCase: return ConvertToKebabCase(Str);
+		default: return Str;
 	}
 }
 
-FString UGdhLibString::ConvertToPascalCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToPascalCase(const FString& Str)
 {
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (Str.IsEmpty()) return Str;
 
-	const FString Tokenized = Tokenize(OriginalString);
+	const FString Tokenized = Tokenize(Str);
 	if (Tokenized.IsEmpty()) return {};
 
 	TArray<FString> Parts;
@@ -383,26 +353,26 @@ FString UGdhLibString::ConvertToPascalCase(const FString& OriginalString)
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
 }
 
-FString UGdhLibString::ConvertToUpperCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToUpperCase(const FString& Str)
 {
-	return Tokenize(OriginalString).ToUpper();
+	return Tokenize(Str).ToUpper();
 }
 
-FString UGdhLibString::ConvertToLowerCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToLowerCase(const FString& Str)
 {
-	return Tokenize(OriginalString).ToLower();
+	return Tokenize(Str).ToLower();
 }
 
-FString UGdhLibString::ConvertToSnakeCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToSnakeCase(const FString& Str)
 {
-	return Tokenize(OriginalString);
+	return Tokenize(Str);
 }
 
-FString UGdhLibString::ConvertToCamelCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToCamelCase(const FString& Str)
 {
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (Str.IsEmpty()) return Str;
 
-	const FString Tokenized = Tokenize(OriginalString);
+	const FString Tokenized = Tokenize(Str);
 	if (Tokenized.IsEmpty()) return {};
 
 	TArray<FString> Parts;
@@ -424,17 +394,17 @@ FString UGdhLibString::ConvertToCamelCase(const FString& OriginalString)
 	return UKismetStringLibrary::JoinStringArray(CapitalizedParts, TEXT(""));
 }
 
-FString UGdhLibString::ConvertToKebabCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToKebabCase(const FString& Str)
 {
-	const FString SnakeCase = ConvertToSnakeCase(OriginalString);
+	const FString SnakeCase = ConvertToSnakeCase(Str);
 	return SnakeCase.Replace(TEXT("_"), TEXT("-"));
 }
 
-FString UGdhLibString::ConvertToPascalSnakeCase(const FString& OriginalString)
+FString UGdhLibString::ConvertToPascalSnakeCase(const FString& Str)
 {
-	if (OriginalString.IsEmpty()) return OriginalString;
+	if (Str.IsEmpty()) return Str;
 
-	const FString Tokenized = Tokenize(OriginalString);
+	const FString Tokenized = Tokenize(Str);
 	if (Tokenized.IsEmpty()) return {};
 
 	TArray<FString> Parts;

@@ -29,7 +29,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
 	static FString GetCharsetAlphaUpper();
 
-
 	/**
 	 * @brief Returns lowercase and uppercase alpha only characters
 	 * @return FString
@@ -144,6 +143,7 @@ public:
 
 	/**
 	 * @brief Returns intersection of character sets of given two strings
+	 * - "", "" => ""
 	 * - "abc", "abd" => "ab"
 	 * - "abcdef" , "f" => "f"
 	 * @param StringA FString
@@ -155,9 +155,10 @@ public:
 
 	/**
 	 * @brief Returns union of character sets of given two strings
+	 * - "", "" => ""
+	 * - "", "abc" => "abc"
 	 * - "abc", "def" => "abcdef"
 	 * - "abc", "abcdef" => "abcdef"
-	 * - "", "abc" => "abc"
 	 * @param StringA FString
 	 * @param StringB FString
 	 * @return FString
@@ -166,20 +167,8 @@ public:
 	static FString Union(const FString& StringA, const FString& StringB);
 
 	/**
-	 * @brief Returns symmetric difference of character sets of given two string. Returns the elements that are unique to SetA or SetB, but not common to both.
-	 * - "abc", "def" => "abcdef"
-	 * - "abc", "abcdef" => "def"
-	 * - "", "abc" => "abc"
-	 * - "", "" => ""
-	 * @param StringA FString
-	 * @param StringB FString
-	 * @return FString
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString SymmetricDifference(const FString& StringA, const FString& StringB);
-
-	/**
 	 * @brief Returns difference of character sets of given two string , set of all elements that are members of StringA, but not members of StringB
+	 * - "", "" => ""
 	 * - "abc", "abd" => "a"
 	 * - "abc", "def" => "abc"
 	 * @param StringA FString
@@ -190,101 +179,105 @@ public:
 	static FString Difference(const FString& StringA, const FString& StringB);
 
 	/**
-	 * @brief Checks if stringA character set is subset of stringB character set
+	 * @brief Returns symmetric difference of character sets of given two string. Returns the elements that are unique to SetA or SetB, but not common to both.
+	 * - "", "" => ""
+	 * - "", "abc" => "abc"
+	 * - "abc", "abc" => ""
+	 * - "abc", "def" => "abcdef"
+	 * - "abc", "abcdef" => "def"
 	 * @param StringA FString
 	 * @param StringB FString
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static bool IsSubSet(const FString& StringA, const FString& StringB);
-
-
-	/**
-	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 
-	 * - _aa_ => aa
-	 * - aaa => aaa
-	 * - aaa___bbb___ccc => aaa_bbb_ccc
-	 * - -aa-bb-cc--01- => aa_bb_cc_01
-	 * 
-	 * @param OriginalString FString
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString Normalize(const FString& OriginalString);
+	static FString SymmetricDifference(const FString& StringA, const FString& StringB);
+
+	/**
+	 * @brief Returns normalized string by removing all extra underscores and hyphens from string start and end, then replaces by underscore in the middle of string 
+	 * - "_aa_" => "aa"
+	 * - "aaa" => "aaa"
+	 * - "aaa___bbb___ccc" => "aaa_bbb_ccc"
+	 * - "-aa-bb-cc--01-" => "aa_bb_cc_01"
+	 * 
+	 * @param Str FString
+	 * @return FString
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
+	static FString Normalize(const FString& Str);
 
 	/**
 	 * @brief Returns new string with contextual parts splitted by underscore. String can be in any naming case, even mixed.
-	 * - PascalCase01 => pascal_case_01
-	 * - 01_my-string => 01_my_string
-	 * - TextureUV01 => texture_uv_01
-	 * @param OriginalString FString
+	 * - "PascalCase01" => "pascal_case_01"
+	 * - "01_my-string" => "01_my_string"
+	 * - "TextureUV01" => "texture_uv_01"
+	 * @param Str FString
 	 * @return FString Result is always in snake_case
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString Tokenize(const FString& OriginalString);
+	static FString Tokenize(const FString& Str);
 
 	/**
 	 * @brief Converts string to given naming case
-	 * @param OriginalString FString
+	 * @param Str FString
 	 * @param NamingCase EGdhNamingCase
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertNamingCase(const FString& OriginalString, const EGdhNamingCase NamingCase);
+	static FString ConvertNamingCase(const FString& Str, const EGdhNamingCase NamingCase);
 
 	/**
 	 * @brief Converts string to PascalCase
-	 * @param OriginalString FString
+	 * @param Str FString
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToPascalCase(const FString& OriginalString);
+	static FString ConvertToPascalCase(const FString& Str);
 
 	/**
-	 * @brief Converts string to UPPERCASE
-	 * @param OriginalString FString
+	 * @brief Converts string to UPPERCASE, but this is tokenized version. For simple conversions use ToUpper
+	 * @param Str FString
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToUpperCase(const FString& OriginalString);
+	static FString ConvertToUpperCase(const FString& Str);
 
 	/**
-	 * @brief Converts string to lowercase
-	 * @param OriginalString FString
+	 * @brief Converts string to lowercase,but this is tokenized version. For simple conversions use ToLower
+	 * @param Str FString
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToLowerCase(const FString& OriginalString);
+	static FString ConvertToLowerCase(const FString& Str);
 
 	/**
 	 * @brief Converts string to snake_case
-	 * @param OriginalString FString 
+	 * @param Str FString 
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToSnakeCase(const FString& OriginalString);
+	static FString ConvertToSnakeCase(const FString& Str);
 
 	/**
 	 * @brief Converts string to camelCase
-	 * @param OriginalString FString 
+	 * @param Str FString 
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToCamelCase(const FString& OriginalString);
+	static FString ConvertToCamelCase(const FString& Str);
 
 	/**
 	 * @brief Converts string to kebab-case
-	 * @param OriginalString FString 
+	 * @param Str FString 
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToKebabCase(const FString& OriginalString);
+	static FString ConvertToKebabCase(const FString& Str);
 
 	/**
 	 * @brief Converts string to Pascal_Snake_Case
-	 * @param OriginalString FString
+	 * @param Str FString
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_String")
-	static FString ConvertToPascalSnakeCase(const FString& OriginalString);
+	static FString ConvertToPascalSnakeCase(const FString& Str);
 };
