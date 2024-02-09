@@ -17,7 +17,10 @@ public class GdhUtil : ModuleRules
 		{
 			"Core",
 			"CoreUObject",
-			"Engine"
+			"Engine",
+			"AssetTools",
+			"AssetRegistry",
+			"ContentBrowser"
 		});
 	}
 }
