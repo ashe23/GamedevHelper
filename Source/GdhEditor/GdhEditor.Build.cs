@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class GdhTools : ModuleRules
+public class GdhEditor : ModuleRules
 {
-	public GdhTools(ReadOnlyTargetRules Target) : base(Target)
+	public GdhEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -14,14 +14,11 @@ public class GdhTools : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"UnrealEd",
+			"EditorStyle",
 			"Slate",
 			"SlateCore",
-			"InputCore",
-			"EditorStyle",
-			"GdhCore",
-			"GdhEditor",
-			"GdhUtil"
+			"Projects",
+			"GdhCore"
 		});
-		
 	}
 }

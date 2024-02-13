@@ -13,6 +13,7 @@ public class GdhCore : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
+			"Projects"
 		});
 	}
 }

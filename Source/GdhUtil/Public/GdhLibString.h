@@ -242,7 +242,7 @@ public:
 	static FString ConvertToUpperCase(const FString& Str);
 
 	/**
-	 * @brief Converts string to lowercase,but this is tokenized version. For simple conversions use ToLower
+	 * @brief Converts string to lowercase, but this is tokenized version. For simple conversions use ToLower
 	 * @param Str FString
 	 * @return FString
 	 */

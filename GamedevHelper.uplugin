@@ -25,6 +25,14 @@
       ]
     },
     {
+      "Name": "GdhEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default",
+      "WhitelistPlatforms": [
+        "Win64"
+      ]
+    },
+    {
       "Name": "GdhUtil",
       "Type": "Runtime",
       "LoadingPhase": "Default",
