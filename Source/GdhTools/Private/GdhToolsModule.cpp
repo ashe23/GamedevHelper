@@ -9,6 +9,8 @@
 #include "UnrealEdMisc.h"
 #include "Widgets/Docking/SDockTab.h"
 
+DEFINE_LOG_CATEGORY(LogGdhTools);
+
 void FGdhToolsModule::StartupModule()
 {
 	IModuleInterface::StartupModule();
@@ -39,7 +41,7 @@ void FGdhToolsModule::StartupModule()
 		                        {
 			                        return
 				                        SNew(SDockTab)
-				                        .TabRole(NomadTab)
+				                        .TabRole(MajorTab)
 				                        [
 					                        SNew(SGdhAssetNamingTool)
 				                        ];

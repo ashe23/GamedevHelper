@@ -20,7 +20,11 @@ public class GdhUtil : ModuleRules
 			"Engine",
 			"AssetTools",
 			"AssetRegistry",
-			"ContentBrowser"
+			"ContentBrowser",
+			"Slate",
+			"SlateCore",
+			"UnrealEd", 
+			"EditorScriptingUtilities"
 		});
 	}
 }

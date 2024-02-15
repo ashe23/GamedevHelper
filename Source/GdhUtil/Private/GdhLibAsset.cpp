@@ -3,10 +3,17 @@
 #include "GdhLibAsset.h"
 #include "GdhLibEditor.h"
 #include "GdhConstants.h"
+#include "GdhLibPath.h"
 // Engine Headers
 #include "AssetToolsModule.h"
+#include "EditorAssetLibrary.h"
+#include "GdhLibString.h"
+#include "GdhStructs.h"
+#include "GdhUtilModule.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/AssetManager.h"
+#include "Internationalization/Regex.h"
+#include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
 
 void UGdhLibAsset::GetAssetsAll(TArray<FAssetData>& Assets)
@@ -16,6 +23,15 @@ void UGdhLibAsset::GetAssetsAll(TArray<FAssetData>& Assets)
 	Assets.Reset();
 
 	UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetsByPath(GdhConstants::PathRoot, Assets, true);
+}
+
+void UGdhLibAsset::GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets)
+{
+	if (UGdhLibEditor::GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
+
+	Assets.Reset();
+
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetsByPath(FName{*Path}, Assets, bRecursive);
 }
 
 void UGdhLibAsset::GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShowSlowTask)
@@ -44,6 +60,75 @@ void UGdhLibAsset::GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShow
 		if (ClassNamesPrimary.Contains(Asset.AssetClass) || ClassNamesPrimary.Contains(GetAssetExactClassName(Asset)))
 		{
 			Assets.Emplace(Asset);
+		}
+	}
+
+	Assets.Shrink();
+}
+
+void UGdhLibAsset::GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bShowSlowTask)
+{
+	if (UGdhLibEditor::GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
+
+	Assets.Reset();
+
+	TSet<FString> ScanFiles;
+	GetSourceAndConfigFiles(ScanFiles);
+
+	FScopedSlowTask SlowTask{
+		static_cast<float>(ScanFiles.Num()),
+		FText::FromString(TEXT("Searching Indirectly used assets...")),
+		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	};
+	SlowTask.MakeDialog(false, false);
+
+	for (const auto& File : ScanFiles)
+	{
+		SlowTask.EnterProgressFrame(1.0f, FText::FromString(File));
+
+		FString FileContent;
+		FFileHelper::LoadFileToString(FileContent, *File);
+
+		if (FileContent.IsEmpty()) continue;
+
+		static FRegexPattern Pattern(TEXT(R"(\/Game([A-Za-z0-9_.\/]+)\b)"));
+		FRegexMatcher Matcher(Pattern, FileContent);
+		while (Matcher.FindNext())
+		{
+			FString FoundedAssetObjectPath = Matcher.GetCaptureGroup(0);
+
+			const FString ObjectPath = UGdhLibPath::PathConvertToObjectPath(FoundedAssetObjectPath);
+			if (ObjectPath.IsEmpty()) continue;
+
+			const FAssetData AssetData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*ObjectPath});
+			if (!AssetData.IsValid()) continue;
+
+			Assets.AddUnique(AssetData);
+		}
+	}
+}
+
+void UGdhLibAsset::GetAssetsUnicode(TArray<FAssetData>& Assets, const bool bShowSlowTask)
+{
+	TArray<FAssetData> AssetsAll;
+	GetAssetsAll(AssetsAll);
+
+	Assets.Reset(AssetsAll.Num());
+
+	FScopedSlowTask SlowTask{
+		static_cast<float>(AssetsAll.Num()),
+		FText::FromString(TEXT("Searching assets with unicode characters in name...")),
+		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	};
+	SlowTask.MakeDialog(false, false);
+
+	for (const auto& Asset : AssetsAll)
+	{
+		SlowTask.EnterProgressFrame(1.0f, FText::FromName(Asset.AssetName));
+
+		if (UGdhLibString::HasUnicode(Asset.AssetName.ToString()))
+		{
+			Assets.Add(Asset);
 		}
 	}
 
@@ -88,6 +173,70 @@ FName UGdhLibAsset::GetAssetExactClassName(const FAssetData& InAsset)
 	return InAsset.AssetClass;
 }
 
+FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& InAsset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes)
+{
+	if (!InAsset.IsValid()) return {};
+	if (!Mappings) return {};
+
+	if (AssetIsBlueprint(InAsset))
+	{
+		const EGdhBlueprintType BlueprintType = GetBlueprintType(InAsset);
+		if (BlueprintTypes.Contains(BlueprintType))
+		{
+			return *BlueprintTypes.Find(BlueprintType);
+		}
+	}
+
+	TArray<FGdhAssetNameAffixRow*> Rows;
+	Mappings->GetAllRows<FGdhAssetNameAffixRow>(TEXT(""), Rows);
+
+	const FName AssetExactClassName = GetAssetExactClassName(InAsset);
+
+	for (const auto& Row : Rows)
+	{
+		if (!Row) continue;
+		if (!Row->AssetClass.LoadSynchronous()) continue;
+
+		if (AssetExactClassName.IsEqual(Row->AssetClass.Get()->GetFName()))
+		{
+			return FGdhAssetNameAffix{Row->Prefix, Row->Suffix};
+		}
+	}
+
+	return {};
+}
+
+FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase, const EGdhAssetNameDelimiter Delimiter)
+{
+	if (Name.IsEmpty()) return Name;
+
+	const FString DelimiterChar = Delimiter == EGdhAssetNameDelimiter::Underscore ? TEXT("_") : TEXT("-");
+	FString TokenizedName = UGdhLibString::Tokenize(Name);
+
+	if (!Affix.Prefix.IsEmpty())
+	{
+		TokenizedName.RemoveFromStart(Affix.Prefix + DelimiterChar);
+	}
+
+	if (!Affix.Suffix.IsEmpty())
+	{
+		TokenizedName.RemoveFromEnd(DelimiterChar + Affix.Suffix);
+	}
+
+	const FString AssetNameOnly = UGdhLibString::ConvertNamingCase(TokenizedName, AssetNamingCase);
+	const FString Prefix = Affix.Prefix.IsEmpty() ? TEXT("") : UGdhLibString::ConvertNamingCase(Affix.Prefix, PrefixNamingCase);
+	const FString Suffix = Affix.Suffix.IsEmpty() ? TEXT("") : UGdhLibString::ConvertNamingCase(Affix.Suffix, SuffixNamingCase);
+
+	const FString FinalName = FString::Printf(
+		TEXT("%s%s%s"),
+		Prefix.IsEmpty() ? TEXT("") : *(Prefix + DelimiterChar),
+		*AssetNameOnly,
+		Suffix.IsEmpty() ? TEXT("") : *(DelimiterChar + Suffix)
+	);
+
+	return FinalName;
+}
+
 int64 UGdhLibAsset::GetAssetSize(const FAssetData& InAsset)
 {
 	if (!InAsset.IsValid()) return 0;
@@ -113,6 +262,49 @@ int64 UGdhLibAsset::GetAssetsTotalSize(const TArray<FAssetData>& InAssets)
 	}
 
 	return Size;
+}
+
+EGdhBlueprintType UGdhLibAsset::GetBlueprintType(const FAssetData& Asset)
+{
+	if (!Asset.IsValid())
+	{
+		return EGdhBlueprintType::None;
+	}
+
+	FString BlueprintTypeStr;
+	Asset.GetTagValue(TEXT("BlueprintType"), BlueprintTypeStr);
+
+	FString ParentClassStr;
+	Asset.GetTagValue(TEXT("ParentClass"), ParentClassStr);
+
+	if (BlueprintTypeStr.IsEmpty())
+	{
+		return EGdhBlueprintType::None;
+	}
+
+	const EBlueprintType BlueprintType = static_cast<EBlueprintType>(StaticEnum<EBlueprintType>()->GetValueByName(FName(*BlueprintTypeStr)));
+
+	if (BlueprintType == BPTYPE_Normal || BlueprintType == BPTYPE_Const)
+	{
+		return EGdhBlueprintType::Normal;
+	}
+
+	if (BlueprintType == BPTYPE_Interface)
+	{
+		return EGdhBlueprintType::Interface;
+	}
+
+	if (BlueprintType == BPTYPE_FunctionLibrary)
+	{
+		return EGdhBlueprintType::FunctionLibrary;
+	}
+
+	if (BlueprintType == BPTYPE_MacroLibrary)
+	{
+		return EGdhBlueprintType::MacroLibrary;
+	}
+
+	return EGdhBlueprintType::None;
 }
 
 bool UGdhLibAsset::AssetIsBlueprint(const FAssetData& InAsset)
@@ -203,4 +395,76 @@ void UGdhLibAsset::FixProjectRedirectors(const TArray<FAssetData>& Redirectors, 
 	}
 
 	UGdhLibEditor::GetModuleAssetTools().Get().FixupReferencers(RedirectorObjects, false);
+}
+
+bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
+{
+	if (!Asset.IsValid())
+	{
+		UE_LOG(LogGdhUtil, Warning, TEXT("Failed To Rename. Invalid asset data."))
+		return false;
+	}
+
+	if (NewName.IsEmpty())
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset. Name cant be empty."), *Asset.AssetName.ToString());
+		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
+		return false;
+	}
+
+	if (!UGdhLibString::HasOnly(NewName, GdhConstants::ValidAssetNameChars))
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset. Name contains invalid characters."), *Asset.AssetName.ToString());
+		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
+		return false;
+	}
+
+	const FString Src = Asset.ToSoftObjectPath().GetAssetPathString();
+	const FString Dst = FString::Printf(TEXT("%s/%s.%s"), *Asset.PackagePath.ToString(), *NewName, *NewName);
+
+	if (!UEditorAssetLibrary::RenameAsset(Src, Dst))
+	{
+		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset"), *Asset.AssetName.ToString());
+		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
+		return false;
+	}
+
+	return true;
+}
+
+void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files)
+{
+	const FString DirSrc = FPaths::ConvertRelativePathToFull(FPaths::GameSourceDir());
+	const FString DirCfg = FPaths::ConvertRelativePathToFull(FPaths::ProjectConfigDir());
+	const FString DirPlg = FPaths::ConvertRelativePathToFull(FPaths::ProjectPluginsDir());
+
+	TArray<FString> SourceFiles;
+	TArray<FString> ConfigFiles;
+
+	const TSet<FString> SourceFileExtensions{TEXT("cpp"), TEXT("h"), TEXT("cs")};
+	const TSet<FString> ConfigFileExtensions{TEXT("ini")};
+
+	UGdhLibPath::GetFilesByExt(DirSrc, true, false, SourceFileExtensions, SourceFiles);
+	UGdhLibPath::GetFilesByExt(DirCfg, true, false, ConfigFileExtensions, ConfigFiles);
+
+	TArray<FString> InstalledPlugins;
+	UGdhLibPath::GetFolders(DirPlg, false, InstalledPlugins);
+
+	TArray<FString> PluginFiles;
+	for (const auto& InstalledPlugin : InstalledPlugins)
+	{
+		UGdhLibPath::GetFilesByExt(InstalledPlugin / TEXT("Source"), true, false, SourceFileExtensions, PluginFiles);
+		SourceFiles.Append(PluginFiles);
+
+		PluginFiles.Reset();
+
+		UGdhLibPath::GetFilesByExt(InstalledPlugin / TEXT("Config"), true, false, ConfigFileExtensions, PluginFiles);
+		ConfigFiles.Append(PluginFiles);
+
+		PluginFiles.Reset();
+	}
+
+	Files.Reset();
+	Files.Append(SourceFiles);
+	Files.Append(ConfigFiles);
 }

@@ -20,6 +20,14 @@ public:
 	// main menu bar
 	TSharedPtr<FUICommandInfo> RestartEditor;
 	TSharedPtr<FUICommandInfo> OpenAssetNamingTool;
+
+	// Asset Naming Tool
 	TSharedPtr<FUICommandInfo> ScanAssets;
 	TSharedPtr<FUICommandInfo> RenameAssets;
+	TSharedPtr<FUICommandInfo> ClearSelection;
+	TSharedPtr<FUICommandInfo> EditMode;
+	TSharedPtr<FUICommandInfo> ApplyChanges;
+	TSharedPtr<FUICommandInfo> UndoChanges;
+	TSharedPtr<FUICommandInfo> NumerizeAssets;
+	TSharedPtr<FUICommandInfo> SearchAndReplace;
 };

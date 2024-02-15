@@ -2,7 +2,7 @@
 
 #include "GdhUtilModule.h"
 
-DEFINE_LOG_CATEGORY(LogGdhUtil);
+DEFINE_LOG_CATEGORY(LogGdhUtil)
 
 void FGdhUtilModule::StartupModule()
 {

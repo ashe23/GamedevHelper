@@ -7,7 +7,7 @@
 #include "GdhStructs.generated.h"
 
 USTRUCT(BlueprintType)
-struct FGdhAssetNameAffix
+struct GDHCORE_API FGdhAssetNameAffix
 {
 	GENERATED_BODY()
 
@@ -19,7 +19,7 @@ struct FGdhAssetNameAffix
 };
 
 USTRUCT(BlueprintType)
-struct FGdhAssetNameAffixRow : public FTableRowBase
+struct GDHCORE_API FGdhAssetNameAffixRow : public FTableRowBase
 {
 	GENERATED_BODY()
 

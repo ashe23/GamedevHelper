@@ -27,4 +27,5 @@ namespace GdhConstants
 	static const FString AlphaUpper = TEXT("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 	static const FString AlphaMixed = TEXT("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 	static const FString SpecialChars = TEXT(" !\"#$%&'()*+,-_./:;<?>@=[]\\^`~");
+	static const FString ValidAssetNameChars = AlphaMixed + Digits + TEXT("_-");
 }
