@@ -14,10 +14,13 @@ class UGdhAssetNamingToolListItem : public UObject
 
 public:
 	UPROPERTY()
-	bool bEditMode = false;
+	bool bDirty = false;
 
 	UPROPERTY()
-	bool bDirty = false;
+	bool bHasErrors = false;
+
+	UPROPERTY()
+	bool bEditMode = false;
 
 	UPROPERTY()
 	FAssetData AssetData;
@@ -36,28 +39,27 @@ public:
 
 	UPROPERTY()
 	FString Note;
-
-	UPROPERTY()
-	FString HighlightText;
 };
 
+DECLARE_DELEGATE_TwoParams(FGdhDelegateRowAssetNameChanged, const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& InputText);
 
 class SGdhAssetNamingToolListItem final : public SMultiColumnTableRow<TWeakObjectPtr<UGdhAssetNamingToolListItem>>
 {
 public:
 	SLATE_BEGIN_ARGS(SGdhAssetNamingToolListItem) {}
 		SLATE_ARGUMENT(TWeakObjectPtr<UGdhAssetNamingToolListItem>, ListItem)
+		SLATE_EVENT(FGdhDelegateRowAssetNameChanged, OnAssetNameChange)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView);
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& InColumnName) override;
-
+	
 private:
-	void OnAssetNameChanged(const FText& Text) const;
+	void OnItemNameChanged(const FText& Text) const;
 
 	TSharedPtr<STextBlock> NoteBlock;
 	TSharedPtr<SImage> StatusIcon;
 	TSharedPtr<STextBlock> NamePreview;
 	TWeakObjectPtr<UGdhAssetNamingToolListItem> ListItem;
-	const UGdhAssetNamingToolSettings* Settings = nullptr;
+	FGdhDelegateRowAssetNameChanged DelegateRowAssetNameChanged;
 };

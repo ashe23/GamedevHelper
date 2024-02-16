@@ -32,6 +32,7 @@ private:
 	int32 GetWidgetIndex() const;
 	void GetDirtyItems(TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>>& Items);
 	void ToggleEditMode(const bool bEnable);
+	void OnItemAssetNameChanged(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const;
 
 	bool bEditModeEnabled = false;
 	FString CurrentPath;
@@ -40,7 +41,9 @@ private:
 	TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> ListItems;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhAssetNamingToolListItem>>> ListView;
 	TWeakObjectPtr<UGdhAssetNamingToolSettings> AssetNamingToolSettings;
+	EColumnSortMode::Type ColumnSortModeStatus = EColumnSortMode::None;
 	EColumnSortMode::Type ColumnSortModeClass = EColumnSortMode::None;
+	EColumnSortMode::Type ColumnSortModePath = EColumnSortMode::None;
 	EColumnSortMode::Type ColumnSortModePrefix = EColumnSortMode::None;
 	EColumnSortMode::Type ColumnSortModeSuffix = EColumnSortMode::None;
 };
