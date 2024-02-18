@@ -24,6 +24,7 @@ public:
 	static void ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
 	static void ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
 	static void CloseAllEditors();
+	static bool EditorInPlayMode();
 
 	static FAssetToolsModule& GetModuleAssetTools();
 	static FAssetRegistryModule& GetModuleAssetRegistry();

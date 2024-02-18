@@ -91,10 +91,6 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.ApplyChanges.Small", new IMAGE_BRUSH(TEXT("IconCheck20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.UndoChanges", new IMAGE_BRUSH(TEXT("IconUndo32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.UndoChanges.Small", new IMAGE_BRUSH(TEXT("IconUndo20"), FVector2D{20.0f, 20.0f}));
-	Style->Set("GamedevHelper.NumerizeAssets", new IMAGE_BRUSH(TEXT("IconNumerize32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.NumerizeAssets.Small", new IMAGE_BRUSH(TEXT("IconNumerize20"), FVector2D{20.0f, 20.0f}));
-	Style->Set("GamedevHelper.SearchAndReplace", new IMAGE_BRUSH(TEXT("IconFind32"), FVector2D{32.0f, 32.0f}));
-	Style->Set("GamedevHelper.SearchAndReplace.Small", new IMAGE_BRUSH(TEXT("IconFind20"), FVector2D{20.0f, 20.0f}));
 
 	// tabs
 	Style->Set("GamedevHelper.Tab.AssetNamingTool", new IMAGE_BRUSH(TEXT("IconAssetNamingTool16"), FVector2D{16.0f, 16.0f}));
@@ -110,9 +106,11 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	// colors
 	Style->Set("GamedevHelper.Color.Red", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#d63232"))}});
 	Style->Set("GamedevHelper.Color.Green", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#228B22"))}});
+	Style->Set("GamedevHelper.Color.LightGreen", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#36AE7C"))}});
 	Style->Set("GamedevHelper.Color.Grey", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#616161"))}});
 	Style->Set("GamedevHelper.Color.GreyDark", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#484848"))}});
 	Style->Set("GamedevHelper.Color.Title", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#17C3B2"))}});
+	Style->Set("GamedevHelper.Color.DarkBlue", FSlateColor{FLinearColor{FColor::FromHex(TEXT("#4477CE"))}});
 
 	return Style;
 }

@@ -4,12 +4,12 @@
 #include "GdhLibEditor.h"
 #include "GdhConstants.h"
 #include "GdhLibPath.h"
-// Engine Headers
-#include "AssetToolsModule.h"
-#include "EditorAssetLibrary.h"
 #include "GdhLibString.h"
 #include "GdhStructs.h"
 #include "GdhUtilModule.h"
+// Engine Headers
+#include "AssetToolsModule.h"
+#include "FileHelpers.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/AssetManager.h"
 #include "Internationalization/Regex.h"
@@ -173,45 +173,68 @@ FName UGdhLibAsset::GetAssetExactClassName(const FAssetData& InAsset)
 	return InAsset.AssetClass;
 }
 
+FString UGdhLibAsset::GetAssetTagValue(const FAssetData& InAsset, const FName& Tag)
+{
+	if (!InAsset.IsValid()) return {};
+	if (!InAsset.TagsAndValues.Contains(Tag)) return {};
+
+	const FString Value = InAsset.TagsAndValues.FindTag(Tag).GetValue();
+	return FPackageName::ExportTextPathToObjectPath(Value);
+}
+
 FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& InAsset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes)
 {
 	if (!InAsset.IsValid()) return {};
 	if (!Mappings) return {};
 
-	if (AssetIsBlueprint(InAsset))
+	const bool bIsBlueprint = AssetIsBlueprint(InAsset);
+	FGdhAssetNameAffix BlueprintAffixes;
+	FGdhAssetNameAffix DataTableAffixes;
+
+	if (bIsBlueprint)
 	{
 		const EGdhBlueprintType BlueprintType = GetBlueprintType(InAsset);
 		if (BlueprintTypes.Contains(BlueprintType))
 		{
-			return *BlueprintTypes.Find(BlueprintType);
+			BlueprintAffixes = *BlueprintTypes.Find(BlueprintType);
 		}
 	}
 
 	TArray<FGdhAssetNameAffixRow*> Rows;
 	Mappings->GetAllRows<FGdhAssetNameAffixRow>(TEXT(""), Rows);
 
-	const FName AssetExactClassName = GetAssetExactClassName(InAsset);
+	// todo:ashe23 we should add options for exact and parent class searches
+
+	const FString GeneratedClass = GetAssetTagValue(InAsset, TEXT("GeneratedClass"));
+	const FString ParentClass = GetAssetTagValue(InAsset, TEXT("ParentClass"));
 
 	for (const auto& Row : Rows)
 	{
 		if (!Row) continue;
 		if (!Row->AssetClass.LoadSynchronous()) continue;
 
-		if (AssetExactClassName.IsEqual(Row->AssetClass.Get()->GetFName()))
+		const FString DataTableClass = Row->AssetClass.ToString();
+
+		if (DataTableClass.Equals(GeneratedClass) || DataTableClass.Equals(ParentClass))
 		{
-			return FGdhAssetNameAffix{Row->Prefix, Row->Suffix};
+			DataTableAffixes = FGdhAssetNameAffix{Row->Prefix, Row->Suffix};
+			break;
 		}
 	}
 
-	return {};
+	FGdhAssetNameAffix FinalAffix;
+	FinalAffix.Prefix = bIsBlueprint && DataTableAffixes.Prefix.IsEmpty() ? BlueprintAffixes.Prefix : DataTableAffixes.Prefix;
+	FinalAffix.Suffix = bIsBlueprint && DataTableAffixes.Suffix.IsEmpty() ? BlueprintAffixes.Suffix : DataTableAffixes.Suffix;
+
+	return FinalAffix;
 }
 
-FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase, const EGdhAssetNameDelimiter Delimiter)
+FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase)
 {
 	if (Name.IsEmpty()) return Name;
 
-	const FString DelimiterChar = Delimiter == EGdhAssetNameDelimiter::Underscore ? TEXT("_") : TEXT("-");
 	FString TokenizedName = UGdhLibString::Tokenize(Name);
+	const FString DelimiterChar = TEXT("_");
 
 	if (!Affix.Prefix.IsEmpty())
 	{
@@ -419,10 +442,17 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 		return false;
 	}
 
-	const FString Src = Asset.ToSoftObjectPath().GetAssetPathString();
+	// const FString Src = Asset.ToSoftObjectPath().GetAssetPathString();
 	const FString Dst = FString::Printf(TEXT("%s/%s.%s"), *Asset.PackagePath.ToString(), *NewName, *NewName);
 
-	if (!UEditorAssetLibrary::RenameAsset(Src, Dst))
+	FAssetRenameData RenameData;
+	RenameData.Asset = Asset.GetAsset();
+	RenameData.OldObjectPath = Asset.ToSoftObjectPath();
+	RenameData.NewObjectPath = FSoftObjectPath{Dst};
+	RenameData.NewPackagePath = Asset.PackagePath.ToString();
+	RenameData.NewName = NewName;
+
+	if (!UGdhLibEditor::GetModuleAssetTools().Get().RenameAssets(TArray<FAssetRenameData>{RenameData}))
 	{
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset"), *Asset.AssetName.ToString());
 		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
@@ -430,6 +460,11 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 	}
 
 	return true;
+}
+
+bool UGdhLibAsset::SaveAllAssets(const bool bPromptToUser)
+{
+	return FEditorFileUtils::SaveDirtyPackages(bPromptToUser, true, true, false, false, false);
 }
 
 void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files)

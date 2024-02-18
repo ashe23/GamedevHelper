@@ -71,6 +71,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
 	static FName GetAssetExactClassName(const FAssetData& InAsset);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	static FString GetAssetTagValue(const FAssetData& InAsset, const FName& Tag);
+
 	/**
 	 * @brief Returns asset name affix (Prefix + Suffix) for given asset and look up data table
 	 * @param InAsset FAssetData
@@ -88,11 +91,10 @@ public:
 	 * @param AssetNamingCase EGdhNamingCase
 	 * @param PrefixNamingCase EGdhNamingCase
 	 * @param SuffixNamingCase EGdhNamingCase
-	 * @param Delimiter EGdhAssetNameDelimiter
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FString GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase, const EGdhAssetNameDelimiter Delimiter);
+	static FString GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase);
 
 	/**
 	 * @brief Returns given asset size on disk in bytes
@@ -172,6 +174,14 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
 	static bool RenameAsset(const FAssetData& Asset, const FString& NewName);
+
+	/**
+	 * @brief Saves all unsaved assets in project
+	 * @param bPromptToUser show confirmation window to user when saving
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, Category="Gdh|Lib_Asset")
+	static bool SaveAllAssets(const bool bPromptToUser);
 
 private:
 	static void GetSourceAndConfigFiles(TSet<FString>& Files);

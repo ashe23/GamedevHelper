@@ -20,11 +20,11 @@ public:
 #endif
 
 	// Data Table Asset with Asset Class => (Prefix, Suffix) Mappings. To create new mappings, just create new data table with row struct "GdhAssetNameAffixRow" selected.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(RequiredAssetDataTags="RowStructure=GdhAssetNameAffixRow"))
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", DisplayName="Asset Affix Mappings", meta=(RequiredAssetDataTags="RowStructure=GdhAssetNameAffixRow"))
 	TSoftObjectPtr<UDataTable> Mappings;
 
 	// Blueprint type affix mappings
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(ForceInlineRow, TitleProperty="Prefix"))
 	TMap<EGdhBlueprintType, FGdhAssetNameAffix> BlueprintTypes;
 
 	// Naming case for asset name only. This does not apply to prefixes or suffixes. Pascal_Snake_Case is recommended.
@@ -38,8 +38,4 @@ public:
 	// Naming case for suffixes
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
 	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::PascalCase;
-
-	// What delimiter type to use when gluing prefixes and suffixes
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
-	EGdhAssetNameDelimiter Delimiter = EGdhAssetNameDelimiter::Underscore;
 };

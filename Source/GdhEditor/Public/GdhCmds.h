@@ -28,6 +28,4 @@ public:
 	TSharedPtr<FUICommandInfo> EditMode;
 	TSharedPtr<FUICommandInfo> ApplyChanges;
 	TSharedPtr<FUICommandInfo> UndoChanges;
-	TSharedPtr<FUICommandInfo> NumerizeAssets;
-	TSharedPtr<FUICommandInfo> SearchAndReplace;
 };

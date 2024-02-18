@@ -8,13 +8,13 @@
 #include "GdhStyles.h"
 #include "GdhStructs.h"
 #include "GdhLibAsset.h"
-// Engine Headers
-#include "FileHelpers.h"
 #include "GdhLibString.h"
+// Engine Headers
 #include "IContentBrowserSingleton.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Settings/ContentBrowserSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -24,228 +24,12 @@ void SGdhAssetNamingTool::Construct(const FArguments& InArgs)
 	AssetNamingToolSettings = GetMutableDefault<UGdhAssetNamingToolSettings>();
 	if (!AssetNamingToolSettings.IsValid()) return;
 
-	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(
-		FGdhCmds::Get().ScanAssets,
-		FExecuteAction::CreateLambda([&]()
-		{
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&] { return !bEditModeEnabled; })
-	);
-	Cmds->MapAction(
-		FGdhCmds::Get().RenameAssets,
-		FExecuteAction::CreateLambda([&]()
-		{
-			if (!ListView.IsValid()) return;
+	CurrentPath = GdhConstants::PathRoot.ToString();
 
-			const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
-			const FText Context = FText::FromString(TEXT("Are you sure you want to rename assets?"));
-
-			const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
-			if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
-
-			const auto SelectedItems = ListView->GetSelectedItems();
-			const auto Items = SelectedItems.Num() > 0 ? SelectedItems : ListItems;
-
-			TMap<FAssetData, FString> AssetsToRename;
-			AssetsToRename.Reserve(Items.Num());
-
-			for (const auto& Item : Items)
-			{
-				if (!Item.IsValid()) continue;
-				if (Item->bHasErrors) continue;
-
-				AssetsToRename.Add(Item->AssetData, Item->NewName);
-			}
-
-			if (AssetsToRename.Num() == 0)
-			{
-				UGdhLibEditor::ShowNotification(TEXT("No valid assets to rename"), SNotificationItem::CS_Fail, 5.0f);
-				return;
-			}
-
-			FScopedSlowTask SlowTask(
-				static_cast<float>(Items.Num()),
-				FText::FromString("Renaming assets...")
-			);
-			SlowTask.MakeDialog(false, false);
-
-			const int32 NumTotal = AssetsToRename.Num();
-			int32 NumRenamed = 0;
-
-			for (const auto& Asset : AssetsToRename)
-			{
-				SlowTask.EnterProgressFrame(1.0f);
-
-				if (UGdhLibAsset::RenameAsset(Asset.Key, Asset.Value))
-				{
-					++NumRenamed;
-				}
-			}
-
-			const FString Msg = FString::Printf(TEXT("Renamed %d of %d assets"), NumRenamed, NumTotal);
-
-			if (NumRenamed == NumTotal)
-			{
-				UGdhLibEditor::ShowNotification(Msg, SNotificationItem::CS_Success, 5.0f);
-			}
-			else
-			{
-				UGdhLibEditor::ShowNotificationWithOutputLog(Msg, SNotificationItem::CS_Fail, 10.0f);
-			}
-
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&]
-		{
-			return !bEditModeEnabled && ListItems.Num() > 0;
-		})
-	);
-
-	Cmds->MapAction(
-		FGdhCmds::Get().ClearSelection,
-		FExecuteAction::CreateLambda([&]() { UpdateListView(); }),
-		FCanExecuteAction::CreateLambda([&]() { return ListView && ListView->GetSelectedItems().Num() > 0; })
-	);
-
-	Cmds->MapAction(
-		FGdhCmds::Get().EditMode,
-		FExecuteAction::CreateLambda([&]()
-		{
-			bEditModeEnabled = true;
-			ToggleEditMode(true);
-		}),
-		FCanExecuteAction::CreateLambda([&]()
-		{
-			return !bEditModeEnabled && ListItems.Num() > 0;
-		}),
-		FIsActionChecked::CreateLambda([&]() { return bEditModeEnabled; })
-	);
-
-	Cmds->MapAction(
-		FGdhCmds::Get().ApplyChanges,
-		FExecuteAction::CreateLambda([&]()
-		{
-			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
-			GetDirtyItems(DirtyItems);
-
-			if (DirtyItems.Num() > 0)
-			{
-				const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
-				const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to rename %d modified assets?"), DirtyItems.Num()));
-				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
-				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
-			}
-
-			TMap<FAssetData, FString> AssetsToRename;
-			AssetsToRename.Reserve(DirtyItems.Num());
-
-			for (const auto& Item : DirtyItems)
-			{
-				if (!Item.IsValid()) continue;
-				if (Item->bHasErrors) continue;
-
-				AssetsToRename.Add(Item->AssetData, Item->NewName);
-			}
-
-			FScopedSlowTask SlowTask(
-				static_cast<float>(DirtyItems.Num()),
-				FText::FromString("Renaming assets...")
-			);
-			SlowTask.MakeDialog(false, false);
-
-			const int32 NumTotal = AssetsToRename.Num();
-			int32 NumRenamed = 0;
-
-			for (const auto& Asset : AssetsToRename)
-			{
-				SlowTask.EnterProgressFrame(1.0f);
-
-				if (UGdhLibAsset::RenameAsset(Asset.Key, Asset.Value))
-				{
-					++NumRenamed;
-				}
-			}
-
-			const FString Msg = FString::Printf(TEXT("Renamed %d of %d assets"), NumRenamed, NumTotal);
-
-			if (NumRenamed == NumTotal)
-			{
-				UGdhLibEditor::ShowNotification(Msg, SNotificationItem::CS_Success, 5.0f);
-			}
-			else
-			{
-				UGdhLibEditor::ShowNotificationWithOutputLog(Msg, SNotificationItem::CS_Fail, 10.0f);
-			}
-
-			bEditModeEnabled = false;
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&]()
-		{
-			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
-			GetDirtyItems(DirtyItems);
-
-			return DirtyItems.Num() > 0;
-		}),
-		FIsActionChecked::CreateLambda([&]() { return false; }),
-		FIsActionButtonVisible::CreateLambda([&]() { return bEditModeEnabled; })
-	);
-
-	Cmds->MapAction(
-		FGdhCmds::Get().UndoChanges,
-		FExecuteAction::CreateLambda([&]()
-		{
-			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
-			GetDirtyItems(DirtyItems);
-
-			if (DirtyItems.Num() > 0)
-			{
-				const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
-				const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to discard all changes?")));
-				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
-				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
-			}
-
-			bEditModeEnabled = false;
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&]() { return bEditModeEnabled; }),
-		FIsActionChecked::CreateLambda([&]() { return false; }),
-		FIsActionButtonVisible::CreateLambda([&]() { return bEditModeEnabled; })
-	);
-
-	Cmds->MapAction(
-		FGdhCmds::Get().NumerizeAssets,
-		FExecuteAction::CreateLambda([&]() {}),
-		FCanExecuteAction::CreateLambda([&]()
-		{
-			return !bEditModeEnabled && ListItems.Num() > 0;
-		}),
-		FIsActionChecked::CreateLambda([&]() { return false; }),
-		FIsActionButtonVisible::CreateLambda([&]() { return !bEditModeEnabled; })
-	);
-
-	Cmds->MapAction(
-		FGdhCmds::Get().SearchAndReplace,
-		FExecuteAction::CreateLambda([&]() {}),
-		FCanExecuteAction::CreateLambda([&]()
-		{
-			return !bEditModeEnabled && ListItems.Num() > 0;
-		}),
-		FIsActionChecked::CreateLambda([&]() { return false; }),
-		FIsActionButtonVisible::CreateLambda([&]() { return !bEditModeEnabled; })
-	);
+	CmdsRegister();
 
 	FPropertyEditorModule& PropertyEditor = UGdhLibEditor::GetModulePropertyEditor();
 	const FContentBrowserModule& ContentBrowser = UGdhLibEditor::GetModuleContentBrowser();
-
-	CurrentPath = GdhConstants::PathRoot.ToString();
 
 	FPathPickerConfig PathPickerConfig;
 	PathPickerConfig.DefaultPath = GdhConstants::PathRoot.ToString();
@@ -394,11 +178,25 @@ void SGdhAssetNamingTool::Construct(const FArguments& InArgs)
 
 void SGdhAssetNamingTool::UpdateListData()
 {
+	if (!AssetNamingToolSettings.IsValid()) return;
+	if (UGdhLibEditor::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
+	if (UGdhLibEditor::EditorInPlayMode()) return;
+	if (!CurrentPath.StartsWith(GdhConstants::PathRoot.ToString())) return;
+
+	const auto ContentBrowserSettings = GetMutableDefault<UContentBrowserSettings>();
+	if (!ContentBrowserSettings) return;
+
+	ContentBrowserSettings->SetDisplayEngineFolder(false);
+	ContentBrowserSettings->SetDisplayCppFolders(false);
+	ContentBrowserSettings->SetDisplayPluginFolders(false);
+	ContentBrowserSettings->SetDisplayL10NFolder(false);
+	ContentBrowserSettings->PostEditChange();
+
 	ListItems.Reset();
 
-	if (UGdhLibEditor::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
+	UGdhLibEditor::CloseAllEditors();
 
-	if (!FEditorFileUtils::SaveDirtyPackages(true, true, true, false, false, false))
+	if (!UGdhLibAsset::SaveAllAssets(true))
 	{
 		UGdhLibEditor::ShowNotificationWithOutputLog(TEXT("Failed to scan assets, because not all assets have been saved."), SNotificationItem::CS_Fail, 5.0f);
 		return;
@@ -427,14 +225,8 @@ void SGdhAssetNamingTool::UpdateListData()
 			UE_LOG(LogTemp, Error, TEXT("%s - %s"), *Redirector.AssetName.ToString(), *Redirector.PackagePath.ToString());
 		}
 
-		ListItems.Empty();
-
-		UpdateListView();
-
 		return;
 	}
-
-	if (!AssetNamingToolSettings.IsValid()) return;
 
 	FScopedSlowTask SlowTask(
 		2.0f,
@@ -470,53 +262,22 @@ void SGdhAssetNamingTool::UpdateListData()
 		if (AssetsIndirect.Contains(Asset)) continue;
 		if (AssetClassesIgnore.Contains(Asset.GetClass())) continue;
 
-		UGdhAssetNamingToolListItem* NewItem = NewObject<UGdhAssetNamingToolListItem>();
-		if (!NewItem) continue;
-
-
-		const FGdhAssetNameAffix Affix = UGdhLibAsset::GetAssetNameAffix(Asset, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
+		TWeakObjectPtr<UGdhAssetNamingToolListItem> NewItem = NewObject<UGdhAssetNamingToolListItem>();
+		if (!NewItem.IsValid()) continue;
 
 		NewItem->AssetData = Asset;
+
+		const FGdhAssetNameAffix Affix = UGdhLibAsset::GetAssetNameAffix(Asset, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
+		if (Affix.Prefix.IsEmpty() && Affix.Suffix.IsEmpty()) continue;
+
+		NewItem->Prefix = Affix.Prefix;
+		NewItem->Suffix = Affix.Suffix;
 		NewItem->OldName = Asset.AssetName.ToString();
-		NewItem->NewName = UGdhLibAsset::GetAssetNameByConvention(
-			NewItem->OldName,
-			Affix,
-			AssetNamingToolSettings->AssetNamingCase,
-			AssetNamingToolSettings->PrefixNamingCase,
-			AssetNamingToolSettings->SuffixNamingCase,
-			AssetNamingToolSettings->Delimiter
-		);
+		ValidateItem(NewItem, NewItem->OldName);
 
 		// we are not showing assets that already have correct name
 		if (NewItem->OldName.Equals(NewItem->NewName, ESearchCase::CaseSensitive)) continue;
 
-		const FString AssetPreviewObjectPath = Asset.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *NewItem->NewName, *NewItem->NewName);
-		const FAssetData ExistingAssetData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*AssetPreviewObjectPath});
-		if (ExistingAssetData.IsValid() && NewItem->OldName.Equals(NewItem->NewName, ESearchCase::CaseSensitive))
-		{
-			NewItem->bHasErrors = true;
-			NewItem->Note.Append(TEXT("Asset with same name already exists in current path"));
-		}
-
-		if (ExistingAssetData.IsValid())
-		{
-			NewItem->bHasErrors = true;
-			NewItem->Note.Append(TEXT("Asset with similar name already exists in current path. This will cause redirector error when renaming. Please choose another name for this asset"));
-		}
-
-		if (UGdhLibString::HasUnicode(NewItem->OldName))
-		{
-			NewItem->bHasErrors = true;
-			NewItem->Note.Append(TEXT("Asset name contains unicode characters"));
-		}
-		else if (!UGdhLibString::HasOnly(NewItem->OldName, GdhConstants::ValidAssetNameChars))
-		{
-			NewItem->bHasErrors = true;
-			NewItem->Note.Append(TEXT("Asset name contains invalid characters"));
-		}
-
-		NewItem->Prefix = Affix.Prefix;
-		NewItem->Suffix = Affix.Suffix;
 		ListItems.Emplace(NewItem);
 	}
 }
@@ -546,8 +307,16 @@ void SGdhAssetNamingTool::UpdateListSort(const FName& ColumnName)
 		SortListItems(ColumnSortModeStatus, [&](const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item1, const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item2)
 		{
 			const bool bHasStatus = Item1->bHasErrors || Item1->bDirty;
-			
+
 			return ColumnSortModeStatus == EColumnSortMode::Ascending ? bHasStatus : !bHasStatus;
+		});
+	}
+
+	if (ColumnName.IsEqual(TEXT("Result")))
+	{
+		SortListItems(ColumnSortModePreview, [&](const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item1, const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item2)
+		{
+			return ColumnSortModePreview == EColumnSortMode::Ascending ? Item1->OldName < Item2->OldName : Item1->OldName > Item2->OldName;
 		});
 	}
 
@@ -620,36 +389,11 @@ FSlateColor SGdhAssetNamingTool::GetListOptionsBtnForegroundColor() const
 	return ListOptionsBtn->IsHovered() ? FEditorStyle::GetSlateColor(InvertedForegroundName) : FEditorStyle::GetSlateColor(DefaultForegroundName);
 }
 
-TSharedRef<SWidget> SGdhAssetNamingTool::GetListOptionsBtnContent()
+TSharedRef<SWidget> SGdhAssetNamingTool::GetListOptionsBtnContent() const
 {
 	const TSharedPtr<FExtender> Extender;
 	FMenuBuilder MenuBuilder(true, Cmds, Extender, true);
 
-	// MenuBuilder.AddMenuEntry(
-	// 	FText::FromString(TEXT("Show Unconfigured Assets")),
-	// 	FText::FromString(TEXT("Show assets that dont have naming settings specified")),
-	// 	FSlateIcon(),
-	// 	FUIAction
-	// 	(
-	// 		FExecuteAction::CreateLambda([&]
-	// 		{
-	// 			AssetNamingToolSubsystem->bShowAssetsUnspecified = !AssetNamingToolSubsystem->bShowAssetsUnspecified;
-	//
-	// 			UpdateListData();
-	// 			UpdateListView();
-	// 		}),
-	// 		FCanExecuteAction::CreateLambda([&]()
-	// 		{
-	// 			return AssetNamingToolSubsystem != nullptr;
-	// 		}),
-	// 		FGetActionCheckState::CreateLambda([&]()
-	// 		{
-	// 			return AssetNamingToolSubsystem->bShowAssetsUnspecified ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-	// 		})
-	// 	),
-	// 	NAME_None,
-	// 	EUserInterfaceActionType::ToggleButton
-	// );
 
 	return MenuBuilder.MakeWidget();
 }
@@ -671,8 +415,6 @@ TSharedRef<SWidget> SGdhAssetNamingTool::CreateToolbarMain() const
 		ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().EditMode);
 		ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().ApplyChanges);
 		ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().UndoChanges);
-		ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().NumerizeAssets);
-		ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().SearchAndReplace);
 	}
 	ToolBarBuilder.EndSection();
 
@@ -701,6 +443,7 @@ TSharedRef<SHeaderRow> SGdhAssetNamingTool::GetHeaderRow()
 		  .VAlignHeader(VAlign_Center)
 		  .FillWidth(0.6f)
 		  .HeaderContentPadding(FMargin{5.0f})
+		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(TEXT("Preview")))
@@ -797,7 +540,153 @@ void SGdhAssetNamingTool::ToggleEditMode(const bool bEnable)
 void SGdhAssetNamingTool::OnItemAssetNameChanged(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const
 {
 	if (!Item.IsValid()) return;
-	if (!AssetNamingToolSettings.IsValid()) return;
+
+	ValidateItem(Item, Name);
+
+	Item->bDirty = !Item->AssetData.AssetName.ToString().Equals(Item->NewName, ESearchCase::CaseSensitive);
+}
+
+void SGdhAssetNamingTool::CmdsRegister()
+{
+	Cmds = MakeShareable(new FUICommandList);
+	Cmds->MapAction(
+		FGdhCmds::Get().ScanAssets,
+		FExecuteAction::CreateLambda([&]()
+		{
+			UpdateListData();
+			UpdateListView();
+		}),
+		FCanExecuteAction::CreateLambda([&] { return !bEditModeEnabled; })
+	);
+	Cmds->MapAction(
+		FGdhCmds::Get().RenameAssets,
+		FExecuteAction::CreateLambda([&]()
+		{
+			if (!ListView.IsValid()) return;
+
+			const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
+			const FText Context = FText::FromString(TEXT("Are you sure you want to rename assets?"));
+
+			const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+			if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+
+			const auto SelectedItems = ListView->GetSelectedItems();
+			const auto Items = SelectedItems.Num() > 0 ? SelectedItems : ListItems;
+
+			TMap<FAssetData, FString> AssetsToRename;
+			AssetsToRename.Reserve(Items.Num());
+
+			for (const auto& Item : Items)
+			{
+				if (!Item.IsValid()) continue;
+				if (Item->bHasErrors) continue;
+
+				AssetsToRename.Add(Item->AssetData, Item->NewName);
+			}
+
+			RenameAssets(AssetsToRename);
+			UpdateListData();
+			UpdateListView();
+		}),
+		FCanExecuteAction::CreateLambda([&]
+		{
+			return !bEditModeEnabled && ListItems.Num() > 0;
+		})
+	);
+
+	Cmds->MapAction(
+		FGdhCmds::Get().ClearSelection,
+		FExecuteAction::CreateLambda([&]() { UpdateListView(); }),
+		FCanExecuteAction::CreateLambda([&]() { return ListView && ListView->GetSelectedItems().Num() > 0; })
+	);
+
+	Cmds->MapAction(
+		FGdhCmds::Get().EditMode,
+		FExecuteAction::CreateLambda([&]()
+		{
+			bEditModeEnabled = true;
+			ToggleEditMode(true);
+		}),
+		FCanExecuteAction::CreateLambda([&]()
+		{
+			return !bEditModeEnabled && ListItems.Num() > 0;
+		}),
+		FIsActionChecked::CreateLambda([&]() { return bEditModeEnabled; })
+	);
+
+	Cmds->MapAction(
+		FGdhCmds::Get().ApplyChanges,
+		FExecuteAction::CreateLambda([&]()
+		{
+			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
+			GetDirtyItems(DirtyItems);
+
+			if (DirtyItems.Num() > 0)
+			{
+				const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
+				const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to rename %d modified assets?"), DirtyItems.Num()));
+				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+			}
+
+			TMap<FAssetData, FString> AssetsToRename;
+			AssetsToRename.Reserve(DirtyItems.Num());
+
+			for (const auto& Item : DirtyItems)
+			{
+				if (!Item.IsValid()) continue;
+				if (Item->bHasErrors) continue;
+
+				AssetsToRename.Add(Item->AssetData, Item->NewName);
+			}
+
+			bEditModeEnabled = false;
+			RenameAssets(AssetsToRename);
+			UpdateListData();
+			UpdateListView();
+		}),
+		FCanExecuteAction::CreateLambda([&]()
+		{
+			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
+			GetDirtyItems(DirtyItems);
+
+			return DirtyItems.Num() > 0;
+		}),
+		FIsActionChecked::CreateLambda([&]() { return false; }),
+		FIsActionButtonVisible::CreateLambda([&]() { return bEditModeEnabled; })
+	);
+
+	Cmds->MapAction(
+		FGdhCmds::Get().UndoChanges,
+		FExecuteAction::CreateLambda([&]()
+		{
+			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
+			GetDirtyItems(DirtyItems);
+
+			if (DirtyItems.Num() > 0)
+			{
+				const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
+				const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to discard all changes?")));
+				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+			}
+
+			bEditModeEnabled = false;
+			UpdateListData();
+			UpdateListView();
+		}),
+		FCanExecuteAction::CreateLambda([&]() { return bEditModeEnabled; }),
+		FIsActionChecked::CreateLambda([&]() { return false; }),
+		FIsActionButtonVisible::CreateLambda([&]() { return bEditModeEnabled; })
+	);
+}
+
+void SGdhAssetNamingTool::ValidateItem(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const
+{
+	if (!Item.IsValid()) return;
+
+	Item->bHasErrors = false;
+	Item->Note.Empty();
 
 	const FGdhAssetNameAffix Affix = UGdhLibAsset::GetAssetNameAffix(Item->AssetData, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
 	const FString NamePreview = UGdhLibAsset::GetAssetNameByConvention(
@@ -805,41 +694,74 @@ void SGdhAssetNamingTool::OnItemAssetNameChanged(const TWeakObjectPtr<UGdhAssetN
 		Affix,
 		AssetNamingToolSettings->AssetNamingCase,
 		AssetNamingToolSettings->PrefixNamingCase,
-		AssetNamingToolSettings->SuffixNamingCase,
-		AssetNamingToolSettings->Delimiter
+		AssetNamingToolSettings->SuffixNamingCase
 	);
-
-	Item->bDirty = !Item->AssetData.AssetName.ToString().Equals(NamePreview, ESearchCase::CaseSensitive);
 	Item->NewName = NamePreview;
-	Item->bHasErrors = false;
-	Item->Note.Empty();
 
-	const FString AssetPreviewObjectPath = Item->AssetData.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *NamePreview, *NamePreview);
+	const FString AssetPreviewObjectPath = Item->AssetData.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *Item->NewName, *Item->NewName);
 	const FAssetData ExistingAssetData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*AssetPreviewObjectPath});
-
-	if (NamePreview.IsEmpty())
+	
+	if (ExistingAssetData.IsValid() && Item->OldName.Equals(Item->NewName, ESearchCase::CaseSensitive))
+	{
+		Item->bHasErrors = true;
+		Item->Note = TEXT("Asset with same name already exists in current path");
+	}
+	else if (Item->NewName.IsEmpty())
 	{
 		Item->bHasErrors = true;
 		Item->Note = TEXT("Asset name cant be empty");
 	}
-	else if (UGdhLibString::HasUnicode(NamePreview))
+	else if (UGdhLibString::HasUnicode(Item->NewName))
 	{
 		Item->bHasErrors = true;
 		Item->Note = TEXT("Asset name contains unicode characters");
 	}
-	else if (!UGdhLibString::HasOnly(Name, GdhConstants::ValidAssetNameChars))
+	else if (!UGdhLibString::HasOnly(Item->NewName, GdhConstants::ValidAssetNameChars) || !UGdhLibString::HasOnly(Name, GdhConstants::ValidAssetNameChars))
 	{
 		Item->bHasErrors = true;
 		Item->Note = TEXT("Asset name contains invalid characters");
 	}
-	else if (ExistingAssetData.IsValid() && Item->OldName.Equals(Item->NewName, ESearchCase::CaseSensitive))
+}
+
+void SGdhAssetNamingTool::RenameAssets(const TMap<FAssetData, FString>& Assets)
+{
+	if (Assets.Num() == 0)
 	{
-		Item->bHasErrors = true;
-		Item->Note = TEXT("Asset name with same name already exists in current path");
+		UGdhLibEditor::ShowNotification(TEXT("No valid assets to rename"), SNotificationItem::CS_Fail, 5.0f);
+		return;
 	}
-	else if (ExistingAssetData.IsValid())
+
+	FScopedSlowTask SlowTask(
+		static_cast<float>(Assets.Num()),
+		FText::FromString("Renaming assets...")
+	);
+	SlowTask.MakeDialog(false, false);
+
+	const int32 NumTotal = Assets.Num();
+	int32 NumRenamed = 0;
+
+	for (const auto& Asset : Assets)
 	{
-		Item->bHasErrors = true;
-		Item->Note = TEXT("Asset with similar name already exists in current path. This will cause redirector error when renaming. Please choose another name for this asset");
+		SlowTask.EnterProgressFrame(1.0f, FText::FromString(Asset.Value));
+
+		if (UGdhLibAsset::RenameAsset(Asset.Key, Asset.Value))
+		{
+			++NumRenamed;
+		}
 	}
+
+	const FString Msg = FString::Printf(TEXT("Renamed %d of %d assets"), NumRenamed, NumTotal);
+
+	if (NumRenamed == NumTotal)
+	{
+		UGdhLibEditor::ShowNotification(Msg, SNotificationItem::CS_Success, 5.0f);
+	}
+	else
+	{
+		UGdhLibEditor::ShowNotificationWithOutputLog(Msg, SNotificationItem::CS_Fail, 10.0f);
+	}
+
+	TArray<FAssetData> Redirectors;
+	UGdhLibAsset::GetProjectRedirectors(Redirectors);
+	UGdhLibAsset::FixProjectRedirectors(Redirectors);
 }

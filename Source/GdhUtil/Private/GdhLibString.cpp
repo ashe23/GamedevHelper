@@ -1,9 +1,9 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GdhLibString.h"
-// Engine Headers
 #include "GdhConstants.h"
 #include "GdhEnums.h"
+// Engine Headers
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/AsciiSet.h"
 
@@ -291,14 +291,7 @@ FString UGdhLibString::Tokenize(const FString& Str)
 			continue;
 		}
 
-		if (
-			!FChar::IsUnderscore(CurrentChar) && FChar::IsUnderscore(PreviousChar) ||
-			FChar::IsLower(CurrentChar) && FChar::IsDigit(PreviousChar) ||
-			FChar::IsUpper(CurrentChar) && FChar::IsLower(PreviousChar) ||
-			FChar::IsUpper(CurrentChar) && FChar::IsDigit(PreviousChar) ||
-			FChar::IsDigit(CurrentChar) && FChar::IsLower(PreviousChar) ||
-			FChar::IsDigit(CurrentChar) && FChar::IsUpper(PreviousChar)
-		)
+		if (!FChar::IsUnderscore(CurrentChar) && FChar::IsUnderscore(PreviousChar) || FChar::IsUpper(CurrentChar) && FChar::IsLower(PreviousChar))
 		{
 			Tokens.Add(Token);
 			Token.Empty();

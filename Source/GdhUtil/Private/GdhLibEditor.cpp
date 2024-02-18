@@ -48,6 +48,11 @@ void UGdhLibEditor::CloseAllEditors()
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->CloseAllAssetEditors();
 }
 
+bool UGdhLibEditor::EditorInPlayMode()
+{
+	return GEditor && GEditor->PlayWorld || GIsPlayInEditorWorld;
+}
+
 void UGdhLibEditor::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)
 {
 	FNotificationInfo Info{FText::FromString(Msg)};

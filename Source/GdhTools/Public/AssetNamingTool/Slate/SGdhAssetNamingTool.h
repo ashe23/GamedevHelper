@@ -25,7 +25,7 @@ private:
 	FText GetListSummaryTxt() const;
 	FText GetListSelectionTxt() const;
 	FSlateColor GetListOptionsBtnForegroundColor() const;
-	TSharedRef<SWidget> GetListOptionsBtnContent();
+	TSharedRef<SWidget> GetListOptionsBtnContent() const;
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhAssetNamingToolListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
 	TSharedRef<SWidget> CreateToolbarMain() const;
 	TSharedRef<SHeaderRow> GetHeaderRow();
@@ -33,6 +33,9 @@ private:
 	void GetDirtyItems(TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>>& Items);
 	void ToggleEditMode(const bool bEnable);
 	void OnItemAssetNameChanged(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const;
+	void CmdsRegister();
+	void ValidateItem(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const;
+	void RenameAssets(const TMap<FAssetData, FString>& Assets);
 
 	bool bEditModeEnabled = false;
 	FString CurrentPath;
@@ -42,6 +45,7 @@ private:
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhAssetNamingToolListItem>>> ListView;
 	TWeakObjectPtr<UGdhAssetNamingToolSettings> AssetNamingToolSettings;
 	EColumnSortMode::Type ColumnSortModeStatus = EColumnSortMode::None;
+	EColumnSortMode::Type ColumnSortModePreview = EColumnSortMode::None;
 	EColumnSortMode::Type ColumnSortModeClass = EColumnSortMode::None;
 	EColumnSortMode::Type ColumnSortModePath = EColumnSortMode::None;
 	EColumnSortMode::Type ColumnSortModePrefix = EColumnSortMode::None;

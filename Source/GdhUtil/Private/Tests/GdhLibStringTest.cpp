@@ -49,7 +49,6 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringCamelCase, "Gdh.Library.String.Cam
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringKebabCase, "Gdh.Library.String.KebabCase", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
 
-
 bool FGdhLibStringRepeat::RunTest(const FString& Parameters)
 {
 	TestEqual(TEXT("Empty input and num is zero"), UGdhLibString::Repeat(TEXT(""), 0), TEXT(""));
@@ -339,16 +338,16 @@ bool FGdhLibStringTokenize::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Ansi chars #2"), UGdhLibString::Tokenize(TEXT("ABC")), TEXT("abc"));
 	TestEqual(TEXT("Ansi chars #3"), UGdhLibString::Tokenize(TEXT("aaa___bbb___ccc")), TEXT("aaa_bbb_ccc"));
 	TestEqual(TEXT("Ansi chars #4"), UGdhLibString::Tokenize(TEXT("-aa-bb-cc--01-")), TEXT("aa_bb_cc_01"));
-	TestEqual(TEXT("Ansi chars #5"), UGdhLibString::Tokenize(TEXT("PascalCase01")), TEXT("pascal_case_01"));
+	TestEqual(TEXT("Ansi chars #5"), UGdhLibString::Tokenize(TEXT("PascalCase01")), TEXT("pascal_case01"));
 	TestEqual(TEXT("Ansi chars #6"), UGdhLibString::Tokenize(TEXT("01_my-string")), TEXT("01_my_string"));
-	TestEqual(TEXT("Ansi chars #7"), UGdhLibString::Tokenize(TEXT("TextureUV01")), TEXT("texture_uv_01"));
+	TestEqual(TEXT("Ansi chars #7"), UGdhLibString::Tokenize(TEXT("TextureUV01")), TEXT("texture_uv01"));
 	TestEqual(TEXT("Ansi chars #8"), UGdhLibString::Tokenize(TEXT("TextureUV_001")), TEXT("texture_uv_001"));
 	TestEqual(TEXT("Must Not Start With Underscore"), UGdhLibString::Tokenize(TEXT("_aBc")), TEXT("a_bc"));
 	TestEqual(TEXT("Must Not End With Underscore"), UGdhLibString::Tokenize(TEXT("aBc_")), TEXT("a_bc"));
 	TestEqual(TEXT("Must Not Start or End With Underscore"), UGdhLibString::Tokenize(TEXT("_aBc_")), TEXT("a_bc"));
 	TestEqual(TEXT("Trailing underscores #1"), UGdhLibString::Tokenize(TEXT("__aBc__")), TEXT("a_bc"));
 	TestEqual(TEXT("Trailing underscores #2"), UGdhLibString::Tokenize(TEXT("__aB__c__")), TEXT("a_b_c"));
-	TestEqual(TEXT("Trailing underscores #3"), UGdhLibString::Tokenize(TEXT("__aB__c01__")), TEXT("a_b_c_01"));
+	TestEqual(TEXT("Trailing underscores #3"), UGdhLibString::Tokenize(TEXT("__aB__c01__")), TEXT("a_b_c01"));
 	TestEqual(TEXT("Special Chars #1"), UGdhLibString::Tokenize(GdhConstants::SpecialChars + TEXT("aBc")), TEXT("a_bc"));
 	TestEqual(TEXT("Special Chars #2"), UGdhLibString::Tokenize(TEXT("aBc") + GdhConstants::SpecialChars), TEXT("a_bc"));
 	TestEqual(TEXT("Special Chars #3"), UGdhLibString::Tokenize(TEXT("-A__-b-__C__")), TEXT("a_b_c"));
@@ -368,7 +367,8 @@ bool FGdhLibStringPascalCase::RunTest(const FString& Parameters)
 {
 	TestEqual(TEXT("Empty String"), UGdhLibString::ConvertToPascalCase(TEXT("")), TEXT(""));
 	TestEqual(TEXT("Single Word Lowercase"), UGdhLibString::ConvertToPascalCase(TEXT("word")), TEXT("Word"));
-	TestEqual(TEXT("Single Word Uppercase"), UGdhLibString::ConvertToPascalCase(TEXT("WORD")), TEXT("Word"));
+	TestEqual(TEXT("Single Word Uppercase #1"), UGdhLibString::ConvertToPascalCase(TEXT("WORD")), TEXT("Word"));
+	TestEqual(TEXT("Single Word Uppercase #2"), UGdhLibString::ConvertToPascalCase(TEXT("MyTexture23")), TEXT("MyTexture23"));
 	TestEqual(TEXT("Multiple Words Lowercase"), UGdhLibString::ConvertToPascalCase(TEXT("multiple words lowercase")), TEXT("MultipleWordsLowercase"));
 	TestEqual(TEXT("Multiple Words Uppercase"), UGdhLibString::ConvertToPascalCase(TEXT("MULTIPLE WORDS UPPERCASE")), TEXT("MultipleWordsUppercase"));
 	TestEqual(TEXT("Mixed Case Words"), UGdhLibString::ConvertToPascalCase(TEXT("Mixed Case Words")), TEXT("MixedCaseWords"));
@@ -472,6 +472,5 @@ bool FGdhLibStringKebabCase::RunTest(const FString& Parameters)
 
 	return true;
 }
-
 
 #endif
