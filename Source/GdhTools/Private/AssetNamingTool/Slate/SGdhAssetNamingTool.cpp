@@ -14,7 +14,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Misc/ScopedSlowTask.h"
-#include "Settings/ContentBrowserSettings.h"
+// #include "Settings/ContentBrowserSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -124,12 +124,12 @@ void SGdhAssetNamingTool::Construct(const FArguments& InArgs)
 						[
 							SNew(SBox).WidthOverride(32.0f).HeightOverride(32.0f)
 							[
-								SNew(SImage).Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Check").GetIcon())
+								SAssignNew(InfoTextImage, SImage).Image(FGdhStyles::GetIcon("GamedevHelper.Icon.Check").GetIcon())
 							]
 						]
 						+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(FMargin{5.0f, 2.0f, 0.0f, 0.0f}).HAlign(HAlign_Left).VAlign(VAlign_Center)
 						[
-							SNew(STextBlock)
+							SAssignNew(InfoTextBlock, STextBlock)
 							.Justification(ETextJustify::Center)
 							.ShadowOffset(FVector2D{1.5f, 1.5f})
 							.ShadowColorAndOpacity(FLinearColor::Black)
@@ -183,14 +183,14 @@ void SGdhAssetNamingTool::UpdateListData()
 	if (UGdhLibEditor::EditorInPlayMode()) return;
 	if (!CurrentPath.StartsWith(GdhConstants::PathRoot.ToString())) return;
 
-	const auto ContentBrowserSettings = GetMutableDefault<UContentBrowserSettings>();
-	if (!ContentBrowserSettings) return;
-
-	ContentBrowserSettings->SetDisplayEngineFolder(false);
-	ContentBrowserSettings->SetDisplayCppFolders(false);
-	ContentBrowserSettings->SetDisplayPluginFolders(false);
-	ContentBrowserSettings->SetDisplayL10NFolder(false);
-	ContentBrowserSettings->PostEditChange();
+	// const auto ContentBrowserSettings = GetMutableDefault<UContentBrowserSettings>();
+	// if (!ContentBrowserSettings) return;
+	//
+	// ContentBrowserSettings->SetDisplayEngineFolder(false);
+	// ContentBrowserSettings->SetDisplayCppFolders(false);
+	// ContentBrowserSettings->SetDisplayPluginFolders(false);
+	// ContentBrowserSettings->SetDisplayL10NFolder(false);
+	// ContentBrowserSettings->PostEditChange();
 
 	ListItems.Reset();
 
@@ -504,6 +504,31 @@ TSharedRef<SHeaderRow> SGdhAssetNamingTool::GetHeaderRow()
 
 int32 SGdhAssetNamingTool::GetWidgetIndex() const
 {
+	if (!FPaths::IsUnderDirectory(CurrentPath, GdhConstants::PathRoot.ToString()))
+	{
+		if (InfoTextBlock.IsValid())
+		{
+			InfoTextBlock->SetText(FText::FromString(TEXT("Only Assets under Content folder can be scanned")));
+		}
+
+		if (InfoTextImage.IsValid())
+		{
+			InfoTextImage->SetImage(FGdhStyles::GetIcon("GamedevHelper.Icon.Warning").GetIcon());
+		}
+
+		return 1;
+	}
+
+	if (InfoTextBlock.IsValid())
+	{
+		InfoTextBlock->SetText(FText::FromString(TEXT("No assets to rename")));
+	}
+
+	if (InfoTextImage.IsValid())
+	{
+		InfoTextImage->SetImage(FGdhStyles::GetIcon("GamedevHelper.Icon.Check").GetIcon());
+	}
+
 	return ListItems.Num() == 0 ? 1 : 0;
 }
 
@@ -700,7 +725,7 @@ void SGdhAssetNamingTool::ValidateItem(const TWeakObjectPtr<UGdhAssetNamingToolL
 
 	const FString AssetPreviewObjectPath = Item->AssetData.PackagePath.ToString() + FString::Printf(TEXT("/%s.%s"), *Item->NewName, *Item->NewName);
 	const FAssetData ExistingAssetData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*AssetPreviewObjectPath});
-	
+
 	if (ExistingAssetData.IsValid() && Item->OldName.Equals(Item->NewName, ESearchCase::CaseSensitive))
 	{
 		Item->bHasErrors = true;

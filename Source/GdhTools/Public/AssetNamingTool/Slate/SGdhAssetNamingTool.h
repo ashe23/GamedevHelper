@@ -41,6 +41,8 @@ private:
 	FString CurrentPath;
 	TSharedPtr<FUICommandList> Cmds;
 	TSharedPtr<SComboButton> ListOptionsBtn;
+	TSharedPtr<SImage> InfoTextImage;
+	TSharedPtr<STextBlock> InfoTextBlock;
 	TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> ListItems;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhAssetNamingToolListItem>>> ListView;
 	TWeakObjectPtr<UGdhAssetNamingToolSettings> AssetNamingToolSettings;
