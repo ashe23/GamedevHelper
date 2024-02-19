@@ -368,6 +368,16 @@ bool UGdhLibAsset::AssetIsCircular(const FAssetData& Asset)
 	return false;
 }
 
+bool UGdhLibAsset::AssetHasRefs(const FAssetData& Asset)
+{
+	if (!Asset.IsValid()) return false;
+
+	TArray<FName> Refs;
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(Asset.PackageName, Refs);
+
+	return Refs.Num() > 0;
+}
+
 void UGdhLibAsset::GetProjectRedirectors(TArray<FAssetData>& Redirectors)
 {
 	FARFilter Filter;

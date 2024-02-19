@@ -151,6 +151,14 @@ public:
 	static bool AssetIsCircular(const FAssetData& Asset);
 
 	/**
+	 * @brief Check if given asset has any referencers or not
+	 * @param Asset FAssetData
+	 * @return bool
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	static bool AssetHasRefs(const FAssetData& Asset);
+
+	/**
 	 * @brief Returns all redirectors in project
 	 * @param Redirectors TArray<FAssetData>
 	 */

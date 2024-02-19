@@ -25,6 +25,8 @@ public:
 	static void ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
 	static void CloseAllEditors();
 	static bool EditorInPlayMode();
+	static void ShaderCompilationEnable();
+	static void ShaderCompilationDisable();
 
 	static FAssetToolsModule& GetModuleAssetTools();
 	static FAssetRegistryModule& GetModuleAssetRegistry();

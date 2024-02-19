@@ -36,6 +36,7 @@ private:
 	void CmdsRegister();
 	void ValidateItem(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const;
 	void RenameAssets(const TMap<FAssetData, FString>& Assets);
+	void GetBucket(const TSet<FAssetData>& AssetsAll, TSet<FAssetData>& Assets);
 
 	bool bEditModeEnabled = false;
 	FString CurrentPath;

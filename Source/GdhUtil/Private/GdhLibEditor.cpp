@@ -5,6 +5,7 @@
 // Engine Headers
 #include "IContentBrowserSingleton.h"
 #include "Editor.h"
+#include "ShaderCompiler.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 
@@ -51,6 +52,20 @@ void UGdhLibEditor::CloseAllEditors()
 bool UGdhLibEditor::EditorInPlayMode()
 {
 	return GEditor && GEditor->PlayWorld || GIsPlayInEditorWorld;
+}
+
+void UGdhLibEditor::ShaderCompilationEnable()
+{
+	if (!GShaderCompilingManager) return;
+
+	GShaderCompilingManager->SkipShaderCompilation(false);
+}
+
+void UGdhLibEditor::ShaderCompilationDisable()
+{
+	if (!GShaderCompilingManager) return;
+
+	GShaderCompilingManager->SkipShaderCompilation(true);
 }
 
 void UGdhLibEditor::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)

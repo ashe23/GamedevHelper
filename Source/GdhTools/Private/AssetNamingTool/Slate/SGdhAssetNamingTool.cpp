@@ -756,22 +756,43 @@ void SGdhAssetNamingTool::RenameAssets(const TMap<FAssetData, FString>& Assets)
 		return;
 	}
 
+	TSet<FAssetData> AssetsAll;
+	Assets.GetKeys(AssetsAll);
+
+	TSet<FAssetData> Bucket;
+
+	const int32 NumTotal = Assets.Num();
+	int32 NumRenamed = 0;
+
 	FScopedSlowTask SlowTask(
 		static_cast<float>(Assets.Num()),
 		FText::FromString("Renaming assets...")
 	);
 	SlowTask.MakeDialog(false, false);
 
-	const int32 NumTotal = Assets.Num();
-	int32 NumRenamed = 0;
-
-	for (const auto& Asset : Assets)
+	while (AssetsAll.Num() > 0)
 	{
-		SlowTask.EnterProgressFrame(1.0f, FText::FromString(Asset.Value));
+		GetBucket(AssetsAll, Bucket);
 
-		if (UGdhLibAsset::RenameAsset(Asset.Key, Asset.Value))
+		for (const auto& Asset : Bucket)
 		{
-			++NumRenamed;
+			if (Assets.Contains(Asset))
+			{
+				const FString NewName = *Assets.Find(Asset);
+
+				SlowTask.EnterProgressFrame(1.0f, FText::FromString(FString::Printf(TEXT("%s -> %s"), *Asset.AssetName.ToString(), *NewName)));
+
+				if (UGdhLibAsset::RenameAsset(Asset, NewName))
+				{
+					++NumRenamed;
+
+					AssetsAll.Remove(Asset);
+				}
+			}
+			else
+			{
+				SlowTask.EnterProgressFrame(1.0f);
+			}
 		}
 	}
 
@@ -789,4 +810,31 @@ void SGdhAssetNamingTool::RenameAssets(const TMap<FAssetData, FString>& Assets)
 	TArray<FAssetData> Redirectors;
 	UGdhLibAsset::GetProjectRedirectors(Redirectors);
 	UGdhLibAsset::FixProjectRedirectors(Redirectors);
+}
+
+void SGdhAssetNamingTool::GetBucket(const TSet<FAssetData>& AssetsAll, TSet<FAssetData>& Assets)
+{
+	Assets.Reset();
+
+	for (const auto& Asset : AssetsAll)
+	{
+		if (UGdhLibAsset::AssetIsCircular(Asset))
+		{
+			Assets.Add(Asset);
+		}
+	}
+
+	if (Assets.Num() > 0) return;
+
+	for (const auto& Asset : AssetsAll)
+	{
+		if (UGdhLibAsset::AssetHasRefs(Asset))
+		{
+			Assets.Add(Asset);
+		}
+	}
+
+	if (Assets.Num() > 0) return;
+
+	Assets.Append(AssetsAll);
 }
