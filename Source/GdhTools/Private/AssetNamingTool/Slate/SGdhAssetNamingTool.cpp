@@ -181,16 +181,7 @@ void SGdhAssetNamingTool::UpdateListData()
 	if (!AssetNamingToolSettings.IsValid()) return;
 	if (UGdhLibEditor::GetModuleAssetRegistry().GetRegistry().IsLoadingAssets()) return;
 	if (UGdhLibEditor::EditorInPlayMode()) return;
-	if (!CurrentPath.StartsWith(GdhConstants::PathRoot.ToString())) return;
-
-	// const auto ContentBrowserSettings = GetMutableDefault<UContentBrowserSettings>();
-	// if (!ContentBrowserSettings) return;
-	//
-	// ContentBrowserSettings->SetDisplayEngineFolder(false);
-	// ContentBrowserSettings->SetDisplayCppFolders(false);
-	// ContentBrowserSettings->SetDisplayPluginFolders(false);
-	// ContentBrowserSettings->SetDisplayL10NFolder(false);
-	// ContentBrowserSettings->PostEditChange();
+	if (!FPaths::IsUnderDirectory(CurrentPath, GdhConstants::PathRoot.ToString())) return;
 
 	ListItems.Reset();
 
