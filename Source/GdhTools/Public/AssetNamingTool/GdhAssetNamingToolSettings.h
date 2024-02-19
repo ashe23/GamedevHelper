@@ -37,5 +37,5 @@ public:
 
 	// Naming case for suffixes
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
-	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::PascalCase;
+	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::UpperCase;
 };

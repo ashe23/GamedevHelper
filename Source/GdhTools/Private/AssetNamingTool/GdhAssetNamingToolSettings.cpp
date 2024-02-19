@@ -12,7 +12,7 @@ UGdhAssetNamingToolSettings::UGdhAssetNamingToolSettings()
 	BlueprintTypes.Add(EGdhBlueprintType::FunctionLibrary, FGdhAssetNameAffix{TEXT("BPFL")});
 	BlueprintTypes.Add(EGdhBlueprintType::MacroLibrary, FGdhAssetNameAffix{TEXT("BPML")});
 
-	static ConstructorHelpers::FObjectFinder<UDataTable> DataTable{TEXT("DataTable'/GamedevHelper/NamingConvention/DT_Affix_Mappings_Basic.DT_Affix_Mappings_Basic'")};
+	static ConstructorHelpers::FObjectFinder<UDataTable> DataTable{TEXT("DataTable'/GamedevHelper/NamingConvention/DT_Affix_Mappings_Unreal.DT_Affix_Mappings_Unreal'")};
 	if (DataTable.Succeeded())
 	{
 		Mappings = DataTable.Object;

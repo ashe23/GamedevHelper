@@ -187,46 +187,40 @@ FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, cons
 	if (!Asset.IsValid()) return {};
 	if (!Mappings) return {};
 
-	const bool bIsBlueprint = AssetIsBlueprint(Asset);
-	FGdhAssetNameAffix BlueprintAffixes;
-	FGdhAssetNameAffix DataTableAffixes;
-
-	if (bIsBlueprint)
-	{
-		const EGdhBlueprintType BlueprintType = GetBlueprintType(Asset);
-		if (BlueprintTypes.Contains(BlueprintType))
-		{
-			BlueprintAffixes = *BlueprintTypes.Find(BlueprintType);
-		}
-	}
-
 	TArray<FGdhAssetNameAffixRow*> Rows;
 	Mappings->GetAllRows<FGdhAssetNameAffixRow>(TEXT(""), Rows);
 
-	// todo:ashe23 we should add options for exact and parent class searches
-
-	const FString GeneratedClass = GetAssetTagValue(Asset, TEXT("GeneratedClass"));
-	const FString ParentClass = GetAssetTagValue(Asset, TEXT("ParentClass"));
-
+	TMap<FString, FGdhAssetNameAffix> AffixMap;
+	AffixMap.Reserve(Rows.Num());
+	
 	for (const auto& Row : Rows)
 	{
 		if (!Row) continue;
 		if (!Row->AssetClass.LoadSynchronous()) continue;
 
-		const FString DataTableClass = Row->AssetClass.ToString();
-
-		if (DataTableClass.Equals(GeneratedClass) || DataTableClass.Equals(ParentClass))
-		{
-			DataTableAffixes = FGdhAssetNameAffix{Row->Prefix, Row->Suffix};
-			break;
-		}
+		AffixMap.Add(Row->AssetClass.ToString(), FGdhAssetNameAffix{Row->Prefix, Row->Suffix});
 	}
 
-	FGdhAssetNameAffix FinalAffix;
-	FinalAffix.Prefix = bIsBlueprint && DataTableAffixes.Prefix.IsEmpty() ? BlueprintAffixes.Prefix : DataTableAffixes.Prefix;
-	FinalAffix.Suffix = bIsBlueprint && DataTableAffixes.Suffix.IsEmpty() ? BlueprintAffixes.Suffix : DataTableAffixes.Suffix;
+	const bool bIsBlueprint = AssetIsBlueprint(Asset);
+	const EGdhBlueprintType BlueprintType = GetBlueprintType(Asset);
+	const FGdhAssetNameAffix BlueprintAffix = BlueprintTypes.Contains(BlueprintType) ? *BlueprintTypes.Find(BlueprintType) : FGdhAssetNameAffix{};
+	const FString AssetExactClassName = bIsBlueprint ? GetAssetTagValue(Asset, TEXT("GeneratedClass")) : FSoftClassPath(Asset.GetClass()).GetAssetPathString();
+	const FString AssetParentClassName = bIsBlueprint ? GetAssetTagValue(Asset, TEXT("ParentClass")) : TEXT("");
 
-	return FinalAffix;
+	if (bIsBlueprint)
+	{
+		const FGdhAssetNameAffix ExactAffixes = AffixMap.Contains(AssetExactClassName) ? *AffixMap.Find(AssetExactClassName) : FGdhAssetNameAffix{};
+		const FGdhAssetNameAffix ParentAffixes = AffixMap.Contains(AssetParentClassName) ? *AffixMap.Find(AssetParentClassName) : BlueprintAffix;
+
+		return FGdhAssetNameAffix{ExactAffixes.Prefix.IsEmpty() ? ParentAffixes.Prefix : ExactAffixes.Prefix, ExactAffixes.Suffix.IsEmpty() ? ParentAffixes.Suffix : ExactAffixes.Suffix};
+	}
+
+	if (AffixMap.Contains(AssetExactClassName))
+	{
+		return *AffixMap.Find(AssetExactClassName);
+	}
+
+	return {};
 }
 
 FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase)
@@ -442,13 +436,12 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 		return false;
 	}
 
-	// const FString Src = Asset.ToSoftObjectPath().GetAssetPathString();
-	const FString Dst = FString::Printf(TEXT("%s/%s.%s"), *Asset.PackagePath.ToString(), *NewName, *NewName);
+	const FString NewObjectPath = FString::Printf(TEXT("%s/%s.%s"), *Asset.PackagePath.ToString(), *NewName, *NewName);
 
 	FAssetRenameData RenameData;
 	RenameData.Asset = Asset.GetAsset();
 	RenameData.OldObjectPath = Asset.ToSoftObjectPath();
-	RenameData.NewObjectPath = FSoftObjectPath{Dst};
+	RenameData.NewObjectPath = FSoftObjectPath{NewObjectPath};
 	RenameData.NewPackagePath = Asset.PackagePath.ToString();
 	RenameData.NewName = NewName;
 
