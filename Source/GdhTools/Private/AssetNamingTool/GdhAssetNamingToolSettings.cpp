@@ -2,6 +2,8 @@
 
 #include "AssetNamingTool/GdhAssetNamingToolSettings.h"
 #include "GdhStructs.h"
+// Engine Headers
+#include "UObject/ConstructorHelpers.h"
 
 UGdhAssetNamingToolSettings::UGdhAssetNamingToolSettings()
 {
@@ -9,6 +11,12 @@ UGdhAssetNamingToolSettings::UGdhAssetNamingToolSettings()
 	BlueprintTypes.Add(EGdhBlueprintType::Interface, FGdhAssetNameAffix{TEXT("BPI")});
 	BlueprintTypes.Add(EGdhBlueprintType::FunctionLibrary, FGdhAssetNameAffix{TEXT("BPFL")});
 	BlueprintTypes.Add(EGdhBlueprintType::MacroLibrary, FGdhAssetNameAffix{TEXT("BPML")});
+
+	static ConstructorHelpers::FObjectFinder<UDataTable> DataTable{TEXT("DataTable'/GamedevHelper/NamingConvention/DT_Affix_Mappings_Basic.DT_Affix_Mappings_Basic'")};
+	if (DataTable.Succeeded())
+	{
+		Mappings = DataTable.Object;
+	}
 }
 
 #if WITH_EDITOR

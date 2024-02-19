@@ -159,41 +159,41 @@ void UGdhLibAsset::GetClassNamesPrimary(TSet<FName>& ClassNames)
 }
 
 
-FName UGdhLibAsset::GetAssetExactClassName(const FAssetData& InAsset)
+FName UGdhLibAsset::GetAssetExactClassName(const FAssetData& Asset)
 {
-	if (!InAsset.IsValid()) return NAME_None;
+	if (!Asset.IsValid()) return NAME_None;
 
-	if (AssetIsBlueprint(InAsset))
+	if (AssetIsBlueprint(Asset))
 	{
-		const FString GeneratedClassName = InAsset.TagsAndValues.FindTag(TEXT("GeneratedClass")).GetValue();
+		const FString GeneratedClassName = Asset.TagsAndValues.FindTag(TEXT("GeneratedClass")).GetValue();
 		const FString ClassObjectPath = FPackageName::ExportTextPathToObjectPath(*GeneratedClassName);
 		return FName{*FPackageName::ObjectPathToObjectName(ClassObjectPath)};
 	}
 
-	return InAsset.AssetClass;
+	return Asset.AssetClass;
 }
 
-FString UGdhLibAsset::GetAssetTagValue(const FAssetData& InAsset, const FName& Tag)
+FString UGdhLibAsset::GetAssetTagValue(const FAssetData& Asset, const FName& Tag)
 {
-	if (!InAsset.IsValid()) return {};
-	if (!InAsset.TagsAndValues.Contains(Tag)) return {};
+	if (!Asset.IsValid()) return {};
+	if (!Asset.TagsAndValues.Contains(Tag)) return {};
 
-	const FString Value = InAsset.TagsAndValues.FindTag(Tag).GetValue();
+	const FString Value = Asset.TagsAndValues.FindTag(Tag).GetValue();
 	return FPackageName::ExportTextPathToObjectPath(Value);
 }
 
-FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& InAsset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes)
+FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes)
 {
-	if (!InAsset.IsValid()) return {};
+	if (!Asset.IsValid()) return {};
 	if (!Mappings) return {};
 
-	const bool bIsBlueprint = AssetIsBlueprint(InAsset);
+	const bool bIsBlueprint = AssetIsBlueprint(Asset);
 	FGdhAssetNameAffix BlueprintAffixes;
 	FGdhAssetNameAffix DataTableAffixes;
 
 	if (bIsBlueprint)
 	{
-		const EGdhBlueprintType BlueprintType = GetBlueprintType(InAsset);
+		const EGdhBlueprintType BlueprintType = GetBlueprintType(Asset);
 		if (BlueprintTypes.Contains(BlueprintType))
 		{
 			BlueprintAffixes = *BlueprintTypes.Find(BlueprintType);
@@ -205,8 +205,8 @@ FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& InAsset, co
 
 	// todo:ashe23 we should add options for exact and parent class searches
 
-	const FString GeneratedClass = GetAssetTagValue(InAsset, TEXT("GeneratedClass"));
-	const FString ParentClass = GetAssetTagValue(InAsset, TEXT("ParentClass"));
+	const FString GeneratedClass = GetAssetTagValue(Asset, TEXT("GeneratedClass"));
+	const FString ParentClass = GetAssetTagValue(Asset, TEXT("ParentClass"));
 
 	for (const auto& Row : Rows)
 	{
@@ -260,21 +260,21 @@ FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAs
 	return FinalName;
 }
 
-int64 UGdhLibAsset::GetAssetSize(const FAssetData& InAsset)
+int64 UGdhLibAsset::GetAssetSize(const FAssetData& Asset)
 {
-	if (!InAsset.IsValid()) return 0;
+	if (!Asset.IsValid()) return 0;
 
-	const FAssetPackageData* AssetPackageData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetPackageData(InAsset.PackageName);
+	const FAssetPackageData* AssetPackageData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetPackageData(Asset.PackageName);
 	if (!AssetPackageData) return 0;
 
 	return AssetPackageData->DiskSize;
 }
 
-int64 UGdhLibAsset::GetAssetsTotalSize(const TArray<FAssetData>& InAssets)
+int64 UGdhLibAsset::GetAssetsTotalSize(const TArray<FAssetData>& Assets)
 {
 	int64 Size = 0;
 
-	for (const auto& Asset : InAssets)
+	for (const auto& Asset : Assets)
 	{
 		if (!Asset.IsValid()) continue;
 
@@ -330,22 +330,22 @@ EGdhBlueprintType UGdhLibAsset::GetBlueprintType(const FAssetData& Asset)
 	return EGdhBlueprintType::None;
 }
 
-bool UGdhLibAsset::AssetIsBlueprint(const FAssetData& InAsset)
+bool UGdhLibAsset::AssetIsBlueprint(const FAssetData& Asset)
 {
-	if (!InAsset.IsValid()) return false;
+	if (!Asset.IsValid()) return false;
 
-	const UClass* AssetClass = InAsset.GetClass();
+	const UClass* AssetClass = Asset.GetClass();
 	if (!AssetClass) return false;
 
 	return AssetClass->IsChildOf(UBlueprint::StaticClass());
 }
 
-bool UGdhLibAsset::AssetIsExtReferenced(const FAssetData& InAsset)
+bool UGdhLibAsset::AssetIsExtReferenced(const FAssetData& Asset)
 {
-	if (!InAsset.IsValid()) return false;
+	if (!Asset.IsValid()) return false;
 
 	TArray<FName> Refs;
-	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(InAsset.PackageName, Refs);
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(Asset.PackageName, Refs);
 
 	return Refs.ContainsByPredicate([](const FName& Ref)
 	{
@@ -353,15 +353,15 @@ bool UGdhLibAsset::AssetIsExtReferenced(const FAssetData& InAsset)
 	});
 }
 
-bool UGdhLibAsset::AssetIsCircular(const FAssetData& InAsset)
+bool UGdhLibAsset::AssetIsCircular(const FAssetData& Asset)
 {
-	if (!InAsset.IsValid()) return false;
+	if (!Asset.IsValid()) return false;
 
 	TArray<FName> Refs;
 	TArray<FName> Deps;
 
-	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(InAsset.PackageName, Refs);
-	UGdhLibEditor::GetModuleAssetRegistry().Get().GetDependencies(InAsset.PackageName, Deps);
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(Asset.PackageName, Refs);
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetDependencies(Asset.PackageName, Deps);
 
 	for (const auto& Ref : Refs)
 	{

@@ -39,6 +39,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringTokenize, "Gdh.Library.String.Toke
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringPascalCase, "Gdh.Library.String.PascalCase", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringPascalSnakeCase, "Gdh.Library.String.PascalSnakeCase", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringUpperCase, "Gdh.Library.String.UpperCase", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGdhLibStringLowerCase, "Gdh.Library.String.LowerCase", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
@@ -369,6 +371,7 @@ bool FGdhLibStringPascalCase::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Single Word Lowercase"), UGdhLibString::ConvertToPascalCase(TEXT("word")), TEXT("Word"));
 	TestEqual(TEXT("Single Word Uppercase #1"), UGdhLibString::ConvertToPascalCase(TEXT("WORD")), TEXT("Word"));
 	TestEqual(TEXT("Single Word Uppercase #2"), UGdhLibString::ConvertToPascalCase(TEXT("MyTexture23")), TEXT("MyTexture23"));
+	TestEqual(TEXT("Single Word Uppercase #3"), UGdhLibString::ConvertToPascalCase(TEXT("MyTexture_23")), TEXT("MyTexture23"));
 	TestEqual(TEXT("Multiple Words Lowercase"), UGdhLibString::ConvertToPascalCase(TEXT("multiple words lowercase")), TEXT("MultipleWordsLowercase"));
 	TestEqual(TEXT("Multiple Words Uppercase"), UGdhLibString::ConvertToPascalCase(TEXT("MULTIPLE WORDS UPPERCASE")), TEXT("MultipleWordsUppercase"));
 	TestEqual(TEXT("Mixed Case Words"), UGdhLibString::ConvertToPascalCase(TEXT("Mixed Case Words")), TEXT("MixedCaseWords"));
@@ -385,6 +388,25 @@ bool FGdhLibStringPascalCase::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+bool FGdhLibStringPascalSnakeCase::RunTest(const FString& Parameters)
+{
+	TestEqual(TEXT("Empty String"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("")), TEXT(""));
+	TestEqual(TEXT("Single Word Lowercase"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("word")), TEXT("Word"));
+	TestEqual(TEXT("Single Word Uppercase"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("WORD")), TEXT("Word"));
+	TestEqual(TEXT("Ansi #1"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("my_material23")), TEXT("My_Material23"));
+	TestEqual(TEXT("Ansi #2"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("my_material_23")), TEXT("My_Material_23"));
+	TestEqual(TEXT("Ansi #3"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("my_material_23")), TEXT("My_Material_23"));
+	TestEqual(TEXT("Ansi #4"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("01_NAME_Brick023")), TEXT("01_Name_Brick023"));
+	TestEqual(TEXT("Ansi #5"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("%^&aaa*(")), TEXT("aaa"));
+	TestEqual(TEXT("Ansi #6"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("my-texture---023")), TEXT("My_Texture_023"));
+	TestEqual(TEXT("Unicode #1"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("привет23")), TEXT("привет23"));
+	TestEqual(TEXT("Unicode #2"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("привет_23")), TEXT("привет_23"));
+	TestEqual(TEXT("Unicode #2"), UGdhLibString::ConvertToPascalSnakeCase(TEXT("Привет-23_АБВ")), TEXT("Привет_23_АБВ"));
+
+	return true;
+}
+
 
 bool FGdhLibStringUpperCase::RunTest(const FString& Parameters)
 {

@@ -207,9 +207,10 @@ public:
 
 	/**
 	 * @brief Returns new string with contextual parts splitted by underscore. String can be in any naming case, even mixed.
-	 * - "PascalCase01" => "pascal_case_01"
+	 * - "PascalCase01" => "pascal_case01"
 	 * - "01_my-string" => "01_my_string"
-	 * - "TextureUV01" => "texture_uv_01"
+	 * - "TextureUV01" => "texture_uv01"
+	 * - "TextureUV_01" => "texture_uv_01"
 	 * @param Str FString
 	 * @return FString Result is always in snake_case
 	 */

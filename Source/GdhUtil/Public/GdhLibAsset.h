@@ -65,24 +65,30 @@ public:
 
 	/**
 	 * @brief Returns asset exact class name, if its blueprint it will return generated class name
-	 * @param InAsset FAssetData
+	 * @param Asset FAssetData
 	 * @return FName 
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FName GetAssetExactClassName(const FAssetData& InAsset);
+	static FName GetAssetExactClassName(const FAssetData& Asset);
 
+	/**
+	 * @brief Returns tag value for given asset
+	 * @param Asset FAssetData
+	 * @param Tag FName
+	 * @return FString
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FString GetAssetTagValue(const FAssetData& InAsset, const FName& Tag);
+	static FString GetAssetTagValue(const FAssetData& Asset, const FName& Tag);
 
 	/**
 	 * @brief Returns asset name affix (Prefix + Suffix) for given asset and look up data table
-	 * @param InAsset FAssetData
+	 * @param Asset FAssetData
 	 * @param Mappings UDataTable
 	 * @param BlueprintTypes TMap<EGdhBlueprintType, FGdhAssetNameAffix>
 	 * @return FGdhAssetNameAffix
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FGdhAssetNameAffix GetAssetNameAffix(const FAssetData& InAsset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes);
+	static FGdhAssetNameAffix GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes);
 
 	/**
 	 * @brief Returns corrected name of asset by naming convention
@@ -98,19 +104,19 @@ public:
 
 	/**
 	 * @brief Returns given asset size on disk in bytes
-	 * @param InAsset FAssetData
+	 * @param Asset FAssetData
 	 * @return int64
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static int64 GetAssetSize(const FAssetData& InAsset);
+	static int64 GetAssetSize(const FAssetData& Asset);
 
 	/**
 	 * @brief Returns total size of given assets in bytes
-	 * @param InAssets TArray<FAssetData>
+	 * @param Assets TArray<FAssetData>
 	 * @return int64
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static int64 GetAssetsTotalSize(const TArray<FAssetData>& InAssets);
+	static int64 GetAssetsTotalSize(const TArray<FAssetData>& Assets);
 
 	/**
 	 * @brief Returns blueprint type for given asset
@@ -122,27 +128,27 @@ public:
 
 	/**
 	 * @brief Checks if given asset is blueprint or not
-	 * @param InAsset FAssetData
+	 * @param Asset FAssetData
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static bool AssetIsBlueprint(const FAssetData& InAsset);
+	static bool AssetIsBlueprint(const FAssetData& Asset);
 
 	/**
 	 * @brief Checks if given asset has external referencers outside Content folder or not
-	 * @param InAsset FAssetData
+	 * @param Asset FAssetData
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static bool AssetIsExtReferenced(const FAssetData& InAsset);
+	static bool AssetIsExtReferenced(const FAssetData& Asset);
 
 	/**
 	 * @brief Checks if given asset has circular dependencies or not
-	 * @param InAsset FAssetData
+	 * @param Asset FAssetData
 	 * @return bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static bool AssetIsCircular(const FAssetData& InAsset);
+	static bool AssetIsCircular(const FAssetData& Asset);
 
 	/**
 	 * @brief Returns all redirectors in project
