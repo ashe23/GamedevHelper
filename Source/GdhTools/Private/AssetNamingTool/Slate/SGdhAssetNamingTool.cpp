@@ -14,7 +14,6 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Misc/ScopedSlowTask.h"
-// #include "Settings/ContentBrowserSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -187,7 +186,7 @@ void SGdhAssetNamingTool::UpdateListData()
 
 	UGdhLibEditor::CloseAllEditors();
 
-	if (!UGdhLibAsset::SaveAllAssets(true))
+	if (!UGdhLibEditor::SaveAllAssets(true))
 	{
 		UGdhLibEditor::ShowNotificationWithOutputLog(TEXT("Failed to scan assets, because not all assets have been saved."), SNotificationItem::CS_Fail, 5.0f);
 		return;
@@ -202,7 +201,7 @@ void SGdhAssetNamingTool::UpdateListData()
 	if (UGdhLibAsset::ProjectHasRedirectors())
 	{
 		UGdhLibEditor::ShowNotificationWithOutputLog(
-			TEXT("Project contains redirectors that are failed to fixed automatically. Please fix them manually to proceed. Check OutputLog for more information."),
+			TEXT("The project contains redirectors that have failed to be fixed automatically. Please fix them manually to proceed. Check the Output Log for more information."),
 			SNotificationItem::CS_Fail,
 			5.0f
 		);

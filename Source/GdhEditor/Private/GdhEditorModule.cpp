@@ -2,6 +2,8 @@
 
 #include "GdhEditorModule.h"
 
+DEFINE_LOG_CATEGORY(LogGdhEditor);
+
 void FGdhEditorModule::StartupModule()
 {
 	IModuleInterface::StartupModule();

@@ -5,6 +5,7 @@
 // Engine Headers
 #include "IContentBrowserSingleton.h"
 #include "Editor.h"
+#include "FileHelpers.h"
 #include "ShaderCompiler.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Subsystems/AssetEditorSubsystem.h"
@@ -52,6 +53,11 @@ void UGdhLibEditor::CloseAllEditors()
 bool UGdhLibEditor::EditorInPlayMode()
 {
 	return GEditor && GEditor->PlayWorld || GIsPlayInEditorWorld;
+}
+
+bool UGdhLibEditor::SaveAllAssets(const bool bPromptToUser)
+{
+	return FEditorFileUtils::SaveDirtyPackages(bPromptToUser, true, true, false, false, false);
 }
 
 void UGdhLibEditor::ShaderCompilationEnable()

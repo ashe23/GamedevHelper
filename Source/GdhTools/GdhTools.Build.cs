@@ -20,8 +20,7 @@ public class GdhTools : ModuleRules
 			"EditorStyle",
 			"EditorScriptingUtilities",
 			"GdhCore",
-			"GdhEditor",
-			"GdhUtil",
+			"GdhEditor"
 		});
 	}
 }

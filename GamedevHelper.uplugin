@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 1,
-  "VersionName": "2.0.0",
+  "VersionName": "1.3.0",
   "EngineVersion": "4.27.0",
   "FriendlyName": "GamedevHelper",
   "Description": "Collection of reusable functions and tools used in game development for unreal engine.",
@@ -27,14 +27,6 @@
     {
       "Name": "GdhEditor",
       "Type": "Editor",
-      "LoadingPhase": "Default",
-      "WhitelistPlatforms": [
-        "Win64"
-      ]
-    },
-    {
-      "Name": "GdhUtil",
-      "Type": "Runtime",
       "LoadingPhase": "Default",
       "WhitelistPlatforms": [
         "Win64"

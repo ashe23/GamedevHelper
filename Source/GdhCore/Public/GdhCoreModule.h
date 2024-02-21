@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleInterface.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogGdhCore, Log, All);
+
 class FGdhCoreModule final : public IModuleInterface
 {
 public:

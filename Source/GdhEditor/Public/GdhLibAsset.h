@@ -11,7 +11,7 @@
 struct FGdhAssetIndirectInfo;
 
 UCLASS(meta=(BlueprintThreadSafe, ScriptName="GdhAssetLibrary"))
-class GDHUTIL_API UGdhLibAsset : public UBlueprintFunctionLibrary
+class GDHEDITOR_API UGdhLibAsset : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -188,14 +188,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
 	static bool RenameAsset(const FAssetData& Asset, const FString& NewName);
-
-	/**
-	 * @brief Saves all unsaved assets in project
-	 * @param bPromptToUser show confirmation window to user when saving
-	 * @return bool
-	 */
-	UFUNCTION(BlueprintCallable, Category="Gdh|Lib_Asset")
-	static bool SaveAllAssets(const bool bPromptToUser);
 
 private:
 	static void GetSourceAndConfigFiles(TSet<FString>& Files);

@@ -10,7 +10,7 @@
 enum class EGdhNamingCase : uint8;
 
 UCLASS(meta=(BlueprintThreadSafe, ScriptName="GdhStringLibrary"))
-class GDHUTIL_API UGdhLibString : public UBlueprintFunctionLibrary
+class GDHCORE_API UGdhLibString : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

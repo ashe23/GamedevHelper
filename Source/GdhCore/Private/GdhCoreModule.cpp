@@ -2,6 +2,8 @@
 
 #include "GdhCoreModule.h"
 
+DEFINE_LOG_CATEGORY(LogGdhCore);
+
 void FGdhCoreModule::StartupModule()
 {
 	IModuleInterface::StartupModule();

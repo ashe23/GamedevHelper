@@ -239,7 +239,7 @@ FString UGdhLibString::SymmetricDifference(const FString& StringA, const FString
 	// Symmetric difference = union - intersection
 	const FString Union = UGdhLibString::Union(StringA, StringB);
 	const FString Intersection = UGdhLibString::Intersection(StringA, StringB);
-	return UGdhLibString::Difference(Union, Intersection);
+	return Difference(Union, Intersection);
 }
 
 FString UGdhLibString::Normalize(const FString& Str)

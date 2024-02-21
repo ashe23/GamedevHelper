@@ -6,10 +6,9 @@
 #include "GdhLibPath.h"
 #include "GdhLibString.h"
 #include "GdhStructs.h"
-#include "GdhUtilModule.h"
+#include "GdhEditorModule.h"
 // Engine Headers
 #include "AssetToolsModule.h"
-#include "FileHelpers.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/AssetManager.h"
 #include "Internationalization/Regex.h"
@@ -192,7 +191,7 @@ FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, cons
 
 	TMap<FString, FGdhAssetNameAffix> AffixMap;
 	AffixMap.Reserve(Rows.Num());
-	
+
 	for (const auto& Row : Rows)
 	{
 		if (!Row) continue;
@@ -428,21 +427,21 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 {
 	if (!Asset.IsValid())
 	{
-		UE_LOG(LogGdhUtil, Warning, TEXT("Failed To Rename. Invalid asset data."))
+		UE_LOG(LogGdhEditor, Warning, TEXT("Failed To Rename. Invalid asset data."))
 		return false;
 	}
 
 	if (NewName.IsEmpty())
 	{
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset. Name cant be empty."), *Asset.AssetName.ToString());
-		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
+		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)
 		return false;
 	}
 
 	if (!UGdhLibString::HasOnly(NewName, GdhConstants::ValidAssetNameChars))
 	{
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset. Name contains invalid characters."), *Asset.AssetName.ToString());
-		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
+		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)
 		return false;
 	}
 
@@ -458,16 +457,11 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 	if (!UGdhLibEditor::GetModuleAssetTools().Get().RenameAssets(TArray<FAssetRenameData>{RenameData}))
 	{
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset"), *Asset.AssetName.ToString());
-		UE_LOG(LogGdhUtil, Warning, TEXT("%s"), *ErrMsg)
+		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)
 		return false;
 	}
 
 	return true;
-}
-
-bool UGdhLibAsset::SaveAllAssets(const bool bPromptToUser)
-{
-	return FEditorFileUtils::SaveDirtyPackages(bPromptToUser, true, true, false, false, false);
 }
 
 void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files)

@@ -12,7 +12,7 @@ class FAssetRegistryModule;
 class FAssetToolsModule;
 
 UCLASS(meta=(BlueprintThreadSafe, ScriptName="GdhEditorLibrary"))
-class GDHUTIL_API UGdhLibEditor : public UBlueprintFunctionLibrary
+class GDHEDITOR_API UGdhLibEditor : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -25,6 +25,7 @@ public:
 	static void ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
 	static void CloseAllEditors();
 	static bool EditorInPlayMode();
+	static bool SaveAllAssets(const bool bPromptToUser);
 	static void ShaderCompilationEnable();
 	static void ShaderCompilationDisable();
 
