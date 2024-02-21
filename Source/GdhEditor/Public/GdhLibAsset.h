@@ -88,7 +88,7 @@ public:
 	 * @return FGdhAssetNameAffix
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FGdhAssetNameAffix GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes);
+	static FGdhAffix GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes);
 
 	/**
 	 * @brief Returns corrected name of asset by naming convention
@@ -100,7 +100,7 @@ public:
 	 * @return FString
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FString GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase);
+	static FString GetAssetNameByConvention(const FString& Name, const FGdhAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase);
 
 	/**
 	 * @brief Returns given asset size on disk in bytes

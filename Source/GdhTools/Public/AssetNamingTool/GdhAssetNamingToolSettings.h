@@ -25,7 +25,7 @@ public:
 
 	// Blueprint type affix mappings
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(ForceInlineRow, TitleProperty="Prefix"))
-	TMap<EGdhBlueprintType, FGdhAssetNameAffix> BlueprintTypes;
+	TMap<EGdhBlueprintType, FGdhAffix> BlueprintTypes;
 
 	// Naming case for asset name only. This does not apply to prefixes or suffixes. Pascal_Snake_Case is recommended.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")

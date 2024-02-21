@@ -257,7 +257,7 @@ void SGdhAssetNamingTool::UpdateListData()
 
 		NewItem->AssetData = Asset;
 
-		const FGdhAssetNameAffix Affix = UGdhLibAsset::GetAssetNameAffix(Asset, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
+		const FGdhAffix Affix = UGdhLibAsset::GetAssetNameAffix(Asset, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
 		if (Affix.Prefix.IsEmpty() && Affix.Suffix.IsEmpty()) continue;
 
 		NewItem->Prefix = Affix.Prefix;
@@ -703,7 +703,7 @@ void SGdhAssetNamingTool::ValidateItem(const TWeakObjectPtr<UGdhAssetNamingToolL
 	Item->bHasErrors = false;
 	Item->Note.Empty();
 
-	const FGdhAssetNameAffix Affix = UGdhLibAsset::GetAssetNameAffix(Item->AssetData, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
+	const FGdhAffix Affix = UGdhLibAsset::GetAssetNameAffix(Item->AssetData, AssetNamingToolSettings->Mappings.LoadSynchronous(), AssetNamingToolSettings->BlueprintTypes);
 	const FString NamePreview = UGdhLibAsset::GetAssetNameByConvention(
 		Name,
 		Affix,

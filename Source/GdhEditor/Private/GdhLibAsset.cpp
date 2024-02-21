@@ -181,15 +181,15 @@ FString UGdhLibAsset::GetAssetTagValue(const FAssetData& Asset, const FName& Tag
 	return FPackageName::ExportTextPathToObjectPath(Value);
 }
 
-FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAssetNameAffix>& BlueprintTypes)
+FGdhAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes)
 {
 	if (!Asset.IsValid()) return {};
 	if (!Mappings) return {};
 
-	TArray<FGdhAssetNameAffixRow*> Rows;
-	Mappings->GetAllRows<FGdhAssetNameAffixRow>(TEXT(""), Rows);
+	TArray<FGdhAssetAffixRow*> Rows;
+	Mappings->GetAllRows<FGdhAssetAffixRow>(TEXT(""), Rows);
 
-	TMap<FString, FGdhAssetNameAffix> AffixMap;
+	TMap<FString, FGdhAffix> AffixMap;
 	AffixMap.Reserve(Rows.Num());
 
 	for (const auto& Row : Rows)
@@ -197,21 +197,21 @@ FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, cons
 		if (!Row) continue;
 		if (!Row->AssetClass.LoadSynchronous()) continue;
 
-		AffixMap.Add(Row->AssetClass.ToString(), FGdhAssetNameAffix{Row->Prefix, Row->Suffix});
+		AffixMap.Add(Row->AssetClass.ToString(), FGdhAffix{Row->Prefix, Row->Suffix});
 	}
 
 	const bool bIsBlueprint = AssetIsBlueprint(Asset);
 	const EGdhBlueprintType BlueprintType = GetBlueprintType(Asset);
-	const FGdhAssetNameAffix BlueprintAffix = BlueprintTypes.Contains(BlueprintType) ? *BlueprintTypes.Find(BlueprintType) : FGdhAssetNameAffix{};
+	const FGdhAffix BlueprintAffix = BlueprintTypes.Contains(BlueprintType) ? *BlueprintTypes.Find(BlueprintType) : FGdhAffix{};
 	const FString AssetExactClassName = bIsBlueprint ? GetAssetTagValue(Asset, TEXT("GeneratedClass")) : FSoftClassPath(Asset.GetClass()).GetAssetPathString();
 	const FString AssetParentClassName = bIsBlueprint ? GetAssetTagValue(Asset, TEXT("ParentClass")) : TEXT("");
 
 	if (bIsBlueprint)
 	{
-		const FGdhAssetNameAffix ExactAffixes = AffixMap.Contains(AssetExactClassName) ? *AffixMap.Find(AssetExactClassName) : FGdhAssetNameAffix{};
-		const FGdhAssetNameAffix ParentAffixes = AffixMap.Contains(AssetParentClassName) ? *AffixMap.Find(AssetParentClassName) : BlueprintAffix;
+		const FGdhAffix ExactAffixes = AffixMap.Contains(AssetExactClassName) ? *AffixMap.Find(AssetExactClassName) : FGdhAffix{};
+		const FGdhAffix ParentAffixes = AffixMap.Contains(AssetParentClassName) ? *AffixMap.Find(AssetParentClassName) : BlueprintAffix;
 
-		return FGdhAssetNameAffix{ExactAffixes.Prefix.IsEmpty() ? ParentAffixes.Prefix : ExactAffixes.Prefix, ExactAffixes.Suffix.IsEmpty() ? ParentAffixes.Suffix : ExactAffixes.Suffix};
+		return FGdhAffix{ExactAffixes.Prefix.IsEmpty() ? ParentAffixes.Prefix : ExactAffixes.Prefix, ExactAffixes.Suffix.IsEmpty() ? ParentAffixes.Suffix : ExactAffixes.Suffix};
 	}
 
 	if (AffixMap.Contains(AssetExactClassName))
@@ -222,7 +222,7 @@ FGdhAssetNameAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, cons
 	return {};
 }
 
-FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAssetNameAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase)
+FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase)
 {
 	if (Name.IsEmpty()) return Name;
 

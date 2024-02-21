@@ -6,6 +6,7 @@
 #include "AssetNamingTool/Slate/SGdhAssetNamingTool.h"
 // Engine Headers
 #include "LevelEditor.h"
+#include "ToolMenus.h"
 #include "UnrealEdMisc.h"
 #include "Widgets/Docking/SDockTab.h"
 
@@ -18,7 +19,7 @@ void FGdhToolsModule::StartupModule()
 	FGdhStyles::Initialize();
 	FGdhStyles::ReloadTextures();
 	FGdhCmds::Register();
-	
+
 	Commands = MakeShareable(new FUICommandList);
 	Commands->MapAction(
 		FGdhCmds::Get().RestartEditor,
@@ -28,29 +29,36 @@ void FGdhToolsModule::StartupModule()
 		})
 	);
 	Commands->MapAction(
-		FGdhCmds::Get().OpenAssetNamingTool,
+		FGdhCmds::Get().RenameAssets,
 		FExecuteAction::CreateLambda([]()
 		{
-			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingTool);
+			UE_LOG(LogGdhTools, Warning, TEXT("Hello"));
 		})
 	);
-	
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		                        GdhConstants::TabAssetNamingTool,
-		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
-		                        {
-			                        return
-				                        SNew(SDockTab)
-				                        .TabRole(MajorTab)
-				                        [
-					                        SNew(SGdhAssetNamingTool)
-				                        ];
-		                        })
-	                        )
-	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingTool"))
-	                        .SetDisplayName(FText::FromName(TEXT("Asset Naming Tool")))
-	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
-	
+	// Commands->MapAction(
+	// 	FGdhCmds::Get().OpenAssetNamingTool,
+	// 	FExecuteAction::CreateLambda([]()
+	// 	{
+	// 		FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingTool);
+	// 	})
+	// );
+	//
+	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+	// 	                        GdhConstants::TabAssetNamingTool,
+	// 	                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+	// 	                        {
+	// 		                        return
+	// 			                        SNew(SDockTab)
+	// 			                        .TabRole(MajorTab)
+	// 			                        [
+	// 				                        SNew(SGdhAssetNamingTool)
+	// 			                        ];
+	// 	                        })
+	//                         )
+	//                         .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingTool"))
+	//                         .SetDisplayName(FText::FromName(TEXT("Asset Naming Tool")))
+	//                         .SetMenuType(ETabSpawnerMenuType::Hidden);
+
 	if (!IsRunningCommandlet())
 	{
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
@@ -70,26 +78,31 @@ void FGdhToolsModule::StartupModule()
 						MenuBuilder.BeginSection("GdhSectionEditor", FText::FromString("Editor"));
 						MenuBuilder.AddMenuEntry(FGdhCmds::Get().RestartEditor);
 						MenuBuilder.EndSection();
-	
-						MenuBuilder.BeginSection("GdhSectionTools", FText::FromString("Tools"));
-						MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenAssetNamingTool);
-						MenuBuilder.EndSection();
+
+						// MenuBuilder.BeginSection("GdhSectionTools", FText::FromString("Tools"));
+						// MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenAssetNamingTool);
+						// MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleName,
 					FName(TEXT("GamedevHelperMenu"))
 				);
 			})
 		);
-	
+
 		LevelEditorMenuExtensibilityManager->AddExtender(MenuExtender);
 	}
+
+	UToolMenus* ToolMenus = UToolMenus::Get();
+	UToolMenu* Menu = ToolMenus->ExtendMenu("LevelEditor.ActorContextMenu");
+	FToolMenuSection& Section = Menu->AddSection("GdhActions", FText::FromName(TEXT("GdhActions")));
+	Section.AddMenuEntry(FGdhCmds::Get().RenameAssets);
 }
 
 void FGdhToolsModule::ShutdownModule()
 {
 	FGdhStyles::Shutdown();
 	FGdhCmds::Unregister();
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingTool);
+	// FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingTool);
 	IModuleInterface::ShutdownModule();
 }
 

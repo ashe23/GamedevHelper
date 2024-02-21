@@ -17,8 +17,10 @@ public class GdhTools : ModuleRules
 			"Slate",
 			"SlateCore",
 			"InputCore",
+			"ToolMenus",
 			"EditorStyle",
 			"EditorScriptingUtilities",
+			"DeveloperSettings",
 			"GdhCore",
 			"GdhEditor"
 		});
