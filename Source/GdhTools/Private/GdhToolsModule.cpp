@@ -35,29 +35,29 @@ void FGdhToolsModule::StartupModule()
 			UE_LOG(LogGdhTools, Warning, TEXT("Hello"));
 		})
 	);
-	// Commands->MapAction(
-	// 	FGdhCmds::Get().OpenAssetNamingTool,
-	// 	FExecuteAction::CreateLambda([]()
-	// 	{
-	// 		FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingTool);
-	// 	})
-	// );
-	//
-	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-	// 	                        GdhConstants::TabAssetNamingTool,
-	// 	                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
-	// 	                        {
-	// 		                        return
-	// 			                        SNew(SDockTab)
-	// 			                        .TabRole(MajorTab)
-	// 			                        [
-	// 				                        SNew(SGdhAssetNamingTool)
-	// 			                        ];
-	// 	                        })
-	//                         )
-	//                         .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingTool"))
-	//                         .SetDisplayName(FText::FromName(TEXT("Asset Naming Tool")))
-	//                         .SetMenuType(ETabSpawnerMenuType::Hidden);
+	Commands->MapAction(
+		FGdhCmds::Get().OpenAssetNamingTool,
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabAssetNamingTool);
+		})
+	);
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        GdhConstants::TabAssetNamingTool,
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+		                        {
+			                        return
+					                        SNew(SDockTab)
+					                        .TabRole(MajorTab)
+					                        [
+						                        SNew(SGdhAssetNamingTool)
+					                        ];
+		                        })
+	                        )
+	                        .SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.AssetNamingTool"))
+	                        .SetDisplayName(FText::FromName(TEXT("Asset Naming Tool")))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
 
 	if (!IsRunningCommandlet())
 	{
@@ -79,9 +79,9 @@ void FGdhToolsModule::StartupModule()
 						MenuBuilder.AddMenuEntry(FGdhCmds::Get().RestartEditor);
 						MenuBuilder.EndSection();
 
-						// MenuBuilder.BeginSection("GdhSectionTools", FText::FromString("Tools"));
-						// MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenAssetNamingTool);
-						// MenuBuilder.EndSection();
+						MenuBuilder.BeginSection("GdhSectionTools", FText::FromString("Tools"));
+						MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenAssetNamingTool);
+						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleName,
 					FName(TEXT("GamedevHelperMenu"))
@@ -92,17 +92,57 @@ void FGdhToolsModule::StartupModule()
 		LevelEditorMenuExtensibilityManager->AddExtender(MenuExtender);
 	}
 
-	UToolMenus* ToolMenus = UToolMenus::Get();
-	UToolMenu* Menu = ToolMenus->ExtendMenu("LevelEditor.ActorContextMenu");
-	FToolMenuSection& Section = Menu->AddSection("GdhActions", FText::FromName(TEXT("GdhActions")));
-	Section.AddMenuEntry(FGdhCmds::Get().RenameAssets);
+	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu");
+	FToolMenuSection& Section = Menu->FindOrAddSection("GdhActions");
+	Section.InsertPosition = FToolMenuInsert("CommonAssetActions", EToolMenuInsertType::After);
+	Section.AddSubMenu(
+		TEXT("GamedevHelperActionsSubMenu"),
+		FText::FromString(TEXT("Gdh Actions")),
+		FText::FromString(TEXT("Asset Helper Actions")),
+		FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
+		{
+			MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Anim Tools"));
+			MenuBuilder.AddMenuEntry(
+				FText::FromString(TEXT("Configure for VertexAnim")),
+				FText::FromString(TEXT("Configure selected static meshes for vertex animation")),
+				FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.VertexAnim"),
+				FUIAction(
+					FExecuteAction::CreateLambda([]()
+					{
+						UE_LOG(LogGdhTools, Warning, TEXT("Hello"));
+					})
+				)
+			);
+			MenuBuilder.EndSection();
+			MenuBuilder.BeginSection("Section_Util", FText::FromString("Utility"));
+			MenuBuilder.AddMenuEntry(
+				FText::FromString(TEXT("Disable Collision")),
+				FText::FromString(TEXT("Disables collision on selected static meshes, included all LODS")),
+				FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.Collision"),
+				FUIAction(
+					FExecuteAction::CreateLambda([]()
+					{
+						UE_LOG(LogGdhTools, Warning, TEXT("Hello"));
+					})
+				)
+			);
+			MenuBuilder.EndSection();
+		}),
+		false,
+		FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon16")
+	);
+
+	// UToolMenus* ToolMenus = UToolMenus::Get();
+	// UToolMenu* Menu = ToolMenus->ExtendMenu("LevelEditor.ActorContextMenu");
+	// FToolMenuSection& Section = Menu->AddSection("GdhActions", FText::FromName(TEXT("GdhActions")));
+	// Section.AddMenuEntry(FGdhCmds::Get().RenameAssets);
 }
 
 void FGdhToolsModule::ShutdownModule()
 {
 	FGdhStyles::Shutdown();
 	FGdhCmds::Unregister();
-	// FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingTool);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingTool);
 	IModuleInterface::ShutdownModule();
 }
 

@@ -24,15 +24,15 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	// Data Table Asset with Asset Class => (Prefix, Suffix) Mappings. To create new mappings, just create new data table with row struct "GdhAssetAffixRow" selected.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(RequiredAssetDataTags="RowStructure=GdhAssetAffixRow"))
-	TSoftObjectPtr<UDataTable> AssetAffixes;
-
-	// Similar to AssetAffixes, but this contains mappings for actors in world outlinear
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(RequiredAssetDataTags="RowStructure=GdhActorAffixRow"))
-	TSoftObjectPtr<UDataTable> ActorAffixes;
-
-	// Affix mapping for blueprint types
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(ForceInlineRow, TitleProperty="Prefix"))
-	TMap<EGdhBlueprintType, FGdhAffix> BlueprintTypeAffixes;
+	// // Data Table Asset with Asset Class => (Prefix, Suffix) Mappings. To create new mappings, just create new data table with row struct "GdhAssetAffixRow" selected.
+	// UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(RequiredAssetDataTags="RowStructure=GdhAssetAffixRow"))
+	// TSoftObjectPtr<UDataTable> AssetAffixes;
+	//
+	// // Similar to AssetAffixes, but this contains mappings for actors in world outlinear
+	// UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(RequiredAssetDataTags="RowStructure=GdhActorAffixRow"))
+	// TSoftObjectPtr<UDataTable> ActorAffixes;
+	//
+	// // Affix mapping for blueprint types
+	// UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", meta=(ForceInlineRow, TitleProperty="Prefix"))
+	// TMap<EGdhBlueprintType, FGdhAffix> BlueprintTypeAffixes;
 };

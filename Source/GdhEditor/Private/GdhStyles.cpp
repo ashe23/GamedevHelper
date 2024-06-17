@@ -97,6 +97,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.Tab.WorldOutlinearManager", new IMAGE_BRUSH(TEXT("IconStructure16"), FVector2D{16.0f, 16.0f}));
 
 	// icons
+	Style->Set("GamedevHelper.Icon16", new IMAGE_BRUSH(TEXT("Icon16"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Icon.Arrow", new IMAGE_BRUSH(TEXT("IconArrow64"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Icon.Bg", new IMAGE_BRUSH(TEXT("IconBg16"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Icon.Check", new IMAGE_BRUSH(TEXT("IconCheck32"), FVector2D{32.0f, 32.0f}));

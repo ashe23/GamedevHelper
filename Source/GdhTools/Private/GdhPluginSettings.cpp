@@ -2,23 +2,29 @@
 
 #include "GdhPluginSettings.h"
 #include "GdhConstants.h"
-#include "GdhEnums.h"
-#include "GdhStructs.h"
+// #include "GdhEnums.h"
+// #include "GdhStructs.h"
 // Engine Headers
-#include "UObject/ConstructorHelpers.h"
+// #include "UObject/ConstructorHelpers.h"
 
 UGdhPluginSettings::UGdhPluginSettings()
 {
-	BlueprintTypeAffixes.Add(EGdhBlueprintType::Normal, FGdhAffix{TEXT("BP")});
-	BlueprintTypeAffixes.Add(EGdhBlueprintType::Interface, FGdhAffix{TEXT("BPI")});
-	BlueprintTypeAffixes.Add(EGdhBlueprintType::FunctionLibrary, FGdhAffix{TEXT("BPFL")});
-	BlueprintTypeAffixes.Add(EGdhBlueprintType::MacroLibrary, FGdhAffix{TEXT("BPML")});
-
-	static ConstructorHelpers::FObjectFinder<UDataTable> DataTable{TEXT("DataTable'/GamedevHelper/NamingConvention/DT_Asset_Affixes_Unreal.DT_Asset_Affixes_Unreal'")};
-	if (DataTable.Succeeded())
-	{
-		AssetAffixes = DataTable.Object;
-	}
+	// BlueprintTypeAffixes.Add(EGdhBlueprintType::Normal, FGdhAffix{TEXT("BP")});
+	// BlueprintTypeAffixes.Add(EGdhBlueprintType::Interface, FGdhAffix{TEXT("BPI")});
+	// BlueprintTypeAffixes.Add(EGdhBlueprintType::FunctionLibrary, FGdhAffix{TEXT("BPFL")});
+	// BlueprintTypeAffixes.Add(EGdhBlueprintType::MacroLibrary, FGdhAffix{TEXT("BPML")});
+	//
+	// static ConstructorHelpers::FObjectFinder<UDataTable> DtAssetAffixes{TEXT("DataTable'/GamedevHelper/NamingConvention/DT_Asset_Affixes_Unreal.DT_Asset_Affixes_Unreal'")};
+	// if (DtAssetAffixes.Succeeded())
+	// {
+	// 	AssetAffixes = DtAssetAffixes.Object;
+	// }
+	//
+	// static ConstructorHelpers::FObjectFinder<UDataTable> DtActorAffixes{TEXT("DataTable'/GamedevHelper/NamingConvention/DT_Actor_Affixes.DT_Actor_Affixes'")};
+	// if (DtActorAffixes.Succeeded())
+	// {
+	// 	ActorAffixes = DtActorAffixes.Object;
+	// }
 }
 
 FName UGdhPluginSettings::GetContainerName() const

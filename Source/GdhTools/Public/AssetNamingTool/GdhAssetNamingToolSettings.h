@@ -19,8 +19,8 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	// Data Table Asset with Asset Class => (Prefix, Suffix) Mappings. To create new mappings, just create new data table with row struct "GdhAssetNameAffixRow" selected.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", DisplayName="Asset Affix Mappings", meta=(RequiredAssetDataTags="RowStructure=GdhAssetNameAffixRow"))
+	// Data Table Asset with Asset Class => (Prefix, Suffix) Mappings. To create new mappings, just create new data table with row struct "GdhAssetAffixRow" selected.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", DisplayName="Asset Affix Mappings", meta=(RequiredAssetDataTags="RowStructure=GdhAssetAffixRow"))
 	TSoftObjectPtr<UDataTable> Mappings;
 
 	// Blueprint type affix mappings
