@@ -445,16 +445,10 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 		return false;
 	}
 
-	const FString NewObjectPath = FString::Printf(TEXT("%s/%s.%s"), *Asset.PackagePath.ToString(), *NewName, *NewName);
+	FString PackagePath = Asset.GetAsset()->GetPathName();
+	PackagePath = FPaths::GetPath(PackagePath);
 
-	FAssetRenameData RenameData;
-	RenameData.Asset = Asset.GetAsset();
-	RenameData.OldObjectPath = Asset.ToSoftObjectPath();
-	RenameData.NewObjectPath = FSoftObjectPath{NewObjectPath};
-	RenameData.NewPackagePath = Asset.PackagePath.ToString();
-	RenameData.NewName = NewName;
-
-	if (!UGdhLibEditor::GetModuleAssetTools().Get().RenameAssets(TArray<FAssetRenameData>{RenameData}))
+	if (!UGdhLibEditor::GetModuleAssetTools().Get().RenameAssets({FAssetRenameData{Asset.GetAsset(), PackagePath, NewName}}))
 	{
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset"), *Asset.AssetName.ToString());
 		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)

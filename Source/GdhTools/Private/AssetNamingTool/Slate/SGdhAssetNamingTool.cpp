@@ -37,12 +37,7 @@ void SGdhAssetNamingTool::Construct(const FArguments& InArgs)
 	PathPickerConfig.bAllowContextMenu = false;
 	PathPickerConfig.bAllowReadOnlyFolders = false;
 	PathPickerConfig.bFocusSearchBoxWhenOpened = false;
-	PathPickerConfig.OnPathSelected.BindLambda([&](const FString& InPath)
-	{
-		CurrentPath = InPath;
-		UpdateListData();
-		UpdateListView();
-	});
+	PathPickerConfig.OnPathSelected.BindRaw(this, &SGdhAssetNamingTool::OnPathChanged);
 
 	FDetailsViewArgs DetailsViewArgs;
 	DetailsViewArgs.bUpdatesFromSelection = false;
@@ -565,133 +560,42 @@ void SGdhAssetNamingTool::CmdsRegister()
 	Cmds = MakeShareable(new FUICommandList);
 	Cmds->MapAction(
 		FGdhCmds::Get().ScanAssets,
-		FExecuteAction::CreateLambda([&]()
-		{
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&] { return !bEditModeEnabled; })
+		FExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::OnScanAssets),
+		FCanExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::CanScanAssets)
 	);
 	Cmds->MapAction(
 		FGdhCmds::Get().RenameAssets,
-		FExecuteAction::CreateLambda([&]()
-		{
-			if (!ListView.IsValid()) return;
-
-			const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
-			const FText Context = FText::FromString(TEXT("Are you sure you want to rename assets?"));
-
-			const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
-			if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
-
-			const auto SelectedItems = ListView->GetSelectedItems();
-			const auto Items = SelectedItems.Num() > 0 ? SelectedItems : ListItems;
-
-			TMap<FAssetData, FString> AssetsToRename;
-			AssetsToRename.Reserve(Items.Num());
-
-			for (const auto& Item : Items)
-			{
-				if (!Item.IsValid()) continue;
-				if (Item->bHasErrors) continue;
-
-				AssetsToRename.Add(Item->AssetData, Item->NewName);
-			}
-
-			RenameAssets(AssetsToRename);
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&]
-		{
-			return !bEditModeEnabled && ListItems.Num() > 0;
-		})
+		FExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::OnRenameAssets),
+		FCanExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::CanRenameAssets)
 	);
 
 	Cmds->MapAction(
 		FGdhCmds::Get().ClearSelection,
-		FExecuteAction::CreateLambda([&]() { UpdateListView(); }),
-		FCanExecuteAction::CreateLambda([&]() { return ListView && ListView->GetSelectedItems().Num() > 0; })
+		FExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::OnClearSelection),
+		FCanExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::CanClearSelection)
 	);
 
 	Cmds->MapAction(
 		FGdhCmds::Get().EditMode,
-		FExecuteAction::CreateLambda([&]()
-		{
-			bEditModeEnabled = true;
-			ToggleEditMode(true);
-		}),
-		FCanExecuteAction::CreateLambda([&]()
-		{
-			return !bEditModeEnabled && ListItems.Num() > 0;
-		}),
-		FIsActionChecked::CreateLambda([&]() { return bEditModeEnabled; })
+		FExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::OnEditModeEnter),
+		FCanExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::CanEnterEditMode),
+		FIsActionChecked::CreateRaw(this, &SGdhAssetNamingTool::EditModeEnabled)
 	);
 
 	Cmds->MapAction(
 		FGdhCmds::Get().ApplyChanges,
-		FExecuteAction::CreateLambda([&]()
-		{
-			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
-			GetDirtyItems(DirtyItems);
-
-			if (DirtyItems.Num() > 0)
-			{
-				const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
-				const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to rename %d modified assets?"), DirtyItems.Num()));
-				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
-				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
-			}
-
-			TMap<FAssetData, FString> AssetsToRename;
-			AssetsToRename.Reserve(DirtyItems.Num());
-
-			for (const auto& Item : DirtyItems)
-			{
-				if (!Item.IsValid()) continue;
-				if (Item->bHasErrors) continue;
-
-				AssetsToRename.Add(Item->AssetData, Item->NewName);
-			}
-
-			bEditModeEnabled = false;
-			RenameAssets(AssetsToRename);
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&]()
-		{
-			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
-			GetDirtyItems(DirtyItems);
-
-			return DirtyItems.Num() > 0;
-		}),
-		FIsActionChecked::CreateLambda([&]() { return false; }),
-		FIsActionButtonVisible::CreateLambda([&]() { return bEditModeEnabled; })
+		FExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::OnApplyChanges),
+		FCanExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::CanApplyChanges),
+		FIsActionChecked::CreateLambda([]() { return false; }),
+		FIsActionButtonVisible::CreateRaw(this, &SGdhAssetNamingTool::EditModeEnabled)
 	);
 
 	Cmds->MapAction(
 		FGdhCmds::Get().UndoChanges,
-		FExecuteAction::CreateLambda([&]()
-		{
-			TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
-			GetDirtyItems(DirtyItems);
-
-			if (DirtyItems.Num() > 0)
-			{
-				const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
-				const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to discard all changes?")));
-				const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
-				if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
-			}
-
-			bEditModeEnabled = false;
-			UpdateListData();
-			UpdateListView();
-		}),
-		FCanExecuteAction::CreateLambda([&]() { return bEditModeEnabled; }),
+		FExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::OnUndoChanges),
+		FCanExecuteAction::CreateRaw(this, &SGdhAssetNamingTool::EditModeEnabled),
 		FIsActionChecked::CreateLambda([&]() { return false; }),
-		FIsActionButtonVisible::CreateLambda([&]() { return bEditModeEnabled; })
+		FIsActionButtonVisible::CreateRaw(this, &SGdhAssetNamingTool::EditModeEnabled)
 	);
 }
 
@@ -769,7 +673,7 @@ void SGdhAssetNamingTool::RenameAssets(const TMap<FAssetData, FString>& Assets)
 			{
 				const FString NewName = *Assets.Find(Asset);
 
-				SlowTask.EnterProgressFrame(1.0f, FText::FromString(FString::Printf(TEXT("%s -> %s"), *Asset.AssetName.ToString(), *NewName)));
+				SlowTask.EnterProgressFrame(1.0f, FText::FromString(FString::Printf(TEXT("Renaming %s -> %s"), *Asset.AssetName.ToString(), *NewName)));
 
 				if (UGdhLibAsset::RenameAsset(Asset, NewName))
 				{
@@ -826,4 +730,138 @@ void SGdhAssetNamingTool::GetBucket(const TSet<FAssetData>& AssetsAll, TSet<FAss
 	if (Assets.Num() > 0) return;
 
 	Assets.Append(AssetsAll);
+}
+
+void SGdhAssetNamingTool::OnPathChanged(const FString& InPath)
+{
+	CurrentPath = InPath;
+	UpdateListData();
+	UpdateListView();
+}
+
+void SGdhAssetNamingTool::OnScanAssets()
+{
+	UpdateListData();
+	UpdateListView();
+}
+
+void SGdhAssetNamingTool::OnRenameAssets()
+{
+	if (!ListView.IsValid()) return;
+
+	const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
+	const FText Context = FText::FromString(TEXT("Are you sure you want to rename assets?"));
+
+	const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+	if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+
+	const auto SelectedItems = ListView->GetSelectedItems();
+	const auto Items = SelectedItems.Num() > 0 ? SelectedItems : ListItems;
+
+	TMap<FAssetData, FString> AssetsToRename;
+	AssetsToRename.Reserve(Items.Num());
+
+	for (const auto& Item : Items)
+	{
+		if (!Item.IsValid()) continue;
+		if (Item->bHasErrors) continue;
+
+		AssetsToRename.Add(Item->AssetData, Item->NewName);
+	}
+
+	RenameAssets(AssetsToRename);
+	UpdateListData();
+	UpdateListView();
+}
+
+void SGdhAssetNamingTool::OnClearSelection() const
+{
+	UpdateListView();
+}
+
+void SGdhAssetNamingTool::OnEditModeEnter()
+{
+	bEditModeEnabled = true;
+	ToggleEditMode(true);
+}
+
+void SGdhAssetNamingTool::OnApplyChanges()
+{
+	TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
+	GetDirtyItems(DirtyItems);
+
+	if (DirtyItems.Num() > 0)
+	{
+		const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
+		const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to rename %d modified assets?"), DirtyItems.Num()));
+		const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+		if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+	}
+
+	TMap<FAssetData, FString> AssetsToRename;
+	AssetsToRename.Reserve(DirtyItems.Num());
+
+	for (const auto& Item : DirtyItems)
+	{
+		if (!Item.IsValid()) continue;
+		if (Item->bHasErrors) continue;
+
+		AssetsToRename.Add(Item->AssetData, Item->NewName);
+	}
+
+	bEditModeEnabled = false;
+	RenameAssets(AssetsToRename);
+	UpdateListData();
+	UpdateListView();
+}
+
+void SGdhAssetNamingTool::OnUndoChanges()
+{
+	TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
+	GetDirtyItems(DirtyItems);
+
+	if (DirtyItems.Num() > 0)
+	{
+		const FText Title = FText::FromString(TEXT("Asset Naming Tool"));
+		const FText Context = FText::FromString(FString::Printf(TEXT("Are you sure you want to discard all changes?")));
+		const EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::YesNo, Context, &Title);
+		if (ReturnType == EAppReturnType::Cancel || ReturnType == EAppReturnType::No) return;
+	}
+
+	bEditModeEnabled = false;
+	UpdateListData();
+	UpdateListView();
+}
+
+bool SGdhAssetNamingTool::EditModeEnabled() const
+{
+	return bEditModeEnabled;
+}
+
+bool SGdhAssetNamingTool::CanScanAssets() const
+{
+	return !bEditModeEnabled;
+}
+
+bool SGdhAssetNamingTool::CanRenameAssets() const
+{
+	return !bEditModeEnabled && ListItems.Num() > 0;
+}
+
+bool SGdhAssetNamingTool::CanClearSelection() const
+{
+	return ListView && ListView->GetSelectedItems().Num() > 0;
+}
+
+bool SGdhAssetNamingTool::CanEnterEditMode() const
+{
+	return !bEditModeEnabled && ListItems.Num() > 0;
+}
+
+bool SGdhAssetNamingTool::CanApplyChanges()
+{
+	TArray<TWeakObjectPtr<UGdhAssetNamingToolListItem>> DirtyItems;
+	GetDirtyItems(DirtyItems);
+
+	return DirtyItems.Num() > 0;
 }

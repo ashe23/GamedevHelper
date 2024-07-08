@@ -37,6 +37,19 @@ private:
 	void ValidateItem(const TWeakObjectPtr<UGdhAssetNamingToolListItem>& Item, const FString& Name) const;
 	void RenameAssets(const TMap<FAssetData, FString>& Assets);
 	void GetBucket(const TSet<FAssetData>& AssetsAll, TSet<FAssetData>& Assets);
+	void OnPathChanged(const FString& InPath);
+	void OnScanAssets();
+	void OnRenameAssets();
+	void OnClearSelection() const;
+	void OnEditModeEnter();
+	void OnApplyChanges();
+	void OnUndoChanges();
+	bool EditModeEnabled() const;
+	bool CanScanAssets() const;
+	bool CanRenameAssets() const;
+	bool CanClearSelection() const;
+	bool CanEnterEditMode() const;
+	bool CanApplyChanges();
 
 	bool bEditModeEnabled = false;
 	FString CurrentPath;
