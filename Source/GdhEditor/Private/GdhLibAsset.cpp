@@ -226,7 +226,7 @@ FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAf
 {
 	if (Name.IsEmpty()) return Name;
 
-	FString TokenizedName = UGdhLibString::Tokenize(Name);
+	FString TokenizedName = AssetNamingCase == EGdhNamingCase::None ? Name : UGdhLibString::Tokenize(Name);
 	const FString DelimiterChar = TEXT("_");
 
 	if (!Affix.Prefix.IsEmpty())

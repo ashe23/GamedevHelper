@@ -29,7 +29,7 @@ public:
 
 	// Naming case for asset name only. This does not apply to prefixes or suffixes. Pascal_Snake_Case is recommended.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
-	EGdhNamingCase AssetNamingCase = EGdhNamingCase::PascalSnakeCase;
+	EGdhNamingCase AssetNamingCase = EGdhNamingCase::None;
 
 	// Naming case for prefixes. UPPERCASE is recommended.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
@@ -37,5 +37,5 @@ public:
 
 	// Naming case for suffixes
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention")
-	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::UpperCase;
+	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::None;
 };

@@ -184,8 +184,6 @@ void SGdhAssetNamingTool::UpdateListData()
 
 	ListItems.Reset();
 
-	UGdhLibEditor::CloseAllEditors();
-
 	if (!UGdhLibEditor::SaveAllAssets(true))
 	{
 		UGdhLibEditor::ShowNotificationWithOutputLog(TEXT("Failed to scan assets, because not all assets have been saved."), SNotificationItem::CS_Fail, 5.0f);
@@ -231,6 +229,7 @@ void SGdhAssetNamingTool::UpdateListData()
 	UGdhLibAsset::GetAssetByPath(CurrentPath, true, AssetsAll);
 	UGdhLibAsset::GetAssetsIndirect(AssetsIndirect, true);
 
+	// we ignore level assets, let user name them manually
 	TSet<UClass*> AssetClassesIgnore;
 	AssetClassesIgnore.Add(UWorld::StaticClass());
 	AssetClassesIgnore.Add(UMapBuildDataRegistry::StaticClass());
