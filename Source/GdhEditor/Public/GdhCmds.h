@@ -20,6 +20,7 @@ public:
 	// Main Menu
 	TSharedPtr<FUICommandInfo> RestartEditor;
 	TSharedPtr<FUICommandInfo> OpenAssetNamingTool;
+	TSharedPtr<FUICommandInfo> OpenActorNamingTool;
 
 	// Asset Naming Tool
 	TSharedPtr<FUICommandInfo> ScanAssets;

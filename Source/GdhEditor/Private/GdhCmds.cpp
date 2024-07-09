@@ -9,6 +9,7 @@ void FGdhCmds::RegisterCommands()
 	// Main Menu
 	UI_COMMAND(RestartEditor, "Restart", "Restart Editor", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(OpenAssetNamingTool, "Asset Naming Tool", "Open Asset Naming Tool Editor", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(OpenActorNamingTool, "Actor Naming Tool", "Open Actor Naming Tool Editor", EUserInterfaceActionType::Button, FInputChord());
 
 	// Asset Naming Tool
 	UI_COMMAND(ScanAssets, "Refresh", "Scan assets and refresh list", EUserInterfaceActionType::Button, FInputChord());
