@@ -18,6 +18,12 @@ void FGdhCmds::RegisterCommands()
 	UI_COMMAND(EditMode, "Inline Edit", "Enable this to rename assets inplace", EUserInterfaceActionType::ToggleButton, FInputChord());
 	UI_COMMAND(ApplyChanges, "Apply Changes", "Apply all modifications", EUserInterfaceActionType::ToggleButton, FInputChord());
 	UI_COMMAND(UndoChanges, "Undo Changes", "Undo all modifications", EUserInterfaceActionType::ToggleButton, FInputChord());
+
+	// Actor Naming Tool
+	UI_COMMAND(ScanActors, "Refresh", "Scan actors and refresh list", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(OrganizeActors, "Organize Actors", "Organize actors in world outliner", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(RenameActors, "Rename Actors", "Rename actors in world outliner", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(UndoAction, "Undo", "Undo last action", EUserInterfaceActionType::Button, FInputChord());
 }
 
 #undef LOCTEXT_NAMESPACE

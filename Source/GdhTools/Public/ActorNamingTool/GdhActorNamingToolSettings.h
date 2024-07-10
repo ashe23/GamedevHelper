@@ -19,6 +19,19 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="NamingConvention", DisplayName="Asset Affix Mappings", meta=(RequiredAssetDataTags="RowStructure=GdhActorAffixRow"))
+	// Data Table asset containing settings for renaming and organizing actors in World Outlinear
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Settings", meta=(RequiredAssetDataTags="RowStructure=GdhActorAffixRow"))
 	TSoftObjectPtr<UDataTable> Mappings;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Settings")
+	EGdhNamingCase ActorNamingCase = EGdhNamingCase::PascalSnakeCase;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Settings")
+	EGdhNamingCase PrefixNamingCase = EGdhNamingCase::UpperCase;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Settings")
+	EGdhNamingCase SuffixNamingCase = EGdhNamingCase::None;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category="Settings")
+	EGdhNamingCase FolderNamingCase = EGdhNamingCase::PascalSnakeCase;
 };

@@ -8,5 +8,7 @@ UGdhActorNamingToolSettings::UGdhActorNamingToolSettings() {}
 void UGdhActorNamingToolSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	SaveConfig();
 }
 #endif

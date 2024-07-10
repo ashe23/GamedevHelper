@@ -29,4 +29,11 @@ public:
 	TSharedPtr<FUICommandInfo> EditMode;
 	TSharedPtr<FUICommandInfo> ApplyChanges;
 	TSharedPtr<FUICommandInfo> UndoChanges;
+
+	// Actor Naming Tool
+	TSharedPtr<FUICommandInfo> ScanActors;
+	TSharedPtr<FUICommandInfo> OrganizeActors;
+	TSharedPtr<FUICommandInfo> RenameActors;
+	TSharedPtr<FUICommandInfo> UndoAction;
+
 };
