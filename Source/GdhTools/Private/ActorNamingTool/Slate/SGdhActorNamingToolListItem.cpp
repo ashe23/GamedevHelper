@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "ActorNamingTool/Slate/SGdhActorNamingToolListItem.h"
+#include "GdhStyles.h"
 
 void SGdhActorNamingToolListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
@@ -15,6 +16,42 @@ void SGdhActorNamingToolListItem::Construct(const FArguments& InArgs, const TSha
 
 TSharedRef<SWidget> SGdhActorNamingToolListItem::GenerateWidgetForColumn(const FName& InColumnName)
 {
+	if (InColumnName == TEXT("Preview"))
+	{
+		return
+				SNew(SBox).Padding(FMargin{5.0f, 0.0f})
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot().AutoWidth().HAlign(HAlign_Fill).VAlign(VAlign_Center).Padding(FMargin{5.0f, 0.0f})
+					[
+						SNew(SBox).WidthOverride(16).HeightOverride(16)
+						[
+							SNew(SImage).Image(ListItem->ActorIcon)
+						]
+					]
+					+ SHorizontalBox::Slot().AutoWidth().HAlign(HAlign_Fill).VAlign(VAlign_Center)
+					[
+						SNew(STextBlock).Justification(ETextJustify::Center).Text(FText::FromString(ListItem->OldName))
+					]
+					+ SHorizontalBox::Slot().Padding(FMargin{5.0f, 0.0f}).AutoWidth()
+					[
+						SNew(SImage)
+						.Image(FGdhStyles::GetIconBrush(TEXT("GamedevHelper.Icon.Arrow")))
+						.ColorAndOpacity(FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Grey")))
+					]
+					+ SHorizontalBox::Slot().AutoWidth().HAlign(HAlign_Fill).VAlign(VAlign_Fill)
+					[
+						SNew(SBorder)
+						.BorderImage(FGdhStyles::GetIconBrush(TEXT("GamedevHelper.Icon.Bg")))
+						.BorderBackgroundColor(FGdhStyles::GetColor(TEXT("GamedevHelper.Color.Green")))
+						.HAlign(HAlign_Left)
+						[
+							SNew(STextBlock).Justification(ETextJustify::Center).Text(FText::FromString(ListItem->NewName))
+						]
+					]
+				];
+	}
+
 	if (InColumnName == TEXT("Prefix"))
 	{
 		return SNew(STextBlock).Text(FText::FromString(ListItem->Prefix)).Justification(ETextJustify::Center);
@@ -25,19 +62,21 @@ TSharedRef<SWidget> SGdhActorNamingToolListItem::GenerateWidgetForColumn(const F
 		return SNew(STextBlock).Text(FText::FromString(ListItem->Suffix)).Justification(ETextJustify::Center);
 	}
 
-	if (InColumnName == TEXT("OldName"))
-	{
-		return SNew(STextBlock).Text(FText::FromString(ListItem->OldName)).Justification(ETextJustify::Center);
-	}
-
-	if (InColumnName == TEXT("NewName"))
-	{
-		return SNew(STextBlock).Text(FText::FromString(ListItem->NewName)).Justification(ETextJustify::Center);
-	}
-
 	if (InColumnName == TEXT("FolderName"))
 	{
-		return SNew(STextBlock).Text(FText::FromString(ListItem->FolderName)).Justification(ETextJustify::Center);
+		return
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().VAlign(VAlign_Center).AutoWidth().Padding(FMargin{10.0f, 0.0f, 5.0f, 0.0f})
+				[
+					SNew(SBox).WidthOverride(16).HeightOverride(16)
+					[
+						SNew(SImage).Image(FEditorStyle::Get().GetBrush("SceneOutliner.FolderOpen"))
+					]
+				]
+				+ SHorizontalBox::Slot().VAlign(VAlign_Center).FillWidth(1.0f).Padding(FMargin{5.0f, 0.0f, 0.0f, 0.0f})
+				[
+					SNew(STextBlock).Text(FText::FromString(ListItem->FolderName)).Justification(ETextJustify::Left)
+				];
 	}
 
 	return SNew(STextBlock).Text(FText::FromString(TEXT("")));

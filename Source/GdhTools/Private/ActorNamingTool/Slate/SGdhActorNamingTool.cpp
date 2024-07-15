@@ -4,11 +4,12 @@
 #include "ActorNamingTool/GdhActorNamingToolSettings.h"
 #include "ActorNamingTool/Slate/SGdhActorNamingToolListItem.h"
 #include "GdhCmds.h"
+#include "GdhStyles.h"
 #include "GdhLibEditor.h"
+#include "GdhLibString.h"
 // Engine Headers
 #include "EditorLevelLibrary.h"
-#include "GdhLibString.h"
-#include "GdhStyles.h"
+#include "ClassIconFinder.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
@@ -207,6 +208,9 @@ void SGdhActorNamingTool::UpdateListData()
 		const FString Suffix = Affix->Suffix.IsEmpty() ? "" : TEXT("_") + UGdhLibString::ConvertNamingCase(Affix->Suffix, ActorNamingToolSettings->SuffixNamingCase);
 		const FString ActorName = UGdhLibString::ConvertNamingCase(Actor->GetActorLabel(), ActorNamingToolSettings->ActorNamingCase);
 		const FString NewName = Prefix + ActorName + Suffix;
+
+		if (NewName.Equals(Actor->GetActorLabel(), ESearchCase::CaseSensitive)) continue;
+
 		const FString FolderName = UGdhLibString::ConvertNamingCase(Affix->Folder, ActorNamingToolSettings->FolderNamingCase);
 
 		NewItem->Prefix = Affix->Prefix;
@@ -215,6 +219,7 @@ void SGdhActorNamingTool::UpdateListData()
 		NewItem->NewName = NewName;
 		NewItem->FolderName = FolderName;
 		NewItem->Actor = Actor;
+		NewItem->ActorIcon = FClassIconFinder::FindIconForActor(Actor);
 
 		ListItems.Add(NewItem);
 	}
@@ -250,61 +255,63 @@ TSharedRef<SHeaderRow> SGdhActorNamingTool::GetHeaderRow()
 {
 	return
 			SNew(SHeaderRow)
-			+ SHeaderRow::Column(TEXT("Prefix"))
+			+ SHeaderRow::Column(TEXT("Preview"))
 			.HAlignHeader(HAlign_Center)
 			.VAlignHeader(VAlign_Center)
 			.HeaderContentPadding(FMargin{5.0f})
-			.FillWidth(0.1f)
+
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Prefix")))
+				.Text(FText::FromString(TEXT("Preview")))
 				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 				.Font(FGdhStyles::GetFont("Light", 10.0f))
-				.ToolTipText(FText::FromName(TEXT("Status")))
-			]
-			+ SHeaderRow::Column(TEXT("Suffix"))
-			.HAlignHeader(HAlign_Center)
-			.VAlignHeader(VAlign_Center)
-			.HeaderContentPadding(FMargin{5.0f})
-			.FillWidth(0.1f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Suffix")))
-				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-				.Font(FGdhStyles::GetFont("Light", 10.0f))
-			]
-			+ SHeaderRow::Column(TEXT("OldName"))
-			.HAlignHeader(HAlign_Center)
-			.VAlignHeader(VAlign_Center)
-			.HeaderContentPadding(FMargin{5.0f})
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("OldName")))
-				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-				.Font(FGdhStyles::GetFont("Light", 10.0f))
-			]
-			+ SHeaderRow::Column(TEXT("NewName"))
-			.HAlignHeader(HAlign_Center)
-			.VAlignHeader(VAlign_Center)
-			.HeaderContentPadding(FMargin{5.0f})
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("NewName")))
-				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-				.Font(FGdhStyles::GetFont("Light", 10.0f))
-				.ToolTipText(FText::FromName(TEXT("Status")))
+				.ToolTipText(FText::FromName(TEXT("Actor rename preview")))
 			]
 			+ SHeaderRow::Column(TEXT("FolderName"))
 			.HAlignHeader(HAlign_Center)
 			.VAlignHeader(VAlign_Center)
 			.HeaderContentPadding(FMargin{5.0f})
+			.FillWidth(0.2f)
 			[
 				SNew(STextBlock)
 				.Text(FText::FromString(TEXT("Folder")))
 				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 				.Font(FGdhStyles::GetFont("Light", 10.0f))
+			]
+			+ SHeaderRow::Column(TEXT("Prefix"))
+			.FillWidth(0.1f)
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.HeaderContentPadding(FMargin{5.0f})
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Prefix")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+			]
+			+ SHeaderRow::Column(TEXT("Suffix"))
+			.FillWidth(0.1f)
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.HeaderContentPadding(FMargin{5.0f})
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Suffix")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
 				.ToolTipText(FText::FromName(TEXT("Status")))
 			];
+	// + SHeaderRow::Column(TEXT("FolderName"))
+	// .HAlignHeader(HAlign_Center)
+	// .VAlignHeader(VAlign_Center)
+	// .HeaderContentPadding(FMargin{5.0f})
+	// [
+	// 	SNew(STextBlock)
+	// 	.Text(FText::FromString(TEXT("Folder")))
+	// 	.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+	// 	.Font(FGdhStyles::GetFont("Light", 10.0f))
+	// 	.ToolTipText(FText::FromName(TEXT("Status")))
+	// ];
 }
 
 TSharedRef<ITableRow> SGdhActorNamingTool::OnGenerateRow(TWeakObjectPtr<UGdhActorNamingToolListItem> Item, const TSharedRef<STableViewBase>& OwnerTable)

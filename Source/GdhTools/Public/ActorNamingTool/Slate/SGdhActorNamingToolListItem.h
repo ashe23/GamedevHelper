@@ -28,6 +28,8 @@ public:
 
 	UPROPERTY()
 	AActor* Actor;
+
+	const FSlateBrush* ActorIcon;
 };
 
 class SGdhActorNamingToolListItem final : public SMultiColumnTableRow<TWeakObjectPtr<UGdhActorNamingToolListItem>>
