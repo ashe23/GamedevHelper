@@ -408,82 +408,82 @@ TSharedRef<SWidget> SGdhAssetNamingTool::CreateToolbarMain() const
 TSharedRef<SHeaderRow> SGdhAssetNamingTool::GetHeaderRow()
 {
 	return
-		SNew(SHeaderRow)
-		+ SHeaderRow::Column(TEXT("Status"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FixedWidth(20.0f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("#")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-			.ToolTipText(FText::FromName(TEXT("Status")))
-		]
-		+ SHeaderRow::Column(TEXT("Result"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.6f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Preview")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-		]
-		+ SHeaderRow::Column(TEXT("Path"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.3f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Path")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-		]
-		+ SHeaderRow::Column(TEXT("AssetClass"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.1f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Class")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-		]
-		+ SHeaderRow::Column(TEXT("Prefix"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.03f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Prefix")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-			.ToolTipText(FText::FromName(TEXT("Status")))
-		]
-		+ SHeaderRow::Column(TEXT("Suffix"))
-		  .HAlignHeader(HAlign_Center)
-		  .VAlignHeader(VAlign_Center)
-		  .FillWidth(0.03f)
-		  .HeaderContentPadding(FMargin{5.0f})
-		  .OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Suffix")))
-			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-			.Font(FGdhStyles::GetFont("Light", 10.0f))
-			.ToolTipText(FText::FromName(TEXT("Status")))
-		];
+			SNew(SHeaderRow)
+			+ SHeaderRow::Column(TEXT("Status"))
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.FixedWidth(20.0f)
+			.HeaderContentPadding(FMargin{5.0f})
+			.OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("#")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+				.ToolTipText(FText::FromName(TEXT("Status")))
+			]
+			+ SHeaderRow::Column(TEXT("Result"))
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.FillWidth(0.6f)
+			.HeaderContentPadding(FMargin{5.0f})
+			.OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Preview")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+			]
+			+ SHeaderRow::Column(TEXT("Path"))
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.FillWidth(0.3f)
+			.HeaderContentPadding(FMargin{5.0f})
+			.OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Path")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+			]
+			+ SHeaderRow::Column(TEXT("AssetClass"))
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.FillWidth(0.1f)
+			.HeaderContentPadding(FMargin{5.0f})
+			.OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Class")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+			]
+			+ SHeaderRow::Column(TEXT("Prefix"))
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.FillWidth(0.03f)
+			.HeaderContentPadding(FMargin{5.0f})
+			.OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Prefix")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+				.ToolTipText(FText::FromName(TEXT("Status")))
+			]
+			+ SHeaderRow::Column(TEXT("Suffix"))
+			.HAlignHeader(HAlign_Center)
+			.VAlignHeader(VAlign_Center)
+			.FillWidth(0.03f)
+			.HeaderContentPadding(FMargin{5.0f})
+			.OnSort_Raw(this, &SGdhAssetNamingTool::OnListSort)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Suffix")))
+				.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+				.Font(FGdhStyles::GetFont("Light", 10.0f))
+				.ToolTipText(FText::FromName(TEXT("Status")))
+			];
 }
 
 int32 SGdhAssetNamingTool::GetWidgetIndex() const
@@ -648,6 +648,11 @@ void SGdhAssetNamingTool::RenameAssets(const TMap<FAssetData, FString>& Assets)
 		UGdhLibEditor::ShowNotification(TEXT("No valid assets to rename"), SNotificationItem::CS_Fail, 5.0f);
 		return;
 	}
+
+	// todo:ashe23 because of unreal engines asset management system is not reliable,
+	// todo:ashe23 renaming assets in batch causing some of assets lose their references to other assets, even tho i am using their API
+	// todo:ashe23 which causes lose information and showing correctly in editor or content browser
+	// todo:ashe23 because of this I will disable this functionality
 
 	TSet<FAssetData> AssetsAll;
 	Assets.GetKeys(AssetsAll);
