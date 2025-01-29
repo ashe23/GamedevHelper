@@ -22,7 +22,12 @@ public class GdhTools : ModuleRules
 			"EditorScriptingUtilities",
 			"DeveloperSettings",
 			"GdhCore",
-			"GdhEditor"
-		});
+			"GdhEditor", 
+            "MovieRenderPipelineCore",
+            "MovieRenderPipelineEditor",
+            "MovieRenderPipelineRenderPasses",
+            "MovieRenderPipelineSettings",
+            "LevelSequence"
+        });
 	}
 }

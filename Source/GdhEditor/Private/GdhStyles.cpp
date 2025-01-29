@@ -81,6 +81,8 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	Style->Set("GamedevHelper.OpenAssetNamingTool.Small", new IMAGE_BRUSH(TEXT("IconAssetNamingTool20"), FVector2D{20.0f, 20.0f}));
 	Style->Set("GamedevHelper.OpenActorNamingTool", new IMAGE_BRUSH(TEXT("IconOrganize32"), FVector2D{32.0f, 32.0f}));
 	Style->Set("GamedevHelper.OpenActorNamingTool.Small", new IMAGE_BRUSH(TEXT("IconOrganize20"), FVector2D{20.0f, 20.0f}));
+	Style->Set("GamedevHelper.OpenVideoEncoderTool", new IMAGE_BRUSH(TEXT("IconRender32"), FVector2D{32.0f, 32.0f}));
+	Style->Set("GamedevHelper.OpenVideoEncoderTool.Small", new IMAGE_BRUSH(TEXT("IconRender20"), FVector2D{20.0f, 20.0f}));
 
 	// Asset Naming Tool Cmds
 	Style->Set("GamedevHelper.ScanAssets", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D{32.0f, 32.0f}));
@@ -109,6 +111,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create()
 	// tabs
 	Style->Set("GamedevHelper.Tab.AssetNamingTool", new IMAGE_BRUSH(TEXT("IconAssetNamingTool16"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Tab.ActorNamingTool", new IMAGE_BRUSH(TEXT("IconOrganize20"), FVector2D{16.0f, 16.0f}));
+	Style->Set("GamedevHelper.Tab.VideoEncoderTool", new IMAGE_BRUSH(TEXT("IconRender20"), FVector2D{16.0f, 16.0f}));
 	Style->Set("GamedevHelper.Tab.WorldOutlinearManager", new IMAGE_BRUSH(TEXT("IconStructure16"), FVector2D{16.0f, 16.0f}));
 
 	// icons

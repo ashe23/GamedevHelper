@@ -21,6 +21,7 @@ public:
 	TSharedPtr<FUICommandInfo> RestartEditor;
 	TSharedPtr<FUICommandInfo> OpenAssetNamingTool;
 	TSharedPtr<FUICommandInfo> OpenActorNamingTool;
+	TSharedPtr<FUICommandInfo> OpenVideoEncoderTool;
 
 	// Asset Naming Tool
 	TSharedPtr<FUICommandInfo> ScanAssets;
@@ -35,5 +36,9 @@ public:
 	TSharedPtr<FUICommandInfo> OrganizeActors;
 	TSharedPtr<FUICommandInfo> RenameActors;
 	TSharedPtr<FUICommandInfo> UndoAction;
+
+	// Video Encoder Tool
+	TSharedPtr<FUICommandInfo> RefreshPipelines;
+
 
 };

@@ -9,6 +9,7 @@
 #include "LevelEditor.h"
 #include "ToolMenus.h"
 #include "UnrealEdMisc.h"
+#include "VideoEncoderTool/Slate/SGdhVideoEncoderTool.h"
 #include "Widgets/Docking/SDockTab.h"
 
 DEFINE_LOG_CATEGORY(LogGdhTools);
@@ -50,6 +51,13 @@ void FGdhToolsModule::StartupModule()
 			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabActorNamingTool);
 		})
 	);
+	Commands->MapAction(
+		FGdhCmds::Get().OpenVideoEncoderTool,
+		FExecuteAction::CreateLambda([]()
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(GdhConstants::TabVideoEncoderTool);
+		})
+	);
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
 		                        GdhConstants::TabAssetNamingTool,
@@ -83,6 +91,22 @@ void FGdhToolsModule::StartupModule()
 							.SetDisplayName(FText::FromName(TEXT("Actor Naming Tool")))
 							.SetMenuType(ETabSpawnerMenuType::Hidden);
 
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+								GdhConstants::TabVideoEncoderTool,
+								FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
+								{
+									return
+											SNew(SDockTab)
+											.TabRole(NomadTab)
+											[
+												SNew(SGdhVideoEncoderTool)
+											];
+								})
+							)
+							.SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.VideoEncoderTool"))
+							.SetDisplayName(FText::FromName(TEXT("Video Encoder Tool")))
+							.SetMenuType(ETabSpawnerMenuType::Hidden);
+
 	if (!IsRunningCommandlet())
 	{
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
@@ -104,8 +128,9 @@ void FGdhToolsModule::StartupModule()
 						MenuBuilder.EndSection();
 
 						MenuBuilder.BeginSection("GdhSectionTools", FText::FromString("Tools"));
-						// MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenAssetNamingTool);
+						MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenAssetNamingTool);
 						MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenActorNamingTool);
+						MenuBuilder.AddMenuEntry(FGdhCmds::Get().OpenVideoEncoderTool);
 						MenuBuilder.EndSection();
 					}),
 					GdhConstants::ModuleName,
@@ -169,6 +194,7 @@ void FGdhToolsModule::ShutdownModule()
 	FGdhCmds::Unregister();
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabAssetNamingTool);
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabActorNamingTool);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(GdhConstants::TabVideoEncoderTool);
 	IModuleInterface::ShutdownModule();
 }
 

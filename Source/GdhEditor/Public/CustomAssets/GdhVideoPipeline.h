@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GdhVideoPipeline.generated.h"
 
+class ULevelSequence;
+class UMoviePipelineQueue;
+
 // Video Pipeline assets are used in order to crete specific render and encoding settings, when using Video Encoder Tool
 // So you can have multiple pipeline assets with different settings, for example one pipeline for mp4 encoding with
 // FullHD resolution another , for mkv or hls with 360p resolution etc. So you specify settings one time in this asset,
@@ -43,7 +46,11 @@ class GDHEDITOR_API UGdhVideoPipeline : public UObject
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Encode", meta = (ToolTip = "Encode cmd visualizer"))
 	FString EncodeCmdVis;
 
-	TArray<TSoftObjectPtr<UMoviePipelineQueue>>
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Queue", meta = (ToolTip = "Level asset"))
+	TSoftObjectPtr<UWorld> Level;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Queue", meta = (ToolTip = "Sequences to render"))
+	TArray<TSoftObjectPtr<ULevelSequence>> Sequences;
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Gdh")
 	void EncodeCmdUpdate();

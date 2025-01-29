@@ -18,7 +18,12 @@ public class GdhEditor : ModuleRules
 			"Slate",
 			"SlateCore",
 			"Projects",
-			"GdhCore"
+			"GdhCore",
+            "MovieRenderPipelineCore",
+            "MovieRenderPipelineEditor",
+            "MovieRenderPipelineRenderPasses",
+            "MovieRenderPipelineSettings",
+            "LevelSequence"
 		});
 	}
 }

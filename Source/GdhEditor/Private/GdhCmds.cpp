@@ -4,12 +4,13 @@
 
 #define LOCTEXT_NAMESPACE "FGdh"
 
-void FGdhCmds::RegisterCommands()
-{
+void FGdhCmds::RegisterCommands() {
+	// clang-format off
 	// Main Menu
 	UI_COMMAND(RestartEditor, "Restart", "Restart Editor", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(OpenAssetNamingTool, "Asset Naming Tool", "Open Asset Naming Tool Editor", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(OpenActorNamingTool, "Actor Naming Tool", "Open Actor Naming Tool Editor", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(OpenVideoEncoderTool, "Video Encoder Tool", "Open Video Encoder Tool Editor", EUserInterfaceActionType::Button, FInputChord());
 
 	// Asset Naming Tool
 	UI_COMMAND(ScanAssets, "Refresh", "Scan assets and refresh list", EUserInterfaceActionType::Button, FInputChord());
@@ -24,6 +25,10 @@ void FGdhCmds::RegisterCommands()
 	UI_COMMAND(OrganizeActors, "Organize Actors", "Organize actors in world outliner", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(RenameActors, "Rename Actors", "Rename actors in world outliner", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(UndoAction, "Undo", "Undo last action", EUserInterfaceActionType::Button, FInputChord());
+
+	// Video Encoder Tool
+	UI_COMMAND(RefreshPipelines, "Refresh", "Refresh pipeline assets", EUserInterfaceActionType::Button, FInputChord());
+	// clang-format on
 }
 
 #undef LOCTEXT_NAMESPACE

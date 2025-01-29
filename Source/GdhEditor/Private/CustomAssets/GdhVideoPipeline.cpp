@@ -2,6 +2,7 @@
 
 #include "CustomAssets/GdhVideoPipeline.h"
 #include "GdhEditorModule.h"
+#include "MoviePipelineQueue.h"
 
 void UGdhVideoPipeline::EncodeCmdUpdate() {
 
