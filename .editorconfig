@@ -8,6 +8,9 @@ indent_style = space
 trim_trailing_whitespace = false
 insert_final_newline = false
 
+[*.uplugin]
+indent_size = 2
+
 [*.{cpp,h}]
 indent_style = tab
 insert_final_newline = true
