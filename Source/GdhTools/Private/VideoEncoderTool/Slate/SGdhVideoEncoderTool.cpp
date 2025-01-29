@@ -4,6 +4,7 @@
 #include "VideoEncoderTool/GdhVideoEncoderToolSettings.h"
 #include "GdhCmds.h"
 #include "GdhLibEditor.h"
+#include "GdhLibPath.h"
 #include "GdhToolsModule.h"
 #include "CustomAssets/GdhVideoPipeline.h"
 #include "Widgets/Layout/SScrollBox.h"
@@ -172,14 +173,54 @@ void SGdhVideoEncoderTool::OnRenderFinished(UMoviePipelineExecutorBase*, bool bS
 	if (!bSuccess) return;
 
 	uint32 ProcessId;
-	const FString FFmpegPath = TEXT("ffmpeg.exe");
+	const FString FFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));
+
+	void* PipeRead = nullptr;
+	void* PipeWrite = nullptr;
 
 	for (const auto& Cmd : EncodeCmds) {
-		FProcHandle ProcessHandle =
-			FPlatformProcess::CreateProc(*FFmpegPath, *Cmd, true, false, false, &ProcessId, 0, nullptr, nullptr);
+		verify(FPlatformProcess::CreatePipe(PipeRead, PipeWrite));
+
+		FProcHandle ProcessHandle = FPlatformProcess::CreateProc(
+			*FFmpegPath, *Cmd, true, false, false, &ProcessId, 0, nullptr, PipeRead	  // Redirect stderr
+		);
 
 		if (ProcessHandle.IsValid()) {
-			FPlatformProcess::WaitForProc(ProcessHandle);
+			FString ErrorOutput;
+			while (FPlatformProcess::IsProcRunning(ProcessHandle)) {
+				FString PartialOutput = FPlatformProcess::ReadPipe(PipeRead);
+				if (!PartialOutput.IsEmpty()) { ErrorOutput += PartialOutput; }
+
+				FPlatformProcess::Sleep(0.1f);	 // Prevent high CPU usage
+			}
+
+			// Read remaining data after process exits
+			FString FinalOutput = FPlatformProcess::ReadPipe(PipeRead);
+			if (!FinalOutput.IsEmpty()) { ErrorOutput += FinalOutput; }
+
+			// Check exit code
+			int32 ReturnCode = 0;
+			if (FPlatformProcess::GetProcReturnCode(ProcessHandle, &ReturnCode)) {
+				if (ReturnCode != 0)   // FFmpeg failed
+				{
+					FString ErrorMessage = FString::Printf(
+						TEXT("FFmpeg failed with exit code: %d\nError Output:\n%s"), ReturnCode, *ErrorOutput
+					);
+
+					UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+					FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(ErrorMessage));
+				}
+			}
+			else { UE_LOG(LogTemp, Error, TEXT("Failed to retrieve FFmpeg process return code.")); }
+
+			// Cleanup
+			FPlatformProcess::CloseProc(ProcessHandle);
+			FPlatformProcess::ClosePipe(PipeRead, PipeWrite);
+		}
+		else {
+			FString ErrorMessage = TEXT("Failed to start FFmpeg process.");
+			UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+			FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(ErrorMessage));
 		}
 	}
 }

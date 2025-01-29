@@ -16,10 +16,6 @@ class UGdhVideoEncoderToolSettings : public UObject
 
 	UGdhVideoEncoderToolSettings();
 
-	// Path to ffmpeg executable, if left empty will use path from ENV, if exists
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
-	FString PathFfmpegExe = TEXT("ffmpeg.exe");
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
 	TSoftObjectPtr<UGdhVideoPipeline> Pipeline;
 
