@@ -4,15 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "GdhSettingsEncoderAssetFactory.generated.h"
+#include "GdhVideoPipelineFactory.generated.h"
 
 UCLASS()
-class UGdhSettingsEncoderAssetFactory : public UFactory
+class UGdhVideoPipelineFactory : public UFactory
 {
-	GENERATED_BODY()
   public:
 
-	UGdhSettingsEncoderAssetFactory();
+	GENERATED_BODY()
+
+	UGdhVideoPipelineFactory();
+
 	virtual UObject* FactoryCreateNew(
 		UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn
 	) override;

@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Modules/ModuleInterface.h"
-#include "GdhSettingsEncoderAssetActions.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGdhEditor, Log, All);
 
-class FGdhSettingsEncoderAssetActions;
+class FGdhVideoPipelineActions;
 
 class FGdhEditorModule final : public IModuleInterface
 {
@@ -19,5 +19,5 @@ class FGdhEditorModule final : public IModuleInterface
 
   private:
 
-	TSharedPtr<FGdhSettingsEncoderAssetActions> SettingsEncoderAssetActions;
+	TSharedPtr<FGdhVideoPipelineActions> VideoPipelineActions;
 };
