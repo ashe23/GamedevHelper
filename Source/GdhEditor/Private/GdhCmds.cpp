@@ -28,6 +28,7 @@ void FGdhCmds::RegisterCommands() {
 
 	// Video Encoder Tool
 	UI_COMMAND(RefreshPipelines, "Refresh", "Refresh pipeline assets", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(Process, "Process", "Render and encode queue assets", EUserInterfaceActionType::Button, FInputChord());
 	// clang-format on
 }
 
