@@ -10,16 +10,14 @@
 #include "Framework/Notifications/NotificationManager.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 
-void UGdhLibEditor::TryOpenFile(const FString& Path)
-{
+void UGdhLibEditor::TryOpenFile(const FString& Path) {
 	if (Path.IsEmpty()) return;
 	if (!FPaths::FileExists(Path)) return;
 
 	FPlatformProcess::LaunchFileInDefaultExternalApplication(*Path);
 }
 
-void UGdhLibEditor::OpenAssetEditor(const FAssetData& Asset)
-{
+void UGdhLibEditor::OpenAssetEditor(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return;
 	if (!GEditor) return;
 
@@ -29,54 +27,46 @@ void UGdhLibEditor::OpenAssetEditor(const FAssetData& Asset)
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorsForAssets(AssetNames);
 }
 
-void UGdhLibEditor::OpenAssetInContentBrowser(const FAssetData& Asset, const bool bSpawnNewBrowser)
-{
+void UGdhLibEditor::OpenAssetInContentBrowser(const FAssetData& Asset, const bool bSpawnNewBrowser) {
 	if (!Asset.IsValid()) return;
 
-	GetModuleContentBrowser().Get().SyncBrowserToAssets(TArray<FAssetData>{Asset}, false, true, FName{}, bSpawnNewBrowser);
+	GetModuleContentBrowser().Get().SyncBrowserToAssets(TArray<FAssetData> {Asset}, false, true, FName {}, bSpawnNewBrowser);
 }
 
-void UGdhLibEditor::OpenPathInFileExplorer(const FString& Path)
-{
+void UGdhLibEditor::OpenPathInFileExplorer(const FString& Path) {
 	if (Path.IsEmpty()) return;
 
 	FPlatformProcess::ExploreFolder(*Path);
 }
 
-void UGdhLibEditor::CloseAllEditors()
-{
+void UGdhLibEditor::CloseAllEditors() {
 	if (!GEditor) return;
 
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->CloseAllAssetEditors();
 }
 
-bool UGdhLibEditor::EditorInPlayMode()
-{
+bool UGdhLibEditor::EditorInPlayMode() {
 	return GEditor && GEditor->PlayWorld || GIsPlayInEditorWorld;
 }
 
-bool UGdhLibEditor::SaveAllAssets(const bool bPromptToUser)
-{
+bool UGdhLibEditor::SaveAllAssets(const bool bPromptToUser) {
 	return FEditorFileUtils::SaveDirtyPackages(bPromptToUser, true, true, false, false, false);
 }
 
-void UGdhLibEditor::ShaderCompilationEnable()
-{
+void UGdhLibEditor::ShaderCompilationEnable() {
 	if (!GShaderCompilingManager) return;
 
 	GShaderCompilingManager->SkipShaderCompilation(false);
 }
 
-void UGdhLibEditor::ShaderCompilationDisable()
-{
+void UGdhLibEditor::ShaderCompilationDisable() {
 	if (!GShaderCompilingManager) return;
 
 	GShaderCompilingManager->SkipShaderCompilation(true);
 }
 
-void UGdhLibEditor::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)
-{
-	FNotificationInfo Info{FText::FromString(Msg)};
+void UGdhLibEditor::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration) {
+	FNotificationInfo Info {FText::FromString(Msg)};
 	Info.Text = FText::FromString(Msg);
 	Info.ExpireDuration = Duration;
 
@@ -86,14 +76,12 @@ void UGdhLibEditor::ShowNotification(const FString& Msg, const SNotificationItem
 	NotificationPtr.Get()->SetCompletionState(State);
 }
 
-void UGdhLibEditor::ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration)
-{
-	FNotificationInfo Info{FText::FromString(Msg)};
+void UGdhLibEditor::ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration) {
+	FNotificationInfo Info {FText::FromString(Msg)};
 	Info.Text = FText::FromString(Msg);
 	Info.ExpireDuration = Duration;
-	Info.Hyperlink = FSimpleDelegate::CreateLambda([]()
-	{
-		FGlobalTabmanager::Get()->TryInvokeTab(FName{TEXT("OutputLog")});
+	Info.Hyperlink = FSimpleDelegate::CreateLambda([]() {
+		FGlobalTabmanager::Get()->TryInvokeTab(FName {TEXT("OutputLog")});
 	});
 	Info.HyperlinkText = FText::FromString(TEXT("Show OutputLog..."));
 
@@ -103,22 +91,18 @@ void UGdhLibEditor::ShowNotificationWithOutputLog(const FString& Msg, const SNot
 	NotificationPtr.Get()->SetCompletionState(State);
 }
 
-FAssetToolsModule& UGdhLibEditor::GetModuleAssetTools()
-{
+FAssetToolsModule& UGdhLibEditor::GetModuleAssetTools() {
 	return FModuleManager::LoadModuleChecked<FAssetToolsModule>(GdhConstants::ModuleAssetTools);
 }
 
-FAssetRegistryModule& UGdhLibEditor::GetModuleAssetRegistry()
-{
+FAssetRegistryModule& UGdhLibEditor::GetModuleAssetRegistry() {
 	return FModuleManager::LoadModuleChecked<FAssetRegistryModule>(GdhConstants::ModuleAssetRegistry);
 }
 
-FContentBrowserModule& UGdhLibEditor::GetModuleContentBrowser()
-{
+FContentBrowserModule& UGdhLibEditor::GetModuleContentBrowser() {
 	return FModuleManager::LoadModuleChecked<FContentBrowserModule>(GdhConstants::ModuleContentBrowser);
 }
 
-FPropertyEditorModule& UGdhLibEditor::GetModulePropertyEditor()
-{
+FPropertyEditorModule& UGdhLibEditor::GetModulePropertyEditor() {
 	return FModuleManager::LoadModuleChecked<FPropertyEditorModule>(GdhConstants::ModulePropertyEditor);
 }

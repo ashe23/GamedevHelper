@@ -8,19 +8,21 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GdhLibAsset.generated.h"
 
+class ULevelSequence;
 struct FGdhAssetIndirectInfo;
 
-UCLASS(meta=(BlueprintThreadSafe, ScriptName="GdhAssetLibrary"))
+UCLASS(meta = (BlueprintThreadSafe, ScriptName = "GdhAssetLibrary"))
 class GDHEDITOR_API UGdhLibAsset : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
+
 	/**
 	 * @brief Returns all assets in project (Content folder)
 	 * @param Assets TArray<FAssetData>
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetAssetsAll(TArray<FAssetData>& Assets);
 
 	/**
@@ -29,7 +31,7 @@ public:
 	 * @param bRecursive bool
 	 * @param Assets TArray<FAssetData>
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets);
 
 	/**
@@ -37,7 +39,7 @@ public:
 	 * @param Assets TArray<FAssetData>
 	 * @param bShowSlowTask bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShowSlowTask = true);
 
 	/**
@@ -45,7 +47,7 @@ public:
 	 * @param Assets TArray<FAssetData> - Assets
 	 * @param bShowSlowTask bool - Show slow task progress bar or not
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bShowSlowTask = true);
 
 	/**
@@ -53,22 +55,22 @@ public:
 	 * @param Assets TArray<FAssetData>
 	 * @param bShowSlowTask bool - Show slow task progress bar or not
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetAssetsUnicode(TArray<FAssetData>& Assets, const bool bShowSlowTask = true);
 
 	/**
 	 * @brief Returns all primary assets class names
 	 * @param ClassNames TSet<FName>
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetClassNamesPrimary(TSet<FName>& ClassNames);
 
 	/**
 	 * @brief Returns asset exact class name, if its blueprint it will return generated class name
 	 * @param Asset FAssetData
-	 * @return FName 
+	 * @return FName
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static FName GetAssetExactClassName(const FAssetData& Asset);
 
 	/**
@@ -77,7 +79,7 @@ public:
 	 * @param Tag FName
 	 * @return FString
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static FString GetAssetTagValue(const FAssetData& Asset, const FName& Tag);
 
 	/**
@@ -87,7 +89,7 @@ public:
 	 * @param BlueprintTypes TMap<EGdhBlueprintType, FGdhAssetNameAffix>
 	 * @return FGdhAssetNameAffix
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static FGdhAffix GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes);
 
 	/**
@@ -99,15 +101,21 @@ public:
 	 * @param SuffixNamingCase EGdhNamingCase
 	 * @return FString
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
-	static FString GetAssetNameByConvention(const FString& Name, const FGdhAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
+	static FString GetAssetNameByConvention(
+		const FString& Name,
+		const FGdhAffix& Affix,
+		const EGdhNamingCase AssetNamingCase,
+		const EGdhNamingCase PrefixNamingCase,
+		const EGdhNamingCase SuffixNamingCase
+	);
 
 	/**
 	 * @brief Returns given asset size on disk in bytes
 	 * @param Asset FAssetData
 	 * @return int64
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static int64 GetAssetSize(const FAssetData& Asset);
 
 	/**
@@ -115,7 +123,7 @@ public:
 	 * @param Assets TArray<FAssetData>
 	 * @return int64
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static int64 GetAssetsTotalSize(const TArray<FAssetData>& Assets);
 
 	/**
@@ -123,7 +131,7 @@ public:
 	 * @param Asset FAssetData
 	 * @return EGdhBlueprintType
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static EGdhBlueprintType GetBlueprintType(const FAssetData& Asset);
 
 	/**
@@ -131,7 +139,7 @@ public:
 	 * @param Asset FAssetData
 	 * @return bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static bool AssetIsBlueprint(const FAssetData& Asset);
 
 	/**
@@ -139,7 +147,7 @@ public:
 	 * @param Asset FAssetData
 	 * @return bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static bool AssetIsExtReferenced(const FAssetData& Asset);
 
 	/**
@@ -147,7 +155,7 @@ public:
 	 * @param Asset FAssetData
 	 * @return bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static bool AssetIsCircular(const FAssetData& Asset);
 
 	/**
@@ -155,21 +163,21 @@ public:
 	 * @param Asset FAssetData
 	 * @return bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static bool AssetHasRefs(const FAssetData& Asset);
 
 	/**
 	 * @brief Returns all redirectors in project
 	 * @param Redirectors TArray<FAssetData>
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void GetProjectRedirectors(TArray<FAssetData>& Redirectors);
 
 	/**
 	 * @brief Checks if project contains any redirector asset
 	 * @return bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static bool ProjectHasRedirectors();
 
 	/**
@@ -177,7 +185,7 @@ public:
 	 * @param Redirectors TArray<FAssetData>
 	 * @param bShowSlowTask bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static void FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask = true);
 
 	/**
@@ -186,9 +194,28 @@ public:
 	 * @param NewName FString
 	 * @return bool
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Gdh|Lib_Asset")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
 	static bool RenameAsset(const FAssetData& Asset, const FString& NewName);
 
+	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
+	static FFrameRate GetLevelSequenceFrameRate(const ULevelSequence* InLevelSequence);
+
+	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
+	static int32 GetLevelSequenceStartFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
+
+	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
+	static int32 GetLevelSequenceEndFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
+
+	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
+	static int32 GetLevelSequenceDurationInFrames(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
+
+	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
+	static float GetLevelSequenceDurationInSeconds(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
+
+	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
+	static bool LevelSequenceHasSlomoTrack(const ULevelSequence* InLevelSequence);
+
 private:
+
 	static void GetSourceAndConfigFiles(TSet<FString>& Files);
 };

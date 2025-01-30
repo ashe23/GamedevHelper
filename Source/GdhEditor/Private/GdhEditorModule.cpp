@@ -3,7 +3,7 @@
 #include "GdhEditorModule.h"
 #include "AssetToolsModule.h"
 #include "GdhConstants.h"
-#include "CustomAssets/GdhVideoPipelineActions.h"
+#include "CustomAssets/GdhRenderListActions.h"
 
 DEFINE_LOG_CATEGORY(LogGdhEditor);
 
@@ -11,19 +11,19 @@ void FGdhEditorModule::StartupModule() {
 
 	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
 		const EAssetTypeCategories::Type Category = FAssetToolsModule::GetModule().Get().RegisterAdvancedAssetCategory(
-			GdhConstants::ModuleName, FText::FromName(GdhConstants::ModuleFullName)
+			GdhConstants::ModuleName, FText::FromName(GdhConstants::ModuleName)
 		);
 
-		VideoPipelineActions = MakeShared<FGdhVideoPipelineActions>(Category);
+		RenderListActions = MakeShared<FGdhRenderListActions>(Category);
 
-		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(VideoPipelineActions.ToSharedRef());
+		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(RenderListActions.ToSharedRef());
 	}
 }
 
 void FGdhEditorModule::ShutdownModule() {
 
 	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
-		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(VideoPipelineActions.ToSharedRef());
+		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(RenderListActions.ToSharedRef());
 	}
 }
 

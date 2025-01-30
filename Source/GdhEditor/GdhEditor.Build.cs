@@ -15,6 +15,7 @@ public class GdhEditor : ModuleRules
 			"Engine",
 			"UnrealEd",
 			"EditorStyle",
+            "EditorWidgets",
 			"Slate",
 			"SlateCore",
 			"Projects",
@@ -23,7 +24,10 @@ public class GdhEditor : ModuleRules
             "MovieRenderPipelineEditor",
             "MovieRenderPipelineRenderPasses",
             "MovieRenderPipelineSettings",
-            "LevelSequence"
+            "LevelSequence",
+            "MovieScene",
+            "MovieSceneTracks",
+            "InputCore"
 		});
 	}
 }

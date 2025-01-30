@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "GdhVideoPipelineFactory.generated.h"
+#include "GdhRenderListFactory.generated.h"
 
 UCLASS()
-class UGdhVideoPipelineFactory : public UFactory
+class UGdhRenderListFactory : public UFactory
 {
   public:
 
 	GENERATED_BODY()
 
-	UGdhVideoPipelineFactory();
+	UGdhRenderListFactory();
 
 	virtual UObject* FactoryCreateNew(
 		UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn

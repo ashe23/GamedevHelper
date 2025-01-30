@@ -9,14 +9,16 @@
 #include "GdhEditorModule.h"
 // Engine Headers
 #include "AssetToolsModule.h"
+#include "LevelSequence.h"
+#include "MovieSceneTimeHelpers.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/AssetManager.h"
 #include "Internationalization/Regex.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Tracks/MovieSceneSlomoTrack.h"
 
-void UGdhLibAsset::GetAssetsAll(TArray<FAssetData>& Assets)
-{
+void UGdhLibAsset::GetAssetsAll(TArray<FAssetData>& Assets) {
 	if (UGdhLibEditor::GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
 
 	Assets.Reset();
@@ -24,17 +26,15 @@ void UGdhLibAsset::GetAssetsAll(TArray<FAssetData>& Assets)
 	UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetsByPath(GdhConstants::PathRoot, Assets, true);
 }
 
-void UGdhLibAsset::GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets)
-{
+void UGdhLibAsset::GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets) {
 	if (UGdhLibEditor::GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
 
 	Assets.Reset();
 
-	UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetsByPath(FName{*Path}, Assets, bRecursive);
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetsByPath(FName {*Path}, Assets, bRecursive);
 }
 
-void UGdhLibAsset::GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShowSlowTask)
-{
+void UGdhLibAsset::GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShowSlowTask) {
 	if (UGdhLibEditor::GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
 
 	TArray<FAssetData> AssetsAll;
@@ -45,19 +45,17 @@ void UGdhLibAsset::GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShow
 
 	Assets.Reset(AssetsAll.Num());
 
-	FScopedSlowTask SlowTask{
-		static_cast<float>(AssetsAll.Num()),
-		FText::FromString(TEXT("Searching primary assets...")),
-		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	FScopedSlowTask SlowTask {
+	  static_cast<float>(AssetsAll.Num()),
+	  FText::FromString(TEXT("Searching primary assets...")),
+	  bShowSlowTask && GIsEditor && !IsRunningCommandlet()
 	};
 	SlowTask.MakeDialog(false, false);
 
-	for (const auto& Asset : AssetsAll)
-	{
+	for (const auto& Asset : AssetsAll) {
 		SlowTask.EnterProgressFrame(1.0f, FText::FromString(Asset.GetFullName()));
 
-		if (ClassNamesPrimary.Contains(Asset.AssetClass) || ClassNamesPrimary.Contains(GetAssetExactClassName(Asset)))
-		{
+		if (ClassNamesPrimary.Contains(Asset.AssetClass) || ClassNamesPrimary.Contains(GetAssetExactClassName(Asset))) {
 			Assets.Emplace(Asset);
 		}
 	}
@@ -65,8 +63,7 @@ void UGdhLibAsset::GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShow
 	Assets.Shrink();
 }
 
-void UGdhLibAsset::GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bShowSlowTask)
-{
+void UGdhLibAsset::GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bShowSlowTask) {
 	if (UGdhLibEditor::GetModuleAssetRegistry().Get().IsLoadingAssets()) return;
 
 	Assets.Reset();
@@ -74,15 +71,14 @@ void UGdhLibAsset::GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bSho
 	TSet<FString> ScanFiles;
 	GetSourceAndConfigFiles(ScanFiles);
 
-	FScopedSlowTask SlowTask{
-		static_cast<float>(ScanFiles.Num()),
-		FText::FromString(TEXT("Searching Indirectly used assets...")),
-		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	FScopedSlowTask SlowTask {
+	  static_cast<float>(ScanFiles.Num()),
+	  FText::FromString(TEXT("Searching Indirectly used assets...")),
+	  bShowSlowTask && GIsEditor && !IsRunningCommandlet()
 	};
 	SlowTask.MakeDialog(false, false);
 
-	for (const auto& File : ScanFiles)
-	{
+	for (const auto& File : ScanFiles) {
 		SlowTask.EnterProgressFrame(1.0f, FText::FromString(File));
 
 		FString FileContent;
@@ -92,14 +88,13 @@ void UGdhLibAsset::GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bSho
 
 		static FRegexPattern Pattern(TEXT(R"(\/Game([A-Za-z0-9_.\/]+)\b)"));
 		FRegexMatcher Matcher(Pattern, FileContent);
-		while (Matcher.FindNext())
-		{
+		while (Matcher.FindNext()) {
 			FString FoundedAssetObjectPath = Matcher.GetCaptureGroup(0);
 
 			const FString ObjectPath = UGdhLibPath::PathConvertToObjectPath(FoundedAssetObjectPath);
 			if (ObjectPath.IsEmpty()) continue;
 
-			const FAssetData AssetData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName{*ObjectPath});
+			const FAssetData AssetData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetByObjectPath(FName {*ObjectPath});
 			if (!AssetData.IsValid()) continue;
 
 			Assets.AddUnique(AssetData);
@@ -107,26 +102,23 @@ void UGdhLibAsset::GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bSho
 	}
 }
 
-void UGdhLibAsset::GetAssetsUnicode(TArray<FAssetData>& Assets, const bool bShowSlowTask)
-{
+void UGdhLibAsset::GetAssetsUnicode(TArray<FAssetData>& Assets, const bool bShowSlowTask) {
 	TArray<FAssetData> AssetsAll;
 	GetAssetsAll(AssetsAll);
 
 	Assets.Reset(AssetsAll.Num());
 
-	FScopedSlowTask SlowTask{
-		static_cast<float>(AssetsAll.Num()),
-		FText::FromString(TEXT("Searching assets with unicode characters in name...")),
-		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	FScopedSlowTask SlowTask {
+	  static_cast<float>(AssetsAll.Num()),
+	  FText::FromString(TEXT("Searching assets with unicode characters in name...")),
+	  bShowSlowTask && GIsEditor && !IsRunningCommandlet()
 	};
 	SlowTask.MakeDialog(false, false);
 
-	for (const auto& Asset : AssetsAll)
-	{
+	for (const auto& Asset : AssetsAll) {
 		SlowTask.EnterProgressFrame(1.0f, FText::FromName(Asset.AssetName));
 
-		if (UGdhLibString::HasUnicode(Asset.AssetName.ToString()))
-		{
+		if (UGdhLibString::HasUnicode(Asset.AssetName.ToString())) {
 			Assets.Add(Asset);
 		}
 	}
@@ -134,8 +126,7 @@ void UGdhLibAsset::GetAssetsUnicode(TArray<FAssetData>& Assets, const bool bShow
 	Assets.Shrink();
 }
 
-void UGdhLibAsset::GetClassNamesPrimary(TSet<FName>& ClassNames)
-{
+void UGdhLibAsset::GetClassNamesPrimary(TSet<FName>& ClassNames) {
 	// getting list of primary asset classes that are defined in AssetManager
 	const auto& AssetManager = UAssetManager::Get();
 	if (!AssetManager.IsValid()) return;
@@ -145,8 +136,7 @@ void UGdhLibAsset::GetClassNamesPrimary(TSet<FName>& ClassNames)
 	AssetManager.Get().GetPrimaryAssetTypeInfoList(AssetTypeInfos);
 	ClassNamesPrimaryBase.Reserve(AssetTypeInfos.Num());
 
-	for (const auto& AssetTypeInfo : AssetTypeInfos)
-	{
+	for (const auto& AssetTypeInfo : AssetTypeInfos) {
 		if (!AssetTypeInfo.AssetBaseClassLoaded) continue;
 
 		ClassNamesPrimaryBase.Emplace(AssetTypeInfo.AssetBaseClassLoaded->GetFName());
@@ -154,26 +144,22 @@ void UGdhLibAsset::GetClassNamesPrimary(TSet<FName>& ClassNames)
 
 	// getting list of primary assets classes that are derived from main primary assets
 	ClassNames.Empty();
-	UGdhLibEditor::GetModuleAssetRegistry().Get().GetDerivedClassNames(ClassNamesPrimaryBase.Array(), TSet<FName>{}, ClassNames);
+	UGdhLibEditor::GetModuleAssetRegistry().Get().GetDerivedClassNames(ClassNamesPrimaryBase.Array(), TSet<FName> {}, ClassNames);
 }
 
-
-FName UGdhLibAsset::GetAssetExactClassName(const FAssetData& Asset)
-{
+FName UGdhLibAsset::GetAssetExactClassName(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return NAME_None;
 
-	if (AssetIsBlueprint(Asset))
-	{
+	if (AssetIsBlueprint(Asset)) {
 		const FString GeneratedClassName = Asset.TagsAndValues.FindTag(TEXT("GeneratedClass")).GetValue();
 		const FString ClassObjectPath = FPackageName::ExportTextPathToObjectPath(*GeneratedClassName);
-		return FName{*FPackageName::ObjectPathToObjectName(ClassObjectPath)};
+		return FName {*FPackageName::ObjectPathToObjectName(ClassObjectPath)};
 	}
 
 	return Asset.AssetClass;
 }
 
-FString UGdhLibAsset::GetAssetTagValue(const FAssetData& Asset, const FName& Tag)
-{
+FString UGdhLibAsset::GetAssetTagValue(const FAssetData& Asset, const FName& Tag) {
 	if (!Asset.IsValid()) return {};
 	if (!Asset.TagsAndValues.Contains(Tag)) return {};
 
@@ -181,8 +167,8 @@ FString UGdhLibAsset::GetAssetTagValue(const FAssetData& Asset, const FName& Tag
 	return FPackageName::ExportTextPathToObjectPath(Value);
 }
 
-FGdhAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes)
-{
+FGdhAffix
+UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes) {
 	if (!Asset.IsValid()) return {};
 	if (!Mappings) return {};
 
@@ -192,50 +178,54 @@ FGdhAffix UGdhLibAsset::GetAssetNameAffix(const FAssetData& Asset, const UDataTa
 	TMap<FString, FGdhAffix> AffixMap;
 	AffixMap.Reserve(Rows.Num());
 
-	for (const auto& Row : Rows)
-	{
+	for (const auto& Row : Rows) {
 		if (!Row) continue;
 		if (!Row->AssetClass.LoadSynchronous()) continue;
 
-		AffixMap.Add(Row->AssetClass.ToString(), FGdhAffix{Row->Prefix, Row->Suffix});
+		AffixMap.Add(Row->AssetClass.ToString(), FGdhAffix {Row->Prefix, Row->Suffix});
 	}
 
 	const bool bIsBlueprint = AssetIsBlueprint(Asset);
 	const EGdhBlueprintType BlueprintType = GetBlueprintType(Asset);
-	const FGdhAffix BlueprintAffix = BlueprintTypes.Contains(BlueprintType) ? *BlueprintTypes.Find(BlueprintType) : FGdhAffix{};
-	const FString AssetExactClassName = bIsBlueprint ? GetAssetTagValue(Asset, TEXT("GeneratedClass")) : FSoftClassPath(Asset.GetClass()).GetAssetPathString();
+	const FGdhAffix BlueprintAffix = BlueprintTypes.Contains(BlueprintType) ? *BlueprintTypes.Find(BlueprintType) : FGdhAffix {};
+	const FString AssetExactClassName =
+		bIsBlueprint ? GetAssetTagValue(Asset, TEXT("GeneratedClass")) : FSoftClassPath(Asset.GetClass()).GetAssetPathString();
 	const FString AssetParentClassName = bIsBlueprint ? GetAssetTagValue(Asset, TEXT("ParentClass")) : TEXT("");
 
-	if (bIsBlueprint)
-	{
-		const FGdhAffix ExactAffixes = AffixMap.Contains(AssetExactClassName) ? *AffixMap.Find(AssetExactClassName) : FGdhAffix{};
+	if (bIsBlueprint) {
+		const FGdhAffix ExactAffixes = AffixMap.Contains(AssetExactClassName) ? *AffixMap.Find(AssetExactClassName) : FGdhAffix {};
 		const FGdhAffix ParentAffixes = AffixMap.Contains(AssetParentClassName) ? *AffixMap.Find(AssetParentClassName) : BlueprintAffix;
 
-		return FGdhAffix{ExactAffixes.Prefix.IsEmpty() ? ParentAffixes.Prefix : ExactAffixes.Prefix, ExactAffixes.Suffix.IsEmpty() ? ParentAffixes.Suffix : ExactAffixes.Suffix};
+		return FGdhAffix {
+		  ExactAffixes.Prefix.IsEmpty() ? ParentAffixes.Prefix : ExactAffixes.Prefix,
+		  ExactAffixes.Suffix.IsEmpty() ? ParentAffixes.Suffix : ExactAffixes.Suffix
+		};
 	}
 
-	if (AffixMap.Contains(AssetExactClassName))
-	{
+	if (AffixMap.Contains(AssetExactClassName)) {
 		return *AffixMap.Find(AssetExactClassName);
 	}
 
 	return {};
 }
 
-FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAffix& Affix, const EGdhNamingCase AssetNamingCase, const EGdhNamingCase PrefixNamingCase, const EGdhNamingCase SuffixNamingCase)
-{
+FString UGdhLibAsset::GetAssetNameByConvention(
+	const FString& Name,
+	const FGdhAffix& Affix,
+	const EGdhNamingCase AssetNamingCase,
+	const EGdhNamingCase PrefixNamingCase,
+	const EGdhNamingCase SuffixNamingCase
+) {
 	if (Name.IsEmpty()) return Name;
 
 	FString TokenizedName = AssetNamingCase == EGdhNamingCase::None ? Name : UGdhLibString::Tokenize(Name);
 	const FString DelimiterChar = TEXT("_");
 
-	if (!Affix.Prefix.IsEmpty())
-	{
+	if (!Affix.Prefix.IsEmpty()) {
 		TokenizedName.RemoveFromStart(Affix.Prefix + DelimiterChar);
 	}
 
-	if (!Affix.Suffix.IsEmpty())
-	{
+	if (!Affix.Suffix.IsEmpty()) {
 		TokenizedName.RemoveFromEnd(DelimiterChar + Affix.Suffix);
 	}
 
@@ -253,8 +243,7 @@ FString UGdhLibAsset::GetAssetNameByConvention(const FString& Name, const FGdhAf
 	return FinalName;
 }
 
-int64 UGdhLibAsset::GetAssetSize(const FAssetData& Asset)
-{
+int64 UGdhLibAsset::GetAssetSize(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return 0;
 
 	const FAssetPackageData* AssetPackageData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetPackageData(Asset.PackageName);
@@ -263,12 +252,10 @@ int64 UGdhLibAsset::GetAssetSize(const FAssetData& Asset)
 	return AssetPackageData->DiskSize;
 }
 
-int64 UGdhLibAsset::GetAssetsTotalSize(const TArray<FAssetData>& Assets)
-{
+int64 UGdhLibAsset::GetAssetsTotalSize(const TArray<FAssetData>& Assets) {
 	int64 Size = 0;
 
-	for (const auto& Asset : Assets)
-	{
+	for (const auto& Asset : Assets) {
 		if (!Asset.IsValid()) continue;
 
 		const auto AssetPackageData = UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssetPackageData(Asset.PackageName);
@@ -280,10 +267,8 @@ int64 UGdhLibAsset::GetAssetsTotalSize(const TArray<FAssetData>& Assets)
 	return Size;
 }
 
-EGdhBlueprintType UGdhLibAsset::GetBlueprintType(const FAssetData& Asset)
-{
-	if (!Asset.IsValid())
-	{
+EGdhBlueprintType UGdhLibAsset::GetBlueprintType(const FAssetData& Asset) {
+	if (!Asset.IsValid()) {
 		return EGdhBlueprintType::None;
 	}
 
@@ -293,38 +278,32 @@ EGdhBlueprintType UGdhLibAsset::GetBlueprintType(const FAssetData& Asset)
 	FString ParentClassStr;
 	Asset.GetTagValue(TEXT("ParentClass"), ParentClassStr);
 
-	if (BlueprintTypeStr.IsEmpty())
-	{
+	if (BlueprintTypeStr.IsEmpty()) {
 		return EGdhBlueprintType::None;
 	}
 
 	const EBlueprintType BlueprintType = static_cast<EBlueprintType>(StaticEnum<EBlueprintType>()->GetValueByName(FName(*BlueprintTypeStr)));
 
-	if (BlueprintType == BPTYPE_Normal || BlueprintType == BPTYPE_Const)
-	{
+	if (BlueprintType == BPTYPE_Normal || BlueprintType == BPTYPE_Const) {
 		return EGdhBlueprintType::Normal;
 	}
 
-	if (BlueprintType == BPTYPE_Interface)
-	{
+	if (BlueprintType == BPTYPE_Interface) {
 		return EGdhBlueprintType::Interface;
 	}
 
-	if (BlueprintType == BPTYPE_FunctionLibrary)
-	{
+	if (BlueprintType == BPTYPE_FunctionLibrary) {
 		return EGdhBlueprintType::FunctionLibrary;
 	}
 
-	if (BlueprintType == BPTYPE_MacroLibrary)
-	{
+	if (BlueprintType == BPTYPE_MacroLibrary) {
 		return EGdhBlueprintType::MacroLibrary;
 	}
 
 	return EGdhBlueprintType::None;
 }
 
-bool UGdhLibAsset::AssetIsBlueprint(const FAssetData& Asset)
-{
+bool UGdhLibAsset::AssetIsBlueprint(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return false;
 
 	const UClass* AssetClass = Asset.GetClass();
@@ -333,21 +312,18 @@ bool UGdhLibAsset::AssetIsBlueprint(const FAssetData& Asset)
 	return AssetClass->IsChildOf(UBlueprint::StaticClass());
 }
 
-bool UGdhLibAsset::AssetIsExtReferenced(const FAssetData& Asset)
-{
+bool UGdhLibAsset::AssetIsExtReferenced(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return false;
 
 	TArray<FName> Refs;
 	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(Asset.PackageName, Refs);
 
-	return Refs.ContainsByPredicate([](const FName& Ref)
-	{
+	return Refs.ContainsByPredicate([](const FName& Ref) {
 		return !Ref.ToString().StartsWith(GdhConstants::PathRoot.ToString());
 	});
 }
 
-bool UGdhLibAsset::AssetIsCircular(const FAssetData& Asset)
-{
+bool UGdhLibAsset::AssetIsCircular(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return false;
 
 	TArray<FName> Refs;
@@ -356,10 +332,8 @@ bool UGdhLibAsset::AssetIsCircular(const FAssetData& Asset)
 	UGdhLibEditor::GetModuleAssetRegistry().Get().GetReferencers(Asset.PackageName, Refs);
 	UGdhLibEditor::GetModuleAssetRegistry().Get().GetDependencies(Asset.PackageName, Deps);
 
-	for (const auto& Ref : Refs)
-	{
-		if (Deps.Contains(Ref))
-		{
+	for (const auto& Ref : Refs) {
+		if (Deps.Contains(Ref)) {
 			return true;
 		}
 	}
@@ -367,8 +341,7 @@ bool UGdhLibAsset::AssetIsCircular(const FAssetData& Asset)
 	return false;
 }
 
-bool UGdhLibAsset::AssetHasRefs(const FAssetData& Asset)
-{
+bool UGdhLibAsset::AssetHasRefs(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return false;
 
 	TArray<FName> Refs;
@@ -377,8 +350,7 @@ bool UGdhLibAsset::AssetHasRefs(const FAssetData& Asset)
 	return Refs.Num() > 0;
 }
 
-void UGdhLibAsset::GetProjectRedirectors(TArray<FAssetData>& Redirectors)
-{
+void UGdhLibAsset::GetProjectRedirectors(TArray<FAssetData>& Redirectors) {
 	FARFilter Filter;
 	Filter.bRecursivePaths = true;
 	Filter.PackagePaths.Emplace(GdhConstants::PathRoot);
@@ -388,30 +360,25 @@ void UGdhLibAsset::GetProjectRedirectors(TArray<FAssetData>& Redirectors)
 	UGdhLibEditor::GetModuleAssetRegistry().Get().GetAssets(Filter, Redirectors);
 }
 
-bool UGdhLibAsset::ProjectHasRedirectors()
-{
+bool UGdhLibAsset::ProjectHasRedirectors() {
 	TArray<FAssetData> Redirectors;
 	GetProjectRedirectors(Redirectors);
 
 	return Redirectors.Num() > 0;
 }
 
-void UGdhLibAsset::FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask)
-{
+void UGdhLibAsset::FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask) {
 	if (Redirectors.Num() == 0) return;
 
-	FScopedSlowTask SlowTask{
-		static_cast<float>(Redirectors.Num()),
-		FText::FromString(TEXT("Fixing redirectors...")),
-		bShowSlowTask && GIsEditor && !IsRunningCommandlet()
+	FScopedSlowTask SlowTask {
+	  static_cast<float>(Redirectors.Num()), FText::FromString(TEXT("Fixing redirectors...")), bShowSlowTask && GIsEditor && !IsRunningCommandlet()
 	};
 	SlowTask.MakeDialog(false, false);
 
 	TArray<UObjectRedirector*> RedirectorObjects;
 	RedirectorObjects.Reserve(Redirectors.Num());
 
-	for (const auto& Redirector : Redirectors)
-	{
+	for (const auto& Redirector : Redirectors) {
 		SlowTask.EnterProgressFrame(1.0f, FText::FromString(Redirector.GetFullName()));
 
 		UObjectRedirector* RedirectorObject = CastChecked<UObjectRedirector>(Redirector.GetAsset());
@@ -423,23 +390,19 @@ void UGdhLibAsset::FixProjectRedirectors(const TArray<FAssetData>& Redirectors, 
 	UGdhLibEditor::GetModuleAssetTools().Get().FixupReferencers(RedirectorObjects, false);
 }
 
-bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
-{
-	if (!Asset.IsValid())
-	{
+bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName) {
+	if (!Asset.IsValid()) {
 		UE_LOG(LogGdhEditor, Warning, TEXT("Failed To Rename. Invalid asset data."))
 		return false;
 	}
 
-	if (NewName.IsEmpty())
-	{
+	if (NewName.IsEmpty()) {
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset. Name cant be empty."), *Asset.AssetName.ToString());
 		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)
 		return false;
 	}
 
-	if (!UGdhLibString::HasOnly(NewName, GdhConstants::ValidAssetNameChars))
-	{
+	if (!UGdhLibString::HasOnly(NewName, GdhConstants::ValidAssetNameChars)) {
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset. Name contains invalid characters."), *Asset.AssetName.ToString());
 		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)
 		return false;
@@ -448,8 +411,9 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 	FString PackagePath = Asset.GetAsset()->GetPathName();
 	PackagePath = FPaths::GetPath(PackagePath);
 
-	if (!UGdhLibEditor::GetModuleAssetTools().Get().RenameAssets({FAssetRenameData{Asset.GetAsset(), PackagePath, NewName}}))
-	{
+	if (!UGdhLibEditor::GetModuleAssetTools().Get().RenameAssets({
+		  FAssetRenameData {Asset.GetAsset(), PackagePath, NewName}
+	})) {
 		const FString ErrMsg = FString::Printf(TEXT("Failed To Rename %s asset"), *Asset.AssetName.ToString());
 		UE_LOG(LogGdhEditor, Warning, TEXT("%s"), *ErrMsg)
 		return false;
@@ -458,8 +422,73 @@ bool UGdhLibAsset::RenameAsset(const FAssetData& Asset, const FString& NewName)
 	return true;
 }
 
-void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files)
-{
+FFrameRate UGdhLibAsset::GetLevelSequenceFrameRate(const ULevelSequence* InLevelSequence) {
+	if (!InLevelSequence) return {};
+
+	return InLevelSequence->MovieScene->GetDisplayRate();
+}
+
+int32 UGdhLibAsset::GetLevelSequenceStartFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate) {
+	if (!InLevelSequence) return 0;
+
+	InLevelSequence->MovieScene->SetDisplayRate(InFrameRate);
+
+	const auto SourceTime = UE::MovieScene::DiscreteInclusiveLower(InLevelSequence->MovieScene->GetPlaybackRange());
+	const auto TickRes = InLevelSequence->MovieScene->GetTickResolution();
+	const auto DisplayRate = InLevelSequence->MovieScene->GetDisplayRate();
+	const auto FrameTime = ConvertFrameTime(SourceTime, TickRes, DisplayRate);
+
+	return FrameTime.FloorToFrame().Value;
+}
+
+int32 UGdhLibAsset::GetLevelSequenceEndFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate) {
+	if (!InLevelSequence) return 0;
+
+	InLevelSequence->MovieScene->SetDisplayRate(InFrameRate);
+
+	const auto SourceTime = UE::MovieScene::DiscreteExclusiveUpper(InLevelSequence->MovieScene->GetPlaybackRange());
+	const auto TickRes = InLevelSequence->MovieScene->GetTickResolution();
+	const auto DisplayRate = InLevelSequence->MovieScene->GetDisplayRate();
+	const auto FrameTime = ConvertFrameTime(SourceTime, TickRes, DisplayRate);
+
+	return FrameTime.FloorToFrame().Value;
+}
+
+int32 UGdhLibAsset::GetLevelSequenceDurationInFrames(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate) {
+
+	if (!InLevelSequence) return 0;
+	if (!InFrameRate.IsValid()) return 0;
+
+	const int32 FrameStart = GetLevelSequenceStartFrame(InLevelSequence, InFrameRate);
+	const int32 FrameEnd = GetLevelSequenceEndFrame(InLevelSequence, InFrameRate);
+
+	check(FrameEnd > FrameStart);
+
+	return FrameEnd - FrameStart;
+}
+
+float UGdhLibAsset::GetLevelSequenceDurationInSeconds(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate) {
+	if (!InLevelSequence) return 0;
+	if (!InFrameRate.IsValid()) return 0;
+
+	const int32 DurationInFrames = GetLevelSequenceDurationInFrames(InLevelSequence, InFrameRate);
+	return DurationInFrames / InFrameRate.AsDecimal();
+}
+
+bool UGdhLibAsset::LevelSequenceHasSlomoTrack(const ULevelSequence* InLevelSequence) {
+	if (!InLevelSequence) return false;
+
+	const auto Tracks = InLevelSequence->GetMovieScene()->GetMasterTracks();
+	for (const auto& Track : Tracks) {
+		if (Cast<UMovieSceneSlomoTrack>(Track)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files) {
 	const FString DirSrc = FPaths::ConvertRelativePathToFull(FPaths::GameSourceDir());
 	const FString DirCfg = FPaths::ConvertRelativePathToFull(FPaths::ProjectConfigDir());
 	const FString DirPlg = FPaths::ConvertRelativePathToFull(FPaths::ProjectPluginsDir());
@@ -467,8 +496,8 @@ void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files)
 	TArray<FString> SourceFiles;
 	TArray<FString> ConfigFiles;
 
-	const TSet<FString> SourceFileExtensions{TEXT("cpp"), TEXT("h"), TEXT("cs")};
-	const TSet<FString> ConfigFileExtensions{TEXT("ini")};
+	const TSet<FString> SourceFileExtensions {TEXT("cpp"), TEXT("h"), TEXT("cs")};
+	const TSet<FString> ConfigFileExtensions {TEXT("ini")};
 
 	UGdhLibPath::GetFilesByExt(DirSrc, true, false, SourceFileExtensions, SourceFiles);
 	UGdhLibPath::GetFilesByExt(DirCfg, true, false, ConfigFileExtensions, ConfigFiles);
@@ -477,8 +506,7 @@ void UGdhLibAsset::GetSourceAndConfigFiles(TSet<FString>& Files)
 	UGdhLibPath::GetFolders(DirPlg, false, InstalledPlugins);
 
 	TArray<FString> PluginFiles;
-	for (const auto& InstalledPlugin : InstalledPlugins)
-	{
+	for (const auto& InstalledPlugin : InstalledPlugins) {
 		UGdhLibPath::GetFilesByExt(InstalledPlugin / TEXT("Source"), true, false, SourceFileExtensions, PluginFiles);
 		SourceFiles.Append(PluginFiles);
 

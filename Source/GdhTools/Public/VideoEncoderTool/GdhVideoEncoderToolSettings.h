@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GdhVideoEncoderToolSettings.generated.h"
 
-class UGdhVideoPipeline;
+class UGdhRenderList;
 
 UCLASS(Config = EditorPerProjectUserSettings, DisplayName = "Settings")
 class UGdhVideoEncoderToolSettings : public UObject
@@ -17,7 +17,7 @@ class UGdhVideoEncoderToolSettings : public UObject
 	UGdhVideoEncoderToolSettings();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
-	TSoftObjectPtr<UGdhVideoPipeline> Pipeline;
+	TSoftObjectPtr<UGdhRenderList> Pipeline;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

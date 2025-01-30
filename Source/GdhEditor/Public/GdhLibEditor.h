@@ -8,15 +8,16 @@
 #include "Widgets/Notifications/SNotificationList.h"
 #include "GdhLibEditor.generated.h"
 
-class FAssetRegistryModule;
 class FAssetToolsModule;
+class FAssetRegistryModule;
 
-UCLASS(meta=(BlueprintThreadSafe, ScriptName="GdhEditorLibrary"))
+UCLASS(meta = (BlueprintThreadSafe, ScriptName = "GdhEditorLibrary"))
 class GDHEDITOR_API UGdhLibEditor : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
+
 	static void TryOpenFile(const FString& Path);
 	static void OpenAssetEditor(const FAssetData& Asset);
 	static void OpenAssetInContentBrowser(const FAssetData& Asset, const bool bSpawnNewBrowser);
