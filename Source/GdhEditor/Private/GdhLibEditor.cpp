@@ -46,7 +46,7 @@ void UGdhLibEditor::CloseAllEditors() {
 }
 
 bool UGdhLibEditor::EditorInPlayMode() {
-	return GEditor && GEditor->PlayWorld || GIsPlayInEditorWorld;
+	return (GEditor && GEditor->PlayWorld) || GIsPlayInEditorWorld;
 }
 
 bool UGdhLibEditor::SaveAllAssets(const bool bPromptToUser) {

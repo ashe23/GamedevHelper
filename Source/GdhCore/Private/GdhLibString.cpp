@@ -291,7 +291,7 @@ FString UGdhLibString::Tokenize(const FString& Str)
 			continue;
 		}
 
-		if (!FChar::IsUnderscore(CurrentChar) && FChar::IsUnderscore(PreviousChar) || FChar::IsUpper(CurrentChar) && FChar::IsLower(PreviousChar))
+		if ((!FChar::IsUnderscore(CurrentChar) && FChar::IsUnderscore(PreviousChar)) || (FChar::IsUpper(CurrentChar) && FChar::IsLower(PreviousChar)))
 		{
 			Tokens.Add(Token);
 			Token.Empty();

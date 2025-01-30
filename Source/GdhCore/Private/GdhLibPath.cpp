@@ -154,7 +154,7 @@ void UGdhLibPath::GetFilesByExt(
 				const FString Ext = FPaths::GetExtension(FullPath, false);
 				const bool bExistsInSearchList = Extensions.Contains(Ext);
 
-				if (bExistsInSearchList && !bSearchInvert || !bExistsInSearchList && bSearchInvert) {
+				if ((bExistsInSearchList && !bSearchInvert) || (!bExistsInSearchList && bSearchInvert)) {
 					Files.Emplace(FullPath);
 				}
 			}
