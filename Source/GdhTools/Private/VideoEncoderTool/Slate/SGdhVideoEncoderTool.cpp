@@ -4,6 +4,7 @@
 #include "VideoEncoderTool/GdhVideoEncoderToolSettings.h"
 #include "VideoEncoderTool/Slate/SGdhVideoEncoderToolListItem.h"
 #include "GdhCmds.h"
+#include "GdhLibAsset.h"
 #include "GdhLibEditor.h"
 #include "GdhLibPath.h"
 #include "GdhStyles.h"
@@ -82,7 +83,6 @@ void SGdhVideoEncoderTool::Construct(const FArguments& InArgs) {
 					[
 						SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhVideoEncoderToolListItem>>)
 						.ListItemsSource(&ListItems)
-						// .ClearSelectionOnClick(true)
 						.SelectionMode(ESelectionMode::None)
 						.OnGenerateRow(this, &SGdhVideoEncoderTool::OnGenerateRow)
 						.HeaderRow(GetHeaderRow())
@@ -95,61 +95,44 @@ void SGdhVideoEncoderTool::Construct(const FArguments& InArgs) {
 }
 
 void SGdhVideoEncoderTool::ListUpdateData() {
-	// if (!VideoEncoderToolSettings.IsValid()) return;
-	// if (!VideoEncoderToolSettings->RenderQueue.LoadSynchronous()) return;
-	// if (!VideoEncoderToolSettings->RenderSettings.LoadSynchronous()) return;
-	//
-	// const UMoviePipelineOutputSetting* OutputSetting = VideoEncoderToolSettings->RenderSettings->FindSetting<UMoviePipelineOutputSetting>(false);
-	// if (!OutputSetting) return;
-	//
-	// const FString DirOutput = FPaths::ConvertRelativePathToFull(OutputSetting->OutputDirectory.Path);
-	// const FString DirImages = FString::Printf(TEXT("%s/images"), *DirOutput);
-	//
-	// const auto Jobs = VideoEncoderToolSettings->RenderQueue->GetJobs();
-	//
-	// ListItems.Reset(Jobs.Num());
-	// EncodeCmds.Reset(Jobs.Num());
-	//
-	// for (const auto& Job : Jobs) {
-	// 	if (!Job) continue;
-	//
-	// 	UGdhVideoEncoderToolListItem* NewItem = NewObject<UGdhVideoEncoderToolListItem>();
-	// 	if (!NewItem) continue;
-	//
-	// 	NewItem->NameQueue = VideoEncoderToolSettings->RenderQueue->GetName();
-	// 	NewItem->NameSequence = Job->Sequence.GetAssetName();
-	//
-	// 	// TODO:ashe23 update this token list later
-	// 	// {ffmpeg} - path to ffmpeg executable on the system. Query from system env or give user option to specify?
-	// 	// {input} - image sequence input format for ffmpeg with full path. Example: "D:/Renders/Test.%04d.png".
-	// 	// {seq_name} - name of level sequence. Example: "Test"
-	// 	// {seq_path} - full path to sequence. Example: "D:/Renders/Test"
-	//
-	// 	// TODO:ashe23 also need to think about audio mixing options and multiple encoding options that must run continuously
-	//
-	// 	const FString EncodeCmd = UKismetStringLibrary::JoinStringArray(VideoEncoderToolSettings->EncodeCmd, TEXT(" "));
-	// 	const FString TokenFFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));
-	// 	const FString TokenInput = FString::Printf(TEXT("%s/%s.%%04d.png"), *DirOutput, *NewItem->NameSequence);
-	// 	const FString TokenSeqName = NewItem->NameSequence;
-	// 	const FString TokenSeqPath = FString::Printf(TEXT("%s/%s"), *DirOutput, *NewItem->NameSequence);
-	// 	const FString EncodeCmdPreview = EncodeCmd.Replace(TEXT("{ffmpeg}"), *TokenFFmpegPath)
-	// 										 .Replace(TEXT("{input}"), *TokenInput)
-	// 										 .Replace(TEXT("{seq_path}"), *TokenSeqPath)
-	// 										 .Replace(TEXT("{seq_name}"), *TokenSeqName);
-	// 	const FString EncodeCmdInternal = EncodeCmd.Replace(TEXT("{ffmpeg}"), TEXT(" "))
-	// 										  .Replace(TEXT("{input}"), *TokenInput)
-	// 										  .Replace(TEXT("{seq_path}"), *TokenSeqPath)
-	// 										  .Replace(TEXT("{seq_name}"), *TokenSeqName);
-	//
-	// 	NewItem->EncodeCmdPreview = EncodeCmdPreview;
-	//
-	// 	ListItems.Add(NewItem);
-	// 	// here we need encode command without {ffmpeg} part, because CreateProc function requires to specify ffmpeg path separately
-	// 	EncodeCmds.Add(EncodeCmdInternal);
-	// }
+	if (!VideoEncoderToolSettings.IsValid()) return;
+
+	ListItems.Reset();
+
+	for (const auto& Queue : VideoEncoderToolSettings->RenderQueues) {
+
+		if (!Queue.LoadSynchronous()) continue;
+
+		ListItems.Reserve(ListItems.Num() + Queue->GetJobs().Num());
+
+		for (const auto& Job : Queue->GetJobs()) {
+			if (!Job) continue;
+
+			UGdhVideoEncoderToolListItem* NewItem = NewObject<UGdhVideoEncoderToolListItem>();
+			if (!NewItem) continue;
+
+			const ULevelSequence* Sequence = Cast<ULevelSequence>(Job->Sequence.TryLoad());
+			if (!Sequence) continue;
+
+			const FFrameRate FrameRate = UGdhLibAsset::GetLevelSequenceFrameRate(Sequence);
+			const int32 FrameStart = UGdhLibAsset::GetLevelSequenceStartFrame(Sequence, FrameRate);
+			const int32 FrameEnd = UGdhLibAsset::GetLevelSequenceEndFrame(Sequence, FrameRate);
+			const int32 DurationInFrames = UGdhLibAsset::GetLevelSequenceDurationInFrames(Sequence, FrameRate);
+			const float DurationInSec = UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
+
+			NewItem->NameQueue = Queue->GetName();
+			NewItem->NameSequence = Job->Sequence.GetAssetName();
+			NewItem->FrameStart = FString::FromInt(FrameStart);
+			NewItem->FrameEnd = FString::FromInt(FrameEnd);
+			NewItem->FrameRate = FrameRate.ToPrettyText().ToString();
+			NewItem->Duration = FString::Printf(TEXT("%d frames(%.2f sec)"), DurationInFrames, DurationInSec);
+
+			ListItems.Add(NewItem);
+		}
+	}
 }
 
-void SGdhVideoEncoderTool::ListUpdateView() {
+void SGdhVideoEncoderTool::ListUpdateView() const {
 	if (!ListView) return;
 
 	ListView->RebuildList();
@@ -157,116 +140,89 @@ void SGdhVideoEncoderTool::ListUpdateView() {
 
 void SGdhVideoEncoderTool::CmdsRegister() {
 	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(FGdhCmds::Get().VetRefresh, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnRefreshPipelines));
-	Cmds->MapAction(FGdhCmds::Get().VetProcess, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnProcess));
+	Cmds->MapAction(FGdhCmds::Get().VetRefresh, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnVetRefresh));
+	Cmds->MapAction(FGdhCmds::Get().VetProcess, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnVetProcess));
 }
 
-void SGdhVideoEncoderTool::OnRefreshPipelines() {
-
+void SGdhVideoEncoderTool::OnVetRefresh() {
+	ValidateSettings();
 	ListUpdateData();
 	ListUpdateView();
 }
 
-void SGdhVideoEncoderTool::OnProcess() {
-	// const FString FFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));
-	//
-	// if (FFmpegPath.IsEmpty()) {
-	// 	FMessageDialog::Open(
-	// 		EAppMsgType::Ok,
-	// 		FText::FromString(TEXT("FFmpeg path not found! Make sure ffmpeg executable is available in sys ENV paths"))
-	// 	);
-	// 	return;
-	// }
+void SGdhVideoEncoderTool::OnVetProcess() {
+	ValidateSettings();
 
-	// requirments for rendering
-	// 1. level sequence has valid camera
+	UMoviePipelineQueue* MasterQueue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	if (!MasterQueue) return;
 
-	// 1. for every sequence that specified in pipeline asset
-	//	1.1. get level sequence asset
-	//  1.2 create new empty mrq asset
-	//  1.3 load sequence to that queue with specified settings
-	//  1.4 generate encode command
-	//  1.5 run ffmpeg encode command
+	// removing all jobs from queue
+	for (const auto& Job : MasterQueue->GetJobs()) {
+		MasterQueue->DeleteJob(Job);
+	}
 
-	// if (!VideoEncoderToolSettings->Pipeline.LoadSynchronous()) return;
-	//
-	// UMoviePipelineQueue* Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
-	// if (!Queue) return;
-	//
-	// Queue->CopyFrom(VideoEncoderToolSettings->RenderQueue.LoadSynchronous());
-	//
-	// for (const auto& Job : Queue->GetJobs()) {
-	// 	Job->SetConfiguration(VideoEncoderToolSettings->RenderSettings.LoadSynchronous());
-	// }
+	// creating main render config class
+	UMoviePipelineMasterConfig* MasterConfig = VideoEncoderToolSettings->RenderSettings.Get();
+	if (!MasterConfig) return;
 
-	//
-	// for (const auto& Job : Queue->GetJobs()) {
-	// 	Queue->DeleteJob(Job);
-	// }
+	UMoviePipelineOutputSetting* OutputSetting =
+		Cast<UMoviePipelineOutputSetting>(MasterConfig->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass()));
+	if (!OutputSetting) return;
 
-	// UMoviePipelineMasterConfig* MasterConfig = NewObject<UMoviePipelineMasterConfig>();
-	// if (!MasterConfig) return;
-	//
-	// MasterConfig->FindOrAddSettingByClass(UMoviePipelineDeferredPassBase::StaticClass());
-	// MasterConfig->FindOrAddSettingByClass(UMoviePipelineImageSequenceOutput_PNG::StaticClass());
-	//
-	// UMoviePipelineOutputSetting* OutputSetting = Cast<UMoviePipelineOutputSetting>(
-	// 	MasterConfig->FindOrAddSettingByClass(UMoviePipelineOutputSetting::StaticClass())
+	const FString DirOutput = FPaths::ConvertRelativePathToFull(VideoEncoderToolSettings->DirOutput.Path);
+	const FString DirNameImagesRaw = VideoEncoderToolSettings->DirNameImages.IsEmpty() ? TEXT("images") : VideoEncoderToolSettings->DirNameImages;
+	const FString DirNameImages = FPaths::MakeValidFileName(DirNameImagesRaw);
+	const FString DirImages = FString::Printf(TEXT("%s/%s"), *DirOutput, *DirNameImages);
+
+	OutputSetting->FileNameFormat = TEXT("{sequence_name}.{frame_number_rel}");
+	OutputSetting->ZeroPadFrameNumbers = 4;
+	OutputSetting->FrameNumberOffset = 0;
+	OutputSetting->bUseCustomPlaybackRange = true;
+
+	for (const auto& Queue : VideoEncoderToolSettings->RenderQueues) {
+		for (const auto& Job : Queue->GetJobs()) {
+			const auto NewJob = MasterQueue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+
+			const ULevelSequence* Sequence = Cast<ULevelSequence>(Job->Sequence.TryLoad());
+			if (!Sequence) continue;
+
+			NewJob->Map = Job->Map;
+			NewJob->SetSequence(Sequence);
+
+			// {dir_output}/{dir_images_name}/{queue_name}/{sequence_name}/
+			const FString NameQueue = Queue->GetName();
+			const FString NameSequence = Sequence->GetName();
+			const FString JobOutputDir = FString::Printf(TEXT("%s/%s/%s"), *DirImages, *NameQueue, *NameSequence);
+
+			if (!FPaths::DirectoryExists(*JobOutputDir)) {
+				FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*JobOutputDir);
+			}
+
+			OutputSetting->OutputDirectory.Path = JobOutputDir;
+			OutputSetting->CustomStartFrame = UGdhLibAsset::GetLevelSequenceStartFrame(Sequence, OutputSetting->OutputFrameRate);
+			OutputSetting->CustomEndFrame = UGdhLibAsset::GetLevelSequenceEndFrame(Sequence, OutputSetting->OutputFrameRate);
+
+			NewJob->SetConfiguration(MasterConfig);
+		}
+	}
+
+	if (GEditor) {
+		const auto ExecutorClass = VideoEncoderToolSettings->ExecutorClass.LoadSynchronous();
+		if (!ExecutorClass) return;
+
+		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(ExecutorClass);
+	}
+	// const auto Executor = Cast<UMoviePipelinePIEExecutor>(
+	// 	GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass())
 	// );
-	// if (!OutputSetting) return;
+	// if (!Executor) return;
 	//
-	// OutputSetting->FileNameFormat = TEXT("{sequence_name}.{frame_number_rel}");
-	// OutputSetting->OutputResolution = FIntPoint(1920, 1080);
-	// OutputSetting->ZeroPadFrameNumbers = 4;
-	// OutputSetting->FrameNumberOffset = 0;
-	// OutputSetting->OutputFrameRate = FFrameRate(30, 1);
-	//
-	// // IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	// const auto& Pipeline = VideoEncoderToolSettings->Pipeline.Get();
-	// const FString OutDir = FString::Printf(
-	// 	TEXT("%s/%s"), *FPaths::ConvertRelativePathToFull(Pipeline->OutputDir.Path), *Pipeline->DirImages
-	// );
-	// OutputSetting->OutputDirectory.Path = OutDir;
-	//
-	// IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	// if (FPaths::DirectoryExists(OutDir)) { PlatformFile.DeleteDirectory(*OutDir); }
-	// PlatformFile.CreateDirectoryTree(*OutDir);
-	//
-	// Pipeline->EncodeCmdUpdate();
-	// const FString MainEncodeCmd = Pipeline->EncodeCmdVis;
-
-	// EncodeCmds.Reset();
-
-	// for (const auto& Job : VideoEncoderToolSettings->RenderQueue->GetJobs()) {
-	// 	const auto NewJob = Queue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-	// 	NewJob->Map = Job->.LoadSynchronous();
-	// 	NewJob->SetSequence(Sequence.LoadSynchronous());
-	// 	NewJob->SetConfiguration(MasterConfig);
-	//
-	// 	// ffmpeg -i {input} => ffmpeg -i LS_Test.%04d.png
-	// 	const FString SequenceName = Sequence->GetName();
-	// 	const FString Input = FString::Printf(TEXT("\"%s/%s.%%04d.png\""), *OutDir, *SequenceName);
-	// 	const FString Output = FString::Printf(TEXT("%s/%s"), *OutDir, *SequenceName);
-	// 	const FString EncodeCmd = MainEncodeCmd.Replace(TEXT("{input}"), *Input).Replace(TEXT("{output}"), *Output);
-	//
-	// 	EncodeCmds.Add(EncodeCmd);
-	// }
-
-	// GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass());
-
-	const auto Executor = Cast<UMoviePipelinePIEExecutor>(
-		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass())
-	);
-	if (!Executor) return;
-
-	Executor->OnExecutorFinished().AddRaw(this, &SGdhVideoEncoderTool::OnRenderFinished);
+	// Executor->OnExecutorFinished().AddRaw(this, &SGdhVideoEncoderTool::OnRenderFinished);
 }
 
 void SGdhVideoEncoderTool::OnRenderFinished(UMoviePipelineExecutorBase*, bool bSuccess) {
 	if (!bSuccess) return;
-
-	// TODO:ashe23 ideally this path should be cached somewhere and checked before proceeding here
-	const FString FFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));
+	if (FFmpegPath.IsEmpty()) return;
 
 	for (const auto& Cmd : EncodeCmds) {
 
@@ -290,59 +246,43 @@ void SGdhVideoEncoderTool::OnRenderFinished(UMoviePipelineExecutorBase*, bool bS
 
 		FPlatformProcess::CloseProc(Handle);
 	}
+}
 
-	// void* PipeRead = nullptr;
-	// void* PipeWrite = nullptr;
-	//
-	// for (const auto& Cmd : EncodeCmds) {
-	// 	verify(FPlatformProcess::CreatePipe(PipeRead, PipeWrite));
-	//
-	// 	FProcHandle ProcessHandle = FPlatformProcess::CreateProc(
-	// 		*FFmpegPath, *Cmd, true, false, false, &ProcessId, 0, nullptr, PipeRead	  // Redirect stderr
-	// 	);
-	//
-	// 	if (ProcessHandle.IsValid()) {
-	// 		FString ErrorOutput;
-	// 		while (FPlatformProcess::IsProcRunning(ProcessHandle)) {
-	// 			FString PartialOutput = FPlatformProcess::ReadPipe(PipeRead);
-	// 			if (!PartialOutput.IsEmpty()) {
-	// 				ErrorOutput += PartialOutput;
-	// 			}
-	//
-	// 			FPlatformProcess::Sleep(0.1f);	 // Prevent high CPU usage
-	// 		}
-	//
-	// 		// Read remaining data after process exits
-	// 		FString FinalOutput = FPlatformProcess::ReadPipe(PipeRead);
-	// 		if (!FinalOutput.IsEmpty()) {
-	// 			ErrorOutput += FinalOutput;
-	// 		}
-	//
-	// 		// Check exit code
-	// 		int32 ReturnCode = 0;
-	// 		if (FPlatformProcess::GetProcReturnCode(ProcessHandle, &ReturnCode)) {
-	// 			if (ReturnCode != 0)   // FFmpeg failed
-	// 			{
-	// 				FString ErrorMessage = FString::Printf(TEXT("FFmpeg failed with exit code: %d\nError Output:\n%s"), ReturnCode, *ErrorOutput);
-	//
-	// 				UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
-	// 				FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(ErrorMessage));
-	// 			}
-	// 		}
-	// 		else {
-	// 			UE_LOG(LogTemp, Error, TEXT("Failed to retrieve FFmpeg process return code."));
-	// 		}
-	//
-	// 		// Cleanup
-	// 		FPlatformProcess::CloseProc(ProcessHandle);
-	// 		FPlatformProcess::ClosePipe(PipeRead, PipeWrite);
-	// 	}
-	// 	else {
-	// 		FString ErrorMessage = TEXT("Failed to start FFmpeg process.");
-	// 		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
-	// 		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(ErrorMessage));
-	// 	}
-	// }
+void SGdhVideoEncoderTool::ValidateSettings() {
+	if (!VideoEncoderToolSettings.IsValid()) return;
+
+	// TODO:ashe23 for now we will show error via message dialogs and when process of refresh buttons clicked. Later on change it and integrate to UI
+
+	// checking ffmpeg path
+	FFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));	// TODO:ashe23 on linux this might differ
+	if (FFmpegPath.IsEmpty()) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("FFmpeg Path Not Found. Make sure its available in system ENV paths")));
+		return;
+	}
+
+	// checking if output directory exists
+	// IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	const FString DirOutput = VideoEncoderToolSettings->DirOutput.Path;
+	if (DirOutput.IsEmpty() || !FPaths::DirectoryExists(FPaths::ConvertRelativePathToFull(VideoEncoderToolSettings->DirOutput.Path))) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Output Directory Not Specified!")));
+		return;
+	}
+
+	// checking if render settings are specified
+	if (!VideoEncoderToolSettings->RenderSettings.LoadSynchronous()) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Render Settings Not Specified!")));
+		return;
+	}
+
+	// checking if queue is empty
+	if (VideoEncoderToolSettings->RenderQueues.Num() == 0) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Render Queue is empty. Select some assets to render.")));
+		return;
+	}
+
+	// render settings must have (deferred or path trace settings specified)
+	// render settings must have (image format specified)
+	// render resolution must be power of 2
 }
 
 TSharedRef<SWidget> SGdhVideoEncoderTool::CreateToolbarMain() const {
@@ -366,33 +306,60 @@ TSharedRef<SHeaderRow> SGdhVideoEncoderTool::GetHeaderRow() {
 		+ SHeaderRow::Column(TEXT("NameQueue"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
-		.FillWidth(0.2f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("NameQueue")))
+			.Text(FText::FromString(TEXT("Queue")))
 			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		]
 		+ SHeaderRow::Column(TEXT("NameSequence"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
-		.FillWidth(0.2f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("NameSequence")))
+			.Text(FText::FromString(TEXT("Sequence")))
 			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		]
-		+ SHeaderRow::Column(TEXT("Preview"))
+		+ SHeaderRow::Column(TEXT("FrameStart"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
-		.FillWidth(0.6f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Preview")))
+			.Text(FText::FromString(TEXT("FrameStart")))
+			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+			.Font(FGdhStyles::GetFont("Light", 10.0f))
+		]
+		+ SHeaderRow::Column(TEXT("FrameEnd"))
+		.HAlignHeader(HAlign_Center)
+		.VAlignHeader(VAlign_Center)
+		.HeaderContentPadding(FMargin{5.0f})
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("FrameEnd")))
+			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+			.Font(FGdhStyles::GetFont("Light", 10.0f))
+		]
+		+ SHeaderRow::Column(TEXT("FrameRate"))
+		.HAlignHeader(HAlign_Center)
+		.VAlignHeader(VAlign_Center)
+		.HeaderContentPadding(FMargin{5.0f})
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("FrameRate")))
+			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+			.Font(FGdhStyles::GetFont("Light", 10.0f))
+		]
+		+ SHeaderRow::Column(TEXT("Duration"))
+		.HAlignHeader(HAlign_Center)
+		.VAlignHeader(VAlign_Center)
+		.HeaderContentPadding(FMargin{5.0f})
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("Duration")))
 			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		];

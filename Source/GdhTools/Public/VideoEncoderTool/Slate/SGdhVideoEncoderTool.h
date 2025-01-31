@@ -21,11 +21,12 @@ public:
 private:
 
 	void ListUpdateData();
-	void ListUpdateView();
+	void ListUpdateView() const;
 	void CmdsRegister();
-	void OnRefreshPipelines();	 // TODO:ashe23 rename later
-	void OnProcess();
+	void OnVetRefresh();
+	void OnVetProcess();
 	void OnRenderFinished(UMoviePipelineExecutorBase*, bool);
+	void ValidateSettings();
 	TSharedRef<SWidget> CreateToolbarMain() const;
 	TSharedRef<SHeaderRow> GetHeaderRow();
 	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhVideoEncoderToolListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -37,4 +38,5 @@ private:
 
 	// FProcHandle ProcessHandle;
 	TArray<FString> EncodeCmds;
+	FString FFmpegPath;
 };

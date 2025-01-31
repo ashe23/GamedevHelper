@@ -14,7 +14,10 @@ public:
 
 	FString NameQueue;
 	FString NameSequence;
-	FString EncodeCmdPreview;
+	FString FrameStart;
+	FString FrameEnd;
+	FString FrameRate;
+	FString Duration;
 };
 
 class SGdhVideoEncoderToolListItem final : public SMultiColumnTableRow<TWeakObjectPtr<UGdhVideoEncoderToolListItem>>

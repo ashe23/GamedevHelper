@@ -18,8 +18,20 @@ TSharedRef<SWidget> SGdhVideoEncoderToolListItem::GenerateWidgetForColumn(const 
 		return SNew(STextBlock).Text(FText::FromString(ListItem->NameSequence)).Justification(ETextJustify::Center);
 	}
 
-	if (InColumnName == TEXT("Preview")) {
-		return SNew(STextBlock).Text(FText::FromString(ListItem->EncodeCmdPreview)).Justification(ETextJustify::Center);
+	if (InColumnName == TEXT("FrameStart")) {
+		return SNew(STextBlock).Text(FText::FromString(ListItem->FrameStart)).Justification(ETextJustify::Center);
+	}
+
+	if (InColumnName == TEXT("FrameEnd")) {
+		return SNew(STextBlock).Text(FText::FromString(ListItem->FrameEnd)).Justification(ETextJustify::Center);
+	}
+
+	if (InColumnName == TEXT("FrameRate")) {
+		return SNew(STextBlock).Text(FText::FromString(ListItem->FrameRate)).Justification(ETextJustify::Center);
+	}
+
+	if (InColumnName == TEXT("Duration")) {
+		return SNew(STextBlock).Text(FText::FromString(ListItem->Duration)).Justification(ETextJustify::Center);
 	}
 
 	return SNew(STextBlock).Text(FText::FromString(TEXT("")));
