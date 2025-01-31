@@ -38,8 +38,8 @@ public:
 	TSharedPtr<FUICommandInfo> UndoAction;
 
 	// Video Encoder Tool
-	TSharedPtr<FUICommandInfo> RefreshPipelines;
-	TSharedPtr<FUICommandInfo> Process;
+	TSharedPtr<FUICommandInfo> VetRefresh;
+	TSharedPtr<FUICommandInfo> VetProcess;
 
 
 };

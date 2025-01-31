@@ -95,58 +95,58 @@ void SGdhVideoEncoderTool::Construct(const FArguments& InArgs) {
 }
 
 void SGdhVideoEncoderTool::ListUpdateData() {
-	if (!VideoEncoderToolSettings.IsValid()) return;
-	if (!VideoEncoderToolSettings->RenderQueue.LoadSynchronous()) return;
-	if (!VideoEncoderToolSettings->RenderSettings.LoadSynchronous()) return;
-
-	const UMoviePipelineOutputSetting* OutputSetting = VideoEncoderToolSettings->RenderSettings->FindSetting<UMoviePipelineOutputSetting>(false);
-	if (!OutputSetting) return;
-
-	const FString DirOutput = FPaths::ConvertRelativePathToFull(OutputSetting->OutputDirectory.Path);
-	const FString DirImages = FString::Printf(TEXT("%s/images"), *DirOutput);
-
-	const auto Jobs = VideoEncoderToolSettings->RenderQueue->GetJobs();
-
-	ListItems.Reset(Jobs.Num());
-	EncodeCmds.Reset(Jobs.Num());
-
-	for (const auto& Job : Jobs) {
-		if (!Job) continue;
-
-		UGdhVideoEncoderToolListItem* NewItem = NewObject<UGdhVideoEncoderToolListItem>();
-		if (!NewItem) continue;
-
-		NewItem->NameQueue = VideoEncoderToolSettings->RenderQueue->GetName();
-		NewItem->NameSequence = Job->Sequence.GetAssetName();
-
-		// TODO:ashe23 update this token list later
-		// {ffmpeg} - path to ffmpeg executable on the system. Query from system env or give user option to specify?
-		// {input} - image sequence input format for ffmpeg with full path. Example: "D:/Renders/Test.%04d.png".
-		// {seq_name} - name of level sequence. Example: "Test"
-		// {seq_path} - full path to sequence. Example: "D:/Renders/Test"
-
-		// TODO:ashe23 also need to think about audio mixing options and multiple encoding options that must run continuously
-
-		const FString EncodeCmd = UKismetStringLibrary::JoinStringArray(VideoEncoderToolSettings->EncodeCmd, TEXT(" "));
-		const FString TokenFFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));
-		const FString TokenInput = FString::Printf(TEXT("%s/%s.%%04d.png"), *DirOutput, *NewItem->NameSequence);
-		const FString TokenSeqName = NewItem->NameSequence;
-		const FString TokenSeqPath = FString::Printf(TEXT("%s/%s"), *DirOutput, *NewItem->NameSequence);
-		const FString EncodeCmdPreview = EncodeCmd.Replace(TEXT("{ffmpeg}"), *TokenFFmpegPath)
-											 .Replace(TEXT("{input}"), *TokenInput)
-											 .Replace(TEXT("{seq_path}"), *TokenSeqPath)
-											 .Replace(TEXT("{seq_name}"), *TokenSeqName);
-		const FString EncodeCmdInternal = EncodeCmd.Replace(TEXT("{ffmpeg}"), TEXT(" "))
-											  .Replace(TEXT("{input}"), *TokenInput)
-											  .Replace(TEXT("{seq_path}"), *TokenSeqPath)
-											  .Replace(TEXT("{seq_name}"), *TokenSeqName);
-
-		NewItem->EncodeCmdPreview = EncodeCmdPreview;
-
-		ListItems.Add(NewItem);
-		// here we need encode command without {ffmpeg} part, because CreateProc function requires to specify ffmpeg path separately
-		EncodeCmds.Add(EncodeCmdInternal);
-	}
+	// if (!VideoEncoderToolSettings.IsValid()) return;
+	// if (!VideoEncoderToolSettings->RenderQueue.LoadSynchronous()) return;
+	// if (!VideoEncoderToolSettings->RenderSettings.LoadSynchronous()) return;
+	//
+	// const UMoviePipelineOutputSetting* OutputSetting = VideoEncoderToolSettings->RenderSettings->FindSetting<UMoviePipelineOutputSetting>(false);
+	// if (!OutputSetting) return;
+	//
+	// const FString DirOutput = FPaths::ConvertRelativePathToFull(OutputSetting->OutputDirectory.Path);
+	// const FString DirImages = FString::Printf(TEXT("%s/images"), *DirOutput);
+	//
+	// const auto Jobs = VideoEncoderToolSettings->RenderQueue->GetJobs();
+	//
+	// ListItems.Reset(Jobs.Num());
+	// EncodeCmds.Reset(Jobs.Num());
+	//
+	// for (const auto& Job : Jobs) {
+	// 	if (!Job) continue;
+	//
+	// 	UGdhVideoEncoderToolListItem* NewItem = NewObject<UGdhVideoEncoderToolListItem>();
+	// 	if (!NewItem) continue;
+	//
+	// 	NewItem->NameQueue = VideoEncoderToolSettings->RenderQueue->GetName();
+	// 	NewItem->NameSequence = Job->Sequence.GetAssetName();
+	//
+	// 	// TODO:ashe23 update this token list later
+	// 	// {ffmpeg} - path to ffmpeg executable on the system. Query from system env or give user option to specify?
+	// 	// {input} - image sequence input format for ffmpeg with full path. Example: "D:/Renders/Test.%04d.png".
+	// 	// {seq_name} - name of level sequence. Example: "Test"
+	// 	// {seq_path} - full path to sequence. Example: "D:/Renders/Test"
+	//
+	// 	// TODO:ashe23 also need to think about audio mixing options and multiple encoding options that must run continuously
+	//
+	// 	const FString EncodeCmd = UKismetStringLibrary::JoinStringArray(VideoEncoderToolSettings->EncodeCmd, TEXT(" "));
+	// 	const FString TokenFFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));
+	// 	const FString TokenInput = FString::Printf(TEXT("%s/%s.%%04d.png"), *DirOutput, *NewItem->NameSequence);
+	// 	const FString TokenSeqName = NewItem->NameSequence;
+	// 	const FString TokenSeqPath = FString::Printf(TEXT("%s/%s"), *DirOutput, *NewItem->NameSequence);
+	// 	const FString EncodeCmdPreview = EncodeCmd.Replace(TEXT("{ffmpeg}"), *TokenFFmpegPath)
+	// 										 .Replace(TEXT("{input}"), *TokenInput)
+	// 										 .Replace(TEXT("{seq_path}"), *TokenSeqPath)
+	// 										 .Replace(TEXT("{seq_name}"), *TokenSeqName);
+	// 	const FString EncodeCmdInternal = EncodeCmd.Replace(TEXT("{ffmpeg}"), TEXT(" "))
+	// 										  .Replace(TEXT("{input}"), *TokenInput)
+	// 										  .Replace(TEXT("{seq_path}"), *TokenSeqPath)
+	// 										  .Replace(TEXT("{seq_name}"), *TokenSeqName);
+	//
+	// 	NewItem->EncodeCmdPreview = EncodeCmdPreview;
+	//
+	// 	ListItems.Add(NewItem);
+	// 	// here we need encode command without {ffmpeg} part, because CreateProc function requires to specify ffmpeg path separately
+	// 	EncodeCmds.Add(EncodeCmdInternal);
+	// }
 }
 
 void SGdhVideoEncoderTool::ListUpdateView() {
@@ -157,8 +157,8 @@ void SGdhVideoEncoderTool::ListUpdateView() {
 
 void SGdhVideoEncoderTool::CmdsRegister() {
 	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(FGdhCmds::Get().RefreshPipelines, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnRefreshPipelines));
-	Cmds->MapAction(FGdhCmds::Get().Process, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnProcess));
+	Cmds->MapAction(FGdhCmds::Get().VetRefresh, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnRefreshPipelines));
+	Cmds->MapAction(FGdhCmds::Get().VetProcess, FExecuteAction::CreateRaw(this, &SGdhVideoEncoderTool::OnProcess));
 }
 
 void SGdhVideoEncoderTool::OnRefreshPipelines() {
@@ -190,14 +190,14 @@ void SGdhVideoEncoderTool::OnProcess() {
 
 	// if (!VideoEncoderToolSettings->Pipeline.LoadSynchronous()) return;
 	//
-	UMoviePipelineQueue* Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
-	if (!Queue) return;
-
-	Queue->CopyFrom(VideoEncoderToolSettings->RenderQueue.LoadSynchronous());
-
-	for (const auto& Job : Queue->GetJobs()) {
-		Job->SetConfiguration(VideoEncoderToolSettings->RenderSettings.LoadSynchronous());
-	}
+	// UMoviePipelineQueue* Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	// if (!Queue) return;
+	//
+	// Queue->CopyFrom(VideoEncoderToolSettings->RenderQueue.LoadSynchronous());
+	//
+	// for (const auto& Job : Queue->GetJobs()) {
+	// 	Job->SetConfiguration(VideoEncoderToolSettings->RenderSettings.LoadSynchronous());
+	// }
 
 	//
 	// for (const auto& Job : Queue->GetJobs()) {
@@ -350,8 +350,9 @@ TSharedRef<SWidget> SGdhVideoEncoderTool::CreateToolbarMain() const {
 	FToolBarBuilder ToolBarBuilder {Cmds, FMultiBoxCustomization::None};
 
 	ToolBarBuilder.BeginSection("GdhVideoEncoderToolMainToolbar");
-	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().RefreshPipelines);
-	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().Process);
+	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().VetRefresh);
+	ToolBarBuilder.AddSeparator();
+	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().VetProcess);
 	ToolBarBuilder.EndSection();
 
 	return ToolBarBuilder.MakeWidget();
@@ -365,6 +366,7 @@ TSharedRef<SHeaderRow> SGdhVideoEncoderTool::GetHeaderRow() {
 		+ SHeaderRow::Column(TEXT("NameQueue"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
+		.FillWidth(0.2f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
@@ -375,6 +377,7 @@ TSharedRef<SHeaderRow> SGdhVideoEncoderTool::GetHeaderRow() {
 		+ SHeaderRow::Column(TEXT("NameSequence"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
+		.FillWidth(0.2f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
@@ -385,6 +388,7 @@ TSharedRef<SHeaderRow> SGdhVideoEncoderTool::GetHeaderRow() {
 		+ SHeaderRow::Column(TEXT("Preview"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
+		.FillWidth(0.6f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)

@@ -18,19 +18,29 @@ public:
 
 	UGdhVideoEncoderToolSettings();
 
+	UPROPERTY(
+		EditAnywhere,
+		BlueprintReadWrite,
+		Config,
+		Category = "General",
+		meta = (ToolTip = "Main output directory for rendered images and encoded videos")
+	)
+	FDirectoryPath DirOutput;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
+	FString DirNameImages = TEXT("images");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
+	FString DirNameVideo = TEXT("video");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
 	TSoftObjectPtr<UMoviePipelineMasterConfig> RenderSettings;
 
-	// TODO:ashe23 this should be array later
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
-	TSoftObjectPtr<UMoviePipelineQueue> RenderQueue;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
+	TArray<TSoftObjectPtr<UMoviePipelineQueue>> RenderQueue;
 
-	// TODO:ashe23 this should be in separate custom asset file
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
-	TArray<FString> EncodeCmd;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
-	// TSoftObjectPtr<UGdhRenderList> RenderList;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
+	TArray<TSoftObjectPtr<UGdhRenderList>> RenderLists;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
