@@ -36,7 +36,6 @@ private:
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhVideoEncoderToolListItem>>> ListView;
 	TWeakObjectPtr<UGdhVideoEncoderToolSettings> VideoEncoderToolSettings;
 
-	// FProcHandle ProcessHandle;
-	TArray<FString> EncodeCmds;
 	FString FFmpegPath;
+	TArray<FString> EncodeCmds;
 };

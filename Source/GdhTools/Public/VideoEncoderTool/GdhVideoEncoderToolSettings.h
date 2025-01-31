@@ -53,4 +53,8 @@ public:
 	// Movie render queue executor class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
 	TSoftClassPtr<UMoviePipelineExecutorBase> ExecutorClass;
+
+	// TODO:ashe23 this will separate asset type (pipeline_name => encode_cmd)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
+	TMap<FString, FString> EncodePipeline;
 };

@@ -19,6 +19,7 @@
 #include "MoviePipelineQueueSubsystem.h"
 #include "Kismet/KismetArrayLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/ScopedSlowTask.h"
 
 void SGdhVideoEncoderTool::Construct(const FArguments& InArgs) {
 
@@ -171,13 +172,18 @@ void SGdhVideoEncoderTool::OnVetProcess() {
 
 	const FString DirOutput = FPaths::ConvertRelativePathToFull(VideoEncoderToolSettings->DirOutput.Path);
 	const FString DirNameImagesRaw = VideoEncoderToolSettings->DirNameImages.IsEmpty() ? TEXT("images") : VideoEncoderToolSettings->DirNameImages;
+	const FString DirNameVideosRaw = VideoEncoderToolSettings->DirNameVideo.IsEmpty() ? TEXT("videos") : VideoEncoderToolSettings->DirNameVideo;
 	const FString DirNameImages = FPaths::MakeValidFileName(DirNameImagesRaw);
+	const FString DirNameVideos = FPaths::MakeValidFileName(DirNameVideosRaw);
 	const FString DirImages = FString::Printf(TEXT("%s/%s"), *DirOutput, *DirNameImages);
+	const FString DirVideos = FString::Printf(TEXT("%s/%s"), *DirOutput, *DirNameVideos);
 
 	OutputSetting->FileNameFormat = TEXT("{sequence_name}.{frame_number_rel}");
 	OutputSetting->ZeroPadFrameNumbers = 4;
 	OutputSetting->FrameNumberOffset = 0;
 	OutputSetting->bUseCustomPlaybackRange = true;
+
+	EncodeCmds.Reset();
 
 	for (const auto& Queue : VideoEncoderToolSettings->RenderQueues) {
 		for (const auto& Job : Queue->GetJobs()) {
@@ -192,17 +198,39 @@ void SGdhVideoEncoderTool::OnVetProcess() {
 			// {dir_output}/{dir_images_name}/{queue_name}/{sequence_name}/
 			const FString NameQueue = Queue->GetName();
 			const FString NameSequence = Sequence->GetName();
-			const FString JobOutputDir = FString::Printf(TEXT("%s/%s/%s"), *DirImages, *NameQueue, *NameSequence);
+			const FString JobOutputDirImages = FString::Printf(TEXT("%s/%s/%s"), *DirImages, *NameQueue, *NameSequence);
 
-			if (!FPaths::DirectoryExists(*JobOutputDir)) {
-				FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*JobOutputDir);
+			if (!FPaths::DirectoryExists(*JobOutputDirImages)) {
+				FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*JobOutputDirImages);
 			}
 
-			OutputSetting->OutputDirectory.Path = JobOutputDir;
+			OutputSetting->OutputDirectory.Path = JobOutputDirImages;
 			OutputSetting->CustomStartFrame = UGdhLibAsset::GetLevelSequenceStartFrame(Sequence, OutputSetting->OutputFrameRate);
 			OutputSetting->CustomEndFrame = UGdhLibAsset::GetLevelSequenceEndFrame(Sequence, OutputSetting->OutputFrameRate);
 
 			NewJob->SetConfiguration(MasterConfig);
+
+			for (const auto& Pipeline : VideoEncoderToolSettings->EncodePipeline) {
+				const FString PipeName = Pipeline.Key;
+				const FString PipeCmd = Pipeline.Value;
+
+				const FString JobOutputDirVideos = FString::Printf(TEXT("%s/%s/%s"), *DirVideos, *PipeName, *NameQueue);
+
+				if (!FPaths::DirectoryExists(*JobOutputDirVideos)) {
+					FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*JobOutputDirVideos);
+				}
+
+				const FString TokenFFmpeg = FFmpegPath;
+				// TODO:ashe23 query image extension from render settings classes
+				const FString TokenInput = FString::Printf(TEXT("%s/%s.%%04d.png"), *JobOutputDirImages, *NameSequence);
+				const FString TokenOutput = FString::Printf(TEXT("%s/%s"), *JobOutputDirVideos, *NameSequence);
+				FString InternalCmd = PipeCmd;
+				InternalCmd.RemoveFromStart(TEXT("{ffmpeg}"));
+				InternalCmd = InternalCmd.Replace(TEXT("{input}"), *TokenInput);
+				InternalCmd = InternalCmd.Replace(TEXT("{output}"), *TokenOutput);
+
+				EncodeCmds.Add(InternalCmd);
+			}
 		}
 	}
 
@@ -210,21 +238,20 @@ void SGdhVideoEncoderTool::OnVetProcess() {
 		const auto ExecutorClass = VideoEncoderToolSettings->ExecutorClass.LoadSynchronous();
 		if (!ExecutorClass) return;
 
-		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(ExecutorClass);
+		const auto Executor = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(ExecutorClass);
+		Executor->OnExecutorFinished().AddRaw(this, &SGdhVideoEncoderTool::OnRenderFinished);
 	}
-	// const auto Executor = Cast<UMoviePipelinePIEExecutor>(
-	// 	GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass())
-	// );
-	// if (!Executor) return;
-	//
-	// Executor->OnExecutorFinished().AddRaw(this, &SGdhVideoEncoderTool::OnRenderFinished);
 }
 
 void SGdhVideoEncoderTool::OnRenderFinished(UMoviePipelineExecutorBase*, bool bSuccess) {
 	if (!bSuccess) return;
 	if (FFmpegPath.IsEmpty()) return;
 
+	FScopedSlowTask SlowTask {static_cast<float>(EncodeCmds.Num()), FText::FromString(TEXT("Encoding..."))};
+	SlowTask.MakeDialog(false, false);
+
 	for (const auto& Cmd : EncodeCmds) {
+		SlowTask.EnterProgressFrame(1.0f, FText::FromString(Cmd));
 
 		uint32 ProcessId;
 		FProcHandle Handle = FPlatformProcess::CreateProc(*FFmpegPath, *Cmd, true, false, false, &ProcessId, 0, nullptr, nullptr);
@@ -246,6 +273,8 @@ void SGdhVideoEncoderTool::OnRenderFinished(UMoviePipelineExecutorBase*, bool bS
 
 		FPlatformProcess::CloseProc(Handle);
 	}
+
+	FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Encoding Done.")));
 }
 
 void SGdhVideoEncoderTool::ValidateSettings() {
