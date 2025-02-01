@@ -9,6 +9,7 @@
 #include "GdhLibPath.h"
 #include "GdhStyles.h"
 #include "GdhToolsModule.h"
+#include "IContentBrowserSingleton.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "MoviePipelineConfigBase.h"
@@ -45,6 +46,18 @@ void SGdhVideoEncoderTool::Construct(const FArguments& InArgs) {
 	const auto SettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
 	SettingsProperty->SetObject(VideoEncoderToolSettings.Get());
 
+	FARFilter Filter;
+	Filter.ClassNames.Add(ULevelSequence::StaticClass()->GetFName());
+
+	FAssetPickerConfig AssetPickerConfig;
+	AssetPickerConfig.Filter = Filter;
+	AssetPickerConfig.bAddFilterUI = false;
+	const auto ContentBrowserView = UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(AssetPickerConfig);
+
+	FPathPickerConfig PathPickerConfig;
+
+	const auto PathView = UGdhLibEditor::GetModuleContentBrowser().Get().CreatePathPicker(PathPickerConfig);
+
 	// clang-format off
 	ChildSlot
 	[
@@ -61,6 +74,21 @@ void SGdhVideoEncoderTool::Construct(const FArguments& InArgs) {
 				+ SVerticalBox::Slot().Padding(5.0f).AutoHeight()
 				[
 					SettingsProperty
+				]
+				+ SVerticalBox::Slot().Padding(5.0f).AutoHeight()
+				[
+					SNew(SSplitter)
+					.PhysicalSplitterHandleSize(3.0f)
+					.Style(FEditorStyle::Get(), "DetailsView.Splitter")
+					.Orientation(Orient_Horizontal)
+					+ SSplitter::Slot().Value(0.5f)
+					[
+						PathView
+					]
+					+SSplitter::Slot().Value(0.5f)
+					[
+						ContentBrowserView
+					]
 				]
 			]
 			+ SSplitter::Slot().Value(0.6f)
@@ -283,7 +311,7 @@ void SGdhVideoEncoderTool::ValidateSettings() {
 	// TODO:ashe23 for now we will show error via message dialogs and when process of refresh buttons clicked. Later on change it and integrate to UI
 
 	// checking ffmpeg path
-	FFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg.exe"));	// TODO:ashe23 on linux this might differ
+	FFmpegPath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg"));	// TODO:ashe23 on linux this might differ
 	if (FFmpegPath.IsEmpty()) {
 		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("FFmpeg Path Not Found. Make sure its available in system ENV paths")));
 		return;

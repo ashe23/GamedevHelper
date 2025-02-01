@@ -226,15 +226,35 @@ int64 UGdhLibPath::GetFilesTotalSize(const TArray<FString>& Files) {
 }
 
 FString UGdhLibPath::GetPathFromEnv(const FString& Executable) {
-	if (Executable.IsEmpty()) return {};
+	if (Executable.IsEmpty()) {
+		return {};
+	}
+
+	FString ExecName = Executable;
+
+#if PLATFORM_WINDOWS
+	// On Windows, ensure the executable name ends with ".exe".
+	if (!ExecName.EndsWith(TEXT(".exe"))) {
+		ExecName.Append(TEXT(".exe"));
+	}
+#endif
 
 	const FString PathEnv = FPlatformMisc::GetEnvironmentVariable(TEXT("PATH"));
-	TArray<FString> Paths;
-	PathEnv.ParseIntoArray(Paths, TEXT(";"), true);
 
-	for (const auto& Path : Paths) {
-		const FString FullPath = FPaths::ConvertRelativePathToFull(FPaths::Combine(Path, Executable));
-		if (FPaths::FileExists(FullPath)) return FullPath;
+#if PLATFORM_WINDOWS
+	const TCHAR* Delimiter = TEXT(";");
+#else
+	const TCHAR* Delimiter = TEXT(":");
+#endif
+
+	TArray<FString> Paths;
+	PathEnv.ParseIntoArray(Paths, Delimiter, true);
+
+	for (const FString& Path : Paths) {
+		const FString FullPath = FPaths::ConvertRelativePathToFull(FPaths::Combine(Path, ExecName));
+		if (FPaths::FileExists(FullPath)) {
+			return FullPath;
+		}
 	}
 
 	return {};
