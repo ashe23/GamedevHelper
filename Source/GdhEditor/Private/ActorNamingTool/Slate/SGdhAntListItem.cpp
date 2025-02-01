@@ -1,21 +1,17 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
-#include "ActorNamingTool/Slate/SGdhActorNamingToolListItem.h"
+#include "ActorNamingTool/Slate/SGdhAntListItem.h"
+
 #include "GdhStyles.h"
 
-void SGdhActorNamingToolListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
-{
+void SGdhAntListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView) {
 	ListItem = InArgs._ListItem;
 
-	SMultiColumnTableRow::Construct(
-		SMultiColumnTableRow::FArguments()
-		.Padding(FMargin{0.0f, 2.0f, 0.0f, 0.0f}),
-		InOwnerTableView
-	);
+	SMultiColumnTableRow::Construct(SMultiColumnTableRow::FArguments().Padding(FMargin {0.0f, 2.0f, 0.0f, 0.0f}), InOwnerTableView);
 }
+TSharedRef<SWidget> SGdhAntListItem::GenerateWidgetForColumn(const FName& InColumnName) {
 
-TSharedRef<SWidget> SGdhActorNamingToolListItem::GenerateWidgetForColumn(const FName& InColumnName)
-{
+	// clang-format off
 	if (InColumnName == TEXT("Preview"))
 	{
 		return
@@ -80,4 +76,6 @@ TSharedRef<SWidget> SGdhActorNamingToolListItem::GenerateWidgetForColumn(const F
 	}
 
 	return SNew(STextBlock).Text(FText::FromString(TEXT("")));
+
+	// clang-format on
 }

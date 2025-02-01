@@ -33,15 +33,6 @@
         "Win64",
         "Linux"
       ]
-    },
-    {
-      "Name": "GdhTools",
-      "Type": "Editor",
-      "LoadingPhase": "Default",
-      "WhitelistPlatforms": [
-        "Win64",
-        "Linux"
-      ]
     }
   ],
   "Plugins": [

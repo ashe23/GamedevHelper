@@ -16,6 +16,7 @@ public class GdhEditor : ModuleRules
 			"UnrealEd",
 			"EditorStyle",
             "EditorWidgets",
+            "EditorScriptingUtilities",
 			"Slate",
 			"SlateCore",
 			"Projects",
@@ -27,7 +28,9 @@ public class GdhEditor : ModuleRules
             "LevelSequence",
             "MovieScene",
             "MovieSceneTracks",
-            "InputCore"
+            "InputCore",
+            "ToolMenus",
+            "DeveloperSettings",
 		});
 	}
 }

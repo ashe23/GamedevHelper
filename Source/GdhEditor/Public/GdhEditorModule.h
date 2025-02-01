@@ -7,16 +7,34 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGdhEditor, Log, All);
 
-class FGdhRenderListActions;
+// class FGdhRenderListActions;
 
 class FGdhEditorModule final : public IModuleInterface
 {
-  public:
+public:
 
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-  private:
+private:
 
-	TSharedPtr<FGdhRenderListActions> RenderListActions;
+	void RegisterCmds();
+	void RegisterTabs();
+	void RegisterMainToolbar();
+	void RegisterAssetContextMenu();
+	void RegisterCustomAssets();
+	void UnregisterCmds();
+	void UnregisterTabs();
+	void UnregisterCustomAssets();
+
+	void OnRestartEditor() const;
+	void OnOpenAnt();
+	void OnOpenBet();
+	TSharedRef<SDockTab> OnTabSpawnAnt(const FSpawnTabArgs& Args) const;
+	TSharedRef<SDockTab> OnTabSpawnBet(const FSpawnTabArgs& Args) const;
+
+	TSharedPtr<FUICommandList> Commands;
+	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
+	TSharedPtr<FExtender> MenuExtender;
+	// TSharedPtr<FGdhRenderListActions> RenderListActions;
 };

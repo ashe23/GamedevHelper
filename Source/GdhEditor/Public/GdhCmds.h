@@ -9,11 +9,8 @@
 class GDHEDITOR_API FGdhCmds final : public TCommands<FGdhCmds>
 {
 public:
-	FGdhCmds() : TCommands(
-		GdhConstants::ModuleFullName,
-		FText::FromString("GamedevHelper Plugin"),
-		NAME_None,
-		GdhConstants::ModuleStylesName) {}
+
+	FGdhCmds() : TCommands(GdhConstants::ModuleFullName, FText::FromString("GamedevHelper Plugin"), NAME_None, GdhConstants::ModuleStylesName) {}
 
 	virtual void RegisterCommands() override;
 
@@ -21,25 +18,23 @@ public:
 	TSharedPtr<FUICommandInfo> RestartEditor;
 	TSharedPtr<FUICommandInfo> OpenAssetNamingTool;
 	TSharedPtr<FUICommandInfo> OpenActorNamingTool;
-	TSharedPtr<FUICommandInfo> OpenVideoEncoderTool;
+	TSharedPtr<FUICommandInfo> OpenBatchEncodeTool;
 
 	// Asset Naming Tool
-	TSharedPtr<FUICommandInfo> ScanAssets;
-	TSharedPtr<FUICommandInfo> RenameAssets;
-	TSharedPtr<FUICommandInfo> ClearSelection;
-	TSharedPtr<FUICommandInfo> EditMode;
-	TSharedPtr<FUICommandInfo> ApplyChanges;
-	TSharedPtr<FUICommandInfo> UndoChanges;
+	// TSharedPtr<FUICommandInfo> ScanAssets;
+	// TSharedPtr<FUICommandInfo> RenameAssets;
+	// TSharedPtr<FUICommandInfo> ClearSelection;
+	// TSharedPtr<FUICommandInfo> EditMode;
+	// TSharedPtr<FUICommandInfo> ApplyChanges;
+	// TSharedPtr<FUICommandInfo> UndoChanges;
 
 	// Actor Naming Tool
-	TSharedPtr<FUICommandInfo> ScanActors;
-	TSharedPtr<FUICommandInfo> OrganizeActors;
-	TSharedPtr<FUICommandInfo> RenameActors;
-	TSharedPtr<FUICommandInfo> UndoAction;
+	TSharedPtr<FUICommandInfo> AntScanActors;
+	TSharedPtr<FUICommandInfo> AntOrganizeActors;
+	TSharedPtr<FUICommandInfo> AntRenameActors;
+	TSharedPtr<FUICommandInfo> AntUndoAction;
 
-	// Video Encoder Tool
-	TSharedPtr<FUICommandInfo> VetRefresh;
-	TSharedPtr<FUICommandInfo> VetProcess;
-
-
+	// Batch Encoder Tool
+	TSharedPtr<FUICommandInfo> BetRefresh;
+	TSharedPtr<FUICommandInfo> BetProcess;
 };

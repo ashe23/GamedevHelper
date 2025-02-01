@@ -3,14 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SGdhActorNamingToolListItem.generated.h"
+#include "SGdhAntListItem.generated.h"
 
 UCLASS(Transient)
-class UGdhActorNamingToolListItem : public UObject
+class UGdhAntListItem : public UObject
 {
 	GENERATED_BODY()
 
 public:
+
 	UPROPERTY()
 	FString Prefix;
 
@@ -32,16 +33,18 @@ public:
 	const FSlateBrush* ActorIcon;
 };
 
-class SGdhActorNamingToolListItem final : public SMultiColumnTableRow<TWeakObjectPtr<UGdhActorNamingToolListItem>>
+class SGdhAntListItem final : public SMultiColumnTableRow<TWeakObjectPtr<UGdhAntListItem>>
 {
 public:
-	SLATE_BEGIN_ARGS(SGdhActorNamingToolListItem) {}
-		SLATE_ARGUMENT(TWeakObjectPtr<UGdhActorNamingToolListItem>, ListItem)
+
+	SLATE_BEGIN_ARGS(SGdhAntListItem) {}
+	SLATE_ARGUMENT(TWeakObjectPtr<UGdhAntListItem>, ListItem)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView);
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& InColumnName) override;
 
 private:
-	TWeakObjectPtr<UGdhActorNamingToolListItem> ListItem;
+
+	TWeakObjectPtr<UGdhAntListItem> ListItem;
 };

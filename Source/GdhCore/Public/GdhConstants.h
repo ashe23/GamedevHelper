@@ -19,9 +19,9 @@ namespace GdhConstants
 	static const FName PathRoot {TEXT("/Game")};
 
 	// tabs
-	static const FName TabAssetNamingTool {TEXT("TabAssetNamingTool")};
-	static const FName TabActorNamingTool {TEXT("TabActorNamingTool")};
-	static const FName TabVideoEncoderTool {TEXT("TabVideoEncoderTool")};
+	// static const FName TabAssetNamingTool {TEXT("TabGdhAssetNamingTool")};
+	static const FName TabActorNamingTool {TEXT("TabGdhActorNamingTool")};
+	static const FName TabBatchEncodeTool {TEXT("TabGdhBatchEncodeTool")};
 
 	// charsets
 	static const FString Digits = TEXT("0123456789");
