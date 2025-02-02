@@ -23,7 +23,9 @@ public:
 
 	// Main output directory for rendered images and encoded videos.
 	// By Default will be {ProjectDir}/Saved/GdhRenders.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General", DisplayName = "OutputDir")
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Config, Category = "General", DisplayName = "OutputDir"
+	)
 	FDirectoryPath DirOutput;
 
 	// Directory structure format. Order in which should images and videos organized in final state.
@@ -32,10 +34,17 @@ public:
 	// {preset} - encoding preset name
 	// {sequence} - level sequence name
 	// {track} - audio track name, if any
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General", DisplayName = "OutputDirFormat")
+	UPROPERTY(
+		EditAnywhere,
+		BlueprintReadWrite,
+		Config,
+		Category = "General",
+		DisplayName = "OutputDirFormat"
+	)
 	FString DirOutputFmt;
 
-	// FFmpeg executable path. Plugin will try to detect it automatically from system env PATHS. But you can modify it manually.
+	// FFmpeg executable path. Plugin will try to detect it automatically from system env PATHS. But
+	// you can modify it manually.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
 	FFilePath FFmpegExePath;
 

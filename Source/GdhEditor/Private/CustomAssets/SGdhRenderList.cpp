@@ -63,14 +63,17 @@ void SGdhRenderList::ListUpdateData() {
 		const FFrameRate FrameRate = UGdhLibAsset::GetLevelSequenceFrameRate(Sequence);
 		const int32 FrameStart = UGdhLibAsset::GetLevelSequenceStartFrame(Sequence, FrameRate);
 		const int32 FrameEnd = UGdhLibAsset::GetLevelSequenceEndFrame(Sequence, FrameRate);
-		const int32 DurationFrames = UGdhLibAsset::GetLevelSequenceDurationInFrames(Sequence, FrameRate);
-		const float DurationSec = UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
+		const int32 DurationFrames =
+			UGdhLibAsset::GetLevelSequenceDurationInFrames(Sequence, FrameRate);
+		const float DurationSec =
+			UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
 
 		NewItem->Name = Sequence->GetName();
 		NewItem->FrameStart = FString::FromInt(FrameStart);
 		NewItem->FrameEnd = FString::FromInt(FrameEnd);
 		NewItem->FrameRate = FString::Printf(TEXT("%s"), *FrameRate.ToPrettyText().ToString());
-		NewItem->Duration = FString::Printf(TEXT("%d frames (~ %.2f sec )"), DurationFrames, DurationSec);
+		NewItem->Duration =
+			FString::Printf(TEXT("%d frames (~ %.2f sec )"), DurationFrames, DurationSec);
 
 		ListItems.Add(NewItem);
 	}
@@ -86,7 +89,8 @@ FReply SGdhRenderList::OnDragDropTarget(TSharedPtr<FDragDropOperation> InOperati
 	if (!InOperation) return FReply::Unhandled();
 	if (!InOperation->IsOfType<FAssetDragDropOp>()) return FReply::Unhandled();
 
-	const TSharedPtr<FAssetDragDropOp> AssetDragDropOp = StaticCastSharedPtr<FAssetDragDropOp>(InOperation);
+	const TSharedPtr<FAssetDragDropOp> AssetDragDropOp =
+		StaticCastSharedPtr<FAssetDragDropOp>(InOperation);
 	FScopedTransaction Transaction {FText::FromName(TEXT("GdhDragDropOperation"))};
 
 	const auto DraggedAssets = AssetDragDropOp->GetAssets();
@@ -112,7 +116,8 @@ bool SGdhRenderList::CanDragDropTarget(TSharedPtr<FDragDropOperation> InOperatio
 	if (!InOperation) return false;
 	if (!InOperation->IsOfType<FAssetDragDropOp>()) return false;
 
-	TSharedPtr<FAssetDragDropOp> AssetDragDropOp = StaticCastSharedPtr<FAssetDragDropOp>(InOperation);
+	TSharedPtr<FAssetDragDropOp> AssetDragDropOp =
+		StaticCastSharedPtr<FAssetDragDropOp>(InOperation);
 	for (const auto& Asset : AssetDragDropOp->GetAssets()) {
 		ULevelSequence* Sequence = Cast<ULevelSequence>(Asset.GetAsset());
 		if (Sequence) {
@@ -186,6 +191,8 @@ TSharedRef<SHeaderRow> SGdhRenderList::GetHeaderRow() {
 	// clang-format on
 }
 
-TSharedRef<ITableRow> SGdhRenderList::OnGenerateRow(TWeakObjectPtr<UGdhRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable) {
+TSharedRef<ITableRow> SGdhRenderList::OnGenerateRow(
+	TWeakObjectPtr<UGdhRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable
+) {
 	return SNew(SGdhRenderListItem, OwnerTable).ListItem(Item);
 }

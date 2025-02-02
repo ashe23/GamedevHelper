@@ -20,7 +20,13 @@ public:
 #endif
 
 	// Data Table asset containing settings for renaming and organizing actors in World Outlinear
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category = "Settings", meta = (RequiredAssetDataTags = "RowStructure=GdhActorAffixRow"))
+	UPROPERTY(
+		BlueprintReadOnly,
+		EditDefaultsOnly,
+		Config,
+		Category = "Settings",
+		meta = (RequiredAssetDataTags = "RowStructure=GdhActorAffixRow")
+	)
 	TSoftObjectPtr<UDataTable> Mappings;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category = "Settings")

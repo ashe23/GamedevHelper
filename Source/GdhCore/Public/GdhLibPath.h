@@ -12,7 +12,7 @@ class GDHCORE_API UGdhLibPath : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
-  public:
+public:
 
 	/**
 	 * @brief Normalize given path
@@ -53,7 +53,8 @@ class GDHCORE_API UGdhLibPath : public UBlueprintFunctionLibrary
 	 * @param OutFiles
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Path")
-	static void GetFiles(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFiles);
+	static void
+	GetFiles(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFiles);
 
 	/**
 	 * @brief Returns list of files inside given path with specified file extension settings
@@ -65,8 +66,11 @@ class GDHCORE_API UGdhLibPath : public UBlueprintFunctionLibrary
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Path")
 	static void GetFilesByExt(
-		const FString& InSearchPath, const bool bSearchRecursive, const bool bExtSearchInvert,
-		const TSet<FString>& InExtensions, TArray<FString>& OutFiles
+		const FString& InSearchPath,
+		const bool bSearchRecursive,
+		const bool bExtSearchInvert,
+		const TSet<FString>& InExtensions,
+		TArray<FString>& OutFiles
 	);
 
 	/**
@@ -76,7 +80,9 @@ class GDHCORE_API UGdhLibPath : public UBlueprintFunctionLibrary
 	 * @param OutFolders
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Path")
-	static void GetFolders(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders);
+	static void GetFolders(
+		const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders
+	);
 
 	/**
 	 * @brief Returns size of given file in bytes

@@ -1,14 +1,14 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "GdhLibPath.h"
-
 #include "GdhConstants.h"
 
 FString UGdhLibPath::Normalize(const FString& InPath) {
 	if (InPath.IsEmpty()) return {};
 
-	// Ensure the path dont starts with a slash or a disk drive letter
-	if (!(InPath.StartsWith(TEXT("/")) || InPath.StartsWith(TEXT("\\")) || (InPath.Len() > 2 && InPath[1] == ':'))) {
+	// Ensure the path don't start with a slash or a disk drive letter
+	if (!(InPath.StartsWith(TEXT("/")) || InPath.StartsWith(TEXT("\\")) ||
+		  (InPath.Len() > 2 && InPath[1] == ':'))) {
 		return {};
 	}
 
@@ -35,7 +35,8 @@ FString UGdhLibPath::Normalize(const FString& InPath) {
 
 FString UGdhLibPath::PathConvertToAbsolute(const FString& InPath) {
 	const FString PathNormalized = Normalize(InPath);
-	const FString PathProjectContent = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()).LeftChop(1);
+	const FString PathProjectContent =
+		FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()).LeftChop(1);
 
 	if (PathNormalized.IsEmpty()) return {};
 	if (PathNormalized.StartsWith(PathProjectContent)) return PathNormalized;
@@ -51,7 +52,8 @@ FString UGdhLibPath::PathConvertToAbsolute(const FString& InPath) {
 
 FString UGdhLibPath::PathConvertToRelative(const FString& InPath) {
 	const FString PathNormalized = Normalize(InPath);
-	const FString PathProjectContent = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()).LeftChop(1);
+	const FString PathProjectContent =
+		FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()).LeftChop(1);
 
 	if (PathNormalized.IsEmpty()) return {};
 	if (PathNormalized.StartsWith(GdhConstants::PathRoot.ToString())) return PathNormalized;
@@ -59,7 +61,8 @@ FString UGdhLibPath::PathConvertToRelative(const FString& InPath) {
 		FString Path = PathNormalized;
 		Path.RemoveFromStart(PathProjectContent);
 
-		return Path.IsEmpty() ? GdhConstants::PathRoot.ToString() : GdhConstants::PathRoot.ToString() / Path;
+		return Path.IsEmpty() ? GdhConstants::PathRoot.ToString()
+							  : GdhConstants::PathRoot.ToString() / Path;
 	}
 
 	return {};
@@ -94,7 +97,9 @@ FString UGdhLibPath::PathConvertToObjectPath(const FString& InPath) {
 	return {};
 }
 
-void UGdhLibPath::GetFiles(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFiles) {
+void UGdhLibPath::GetFiles(
+	const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFiles
+) {
 	OutFiles.Empty();
 
 	struct FFindFilesVisitor : IPlatformFile::FDirectoryVisitor
@@ -115,10 +120,14 @@ void UGdhLibPath::GetFiles(const FString& InSearchPath, const bool bSearchRecurs
 	FFindFilesVisitor FindFilesVisitor {OutFiles};
 
 	if (bSearchRecursive) {
-		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(*InSearchPath, FindFilesVisitor);
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(
+			*InSearchPath, FindFilesVisitor
+		);
 	}
 	else {
-		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*InSearchPath, FindFilesVisitor);
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(
+			*InSearchPath, FindFilesVisitor
+		);
 	}
 }
 
@@ -137,7 +146,9 @@ void UGdhLibPath::GetFilesByExt(
 		TArray<FString>& Files;
 		const TSet<FString>& Extensions;
 
-		explicit FFindFilesVisitor(const bool bInSearchInvert, TArray<FString>& InFiles, const TSet<FString>& InExtensions) :
+		explicit FFindFilesVisitor(
+			const bool bInSearchInvert, TArray<FString>& InFiles, const TSet<FString>& InExtensions
+		) :
 			bSearchInvert(bInSearchInvert),
 			Files(InFiles),
 			Extensions(InExtensions) {}
@@ -154,7 +165,8 @@ void UGdhLibPath::GetFilesByExt(
 				const FString Ext = FPaths::GetExtension(FullPath, false);
 				const bool bExistsInSearchList = Extensions.Contains(Ext);
 
-				if ((bExistsInSearchList && !bSearchInvert) || (!bExistsInSearchList && bSearchInvert)) {
+				if ((bExistsInSearchList && !bSearchInvert) ||
+					(!bExistsInSearchList && bSearchInvert)) {
 					Files.Emplace(FullPath);
 				}
 			}
@@ -173,14 +185,20 @@ void UGdhLibPath::GetFilesByExt(
 
 	FFindFilesVisitor FindFilesVisitor {bExtSearchInvert, OutFiles, ExtensionsNormalized};
 	if (bSearchRecursive) {
-		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(*InSearchPath, FindFilesVisitor);
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(
+			*InSearchPath, FindFilesVisitor
+		);
 	}
 	else {
-		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*InSearchPath, FindFilesVisitor);
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(
+			*InSearchPath, FindFilesVisitor
+		);
 	}
 }
 
-void UGdhLibPath::GetFolders(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders) {
+void UGdhLibPath::GetFolders(
+	const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders
+) {
 	OutFolders.Empty();
 
 	struct FFindFoldersVisitor : IPlatformFile::FDirectoryVisitor
@@ -200,10 +218,14 @@ void UGdhLibPath::GetFolders(const FString& InSearchPath, const bool bSearchRecu
 
 	FFindFoldersVisitor FindFoldersVisitor {OutFolders};
 	if (bSearchRecursive) {
-		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(*InSearchPath, FindFoldersVisitor);
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectoryRecursively(
+			*InSearchPath, FindFoldersVisitor
+		);
 	}
 	else {
-		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*InSearchPath, FindFoldersVisitor);
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(
+			*InSearchPath, FindFoldersVisitor
+		);
 	}
 }
 

@@ -4,13 +4,11 @@
 
 DEFINE_LOG_CATEGORY(LogGdhCore);
 
-void FGdhCoreModule::StartupModule()
-{
+void FGdhCoreModule::StartupModule() {
 	IModuleInterface::StartupModule();
 }
 
-void FGdhCoreModule::ShutdownModule()
-{
+void FGdhCoreModule::ShutdownModule() {
 	IModuleInterface::ShutdownModule();
 }
 

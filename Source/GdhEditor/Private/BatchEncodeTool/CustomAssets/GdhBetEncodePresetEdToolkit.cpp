@@ -1,6 +1,7 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetEdToolkit.h"
+#include "GdhLibEditor.h"
 
 void FGdhBetEncodePresetEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
 	EncodePreset = Cast<UGdhBetEncodePreset>(InObjects[0]);	  // TODO:ashe23 change later
@@ -26,27 +27,36 @@ void FGdhBetEncodePresetEdToolkit::InitEditor(const TArray<UObject*>& InObjects)
 
 	// clang-format on
 
-	FAssetEditorToolkit::InitAssetEditor(EToolkitMode::Standalone, {}, "GdhBetEncodePresetEditor", Layout, true, true, InObjects);
+	FAssetEditorToolkit::InitAssetEditor(
+		EToolkitMode::Standalone, {}, "GdhBetEncodePresetEditor", Layout, true, true, InObjects
+	);
 }
 
-void FGdhBetEncodePresetEdToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) {
+void FGdhBetEncodePresetEdToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager
+) {
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
-	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("Gdh Encode Preset Editor"));
+	WorkspaceMenuCategory =
+		InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("Gdh Encode Preset Editor"));
 
 	// const FName TabIdDetails = TEXT("GdhRenderListDetailsTab");
 	const FName TaIdList = TEXT("GdhBetEncodePresetTab");
 
-	// InTabManager->RegisterTabSpawner(TabIdDetails, FOnSpawnTab::CreateRaw(this, &FGdhRenderListEdToolkit::OnTabSpawnDetails))
-	// 	.SetDisplayName(INVTEXT("Details"))
+	// InTabManager->RegisterTabSpawner(TabIdDetails, FOnSpawnTab::CreateRaw(this,
+	// &FGdhRenderListEdToolkit::OnTabSpawnDetails)) 	.SetDisplayName(INVTEXT("Details"))
 	// 	.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
-	InTabManager->RegisterTabSpawner(TaIdList, FOnSpawnTab::CreateRaw(this, &FGdhBetEncodePresetEdToolkit::OnTabSpawnSequences))
+	InTabManager
+		->RegisterTabSpawner(
+			TaIdList,
+			FOnSpawnTab::CreateRaw(this, &FGdhBetEncodePresetEdToolkit::OnTabSpawnSequences)
+		)
 		.SetDisplayName(INVTEXT("Sequences"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 }
 
-void FGdhBetEncodePresetEdToolkit::UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) {
+void FGdhBetEncodePresetEdToolkit::UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager
+) {
 	FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
 
 	InTabManager->UnregisterTabSpawner("GdhBetEncodePresetTab");
@@ -66,5 +76,11 @@ FLinearColor FGdhBetEncodePresetEdToolkit::GetWorldCentricTabColorScale() const 
 }
 TSharedRef<SDockTab> FGdhBetEncodePresetEdToolkit::OnTabSpawnSequences(const FSpawnTabArgs& Args) {
 	// return SNew(SDockTab)[SNew(SGdhRenderList).RenderList(RenderList)];
+	FPropertyEditorModule& ModuleProperty = UGdhLibEditor::GetModulePropertyEditor();
+
+	FDetailsViewArgs DetailsViewArgs;
+	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+	TSharedRef<IDetailsView> DetailsView = ModuleProperty.CreateDetailView(DetailsViewArgs);
+
 	return SNew(SDockTab);
 }

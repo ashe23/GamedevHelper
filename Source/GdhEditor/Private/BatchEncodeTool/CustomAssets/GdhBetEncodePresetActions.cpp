@@ -3,7 +3,10 @@
 #include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetActions.h"
 #include "BatchEncodeTool/CustomAssets/GdhBetEncodePreset.h"
 
-FGdhBetEncodePresetActions::FGdhBetEncodePresetActions(const EAssetTypeCategories::Type& InAssetTypeCategory) : Category(InAssetTypeCategory) {}
+FGdhBetEncodePresetActions::FGdhBetEncodePresetActions(
+	const EAssetTypeCategories::Type& InAssetTypeCategory
+) :
+	Category(InAssetTypeCategory) {}
 
 UClass* FGdhBetEncodePresetActions::GetSupportedClass() const {
 	return UGdhBetEncodePreset::StaticClass();
@@ -21,6 +24,8 @@ uint32 FGdhBetEncodePresetActions::GetCategories() {
 	return Category;
 }
 
-void FGdhBetEncodePresetActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor) {
+void FGdhBetEncodePresetActions::OpenAssetEditor(
+	const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor
+) {
 	// MakeShared<FGdhRenderListEdToolkit>()->InitEditor(InObjects);
 }

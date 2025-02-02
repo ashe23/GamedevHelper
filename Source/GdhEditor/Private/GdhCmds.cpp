@@ -26,7 +26,7 @@ void FGdhCmds::RegisterCommands() {
 	UI_COMMAND(AntRenameActors, "Rename Actors", "Rename actors in world outliner", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(AntUndoAction, "Undo", "Undo last action", EUserInterfaceActionType::Button, FInputChord());
 
-	// Batch Encoder Tool
+	// Batch Encode Tool
 	UI_COMMAND(BetRefresh, "Refresh", "Refresh", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(BetProcess, "Process", "Start Rendering and Encoding process", EUserInterfaceActionType::Button, FInputChord());
 	// clang-format on

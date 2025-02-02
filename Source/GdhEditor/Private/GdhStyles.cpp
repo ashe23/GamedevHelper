@@ -58,9 +58,14 @@ FSlateFontInfo FGdhStyles::GetFont(const FString& FontType, const uint32 FontSiz
 #define OTF_FONT(RelativePath, ...) FSlateFontInfo( Style->RootToContentDir( RelativePath, TEXT(".otf") ), __VA_ARGS__ )
 
 TSharedRef<FSlateStyleSet> FGdhStyles::Create() {
-	TSharedRef<FSlateStyleSet> Style = MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
-	Style->SetContentRoot(IPluginManager::Get().FindPlugin(GdhConstants::ModuleFullName.ToString())->GetBaseDir() / TEXT("Resources"));
+	TSharedRef<FSlateStyleSet> Style =
+		MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
+	Style->SetContentRoot(
+		IPluginManager::Get().FindPlugin(GdhConstants::ModuleFullName.ToString())->GetBaseDir() /
+		TEXT("Resources")
+	);
 
+	// clang-format off
 	// cmds
 	Style->Set("GamedevHelper.TabMain", new IMAGE_BRUSH(TEXT("Icon40"), FVector2D {40.0f, 40.0f}));
 	Style->Set("GamedevHelper.RestartEditor", new IMAGE_BRUSH(TEXT("IconRestart32"), FVector2D {32.0f, 32.0f}));
@@ -124,6 +129,7 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create() {
 	Style->Set("GamedevHelper.Color.GreyDark", FSlateColor {FLinearColor {FColor::FromHex(TEXT("#484848"))}});
 	Style->Set("GamedevHelper.Color.Title", FSlateColor {FLinearColor {FColor::FromHex(TEXT("#17C3B2"))}});
 	Style->Set("GamedevHelper.Color.DarkBlue", FSlateColor {FLinearColor {FColor::FromHex(TEXT("#4477CE"))}});
+	// clang-format on
 
 	return Style;
 }

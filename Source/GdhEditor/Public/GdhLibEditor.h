@@ -22,8 +22,12 @@ public:
 	static void OpenAssetEditor(const FAssetData& Asset);
 	static void OpenAssetInContentBrowser(const FAssetData& Asset, const bool bSpawnNewBrowser);
 	static void OpenPathInFileExplorer(const FString& Path);
-	static void ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
-	static void ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration);
+	static void ShowNotification(
+		const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration
+	);
+	static void ShowNotificationWithOutputLog(
+		const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration
+	);
 	static void CloseAllEditors();
 	static bool EditorInPlayMode();
 	static bool SaveAllAssets(const bool bPromptToUser);

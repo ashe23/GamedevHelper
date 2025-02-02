@@ -28,22 +28,28 @@ void FGdhRenderListEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
 
 	// clang-format on
 
-	FAssetEditorToolkit::InitAssetEditor(EToolkitMode::Standalone, {}, "GdhRenderListEditor", Layout, true, true, InObjects);
+	FAssetEditorToolkit::InitAssetEditor(
+		EToolkitMode::Standalone, {}, "GdhRenderListEditor", Layout, true, true, InObjects
+	);
 }
 
 void FGdhRenderListEdToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) {
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
-	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("Gdh Render List Editor"));
+	WorkspaceMenuCategory =
+		InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("Gdh Render List Editor"));
 
 	// const FName TabIdDetails = TEXT("GdhRenderListDetailsTab");
 	const FName TaIdList = TEXT("GdhRenderListSequencesTab");
 
-	// InTabManager->RegisterTabSpawner(TabIdDetails, FOnSpawnTab::CreateRaw(this, &FGdhRenderListEdToolkit::OnTabSpawnDetails))
-	// 	.SetDisplayName(INVTEXT("Details"))
+	// InTabManager->RegisterTabSpawner(TabIdDetails, FOnSpawnTab::CreateRaw(this,
+	// &FGdhRenderListEdToolkit::OnTabSpawnDetails)) 	.SetDisplayName(INVTEXT("Details"))
 	// 	.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
-	InTabManager->RegisterTabSpawner(TaIdList, FOnSpawnTab::CreateRaw(this, &FGdhRenderListEdToolkit::OnTabSpawnSequences))
+	InTabManager
+		->RegisterTabSpawner(
+			TaIdList, FOnSpawnTab::CreateRaw(this, &FGdhRenderListEdToolkit::OnTabSpawnSequences)
+		)
 		.SetDisplayName(INVTEXT("Sequences"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 }
