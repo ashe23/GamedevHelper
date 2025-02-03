@@ -6,7 +6,7 @@ public class GdhEditor : ModuleRules
 {
 	public GdhEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PrivateDependencyModuleNames.AddRange(new[]
 		{
@@ -31,6 +31,7 @@ public class GdhEditor : ModuleRules
             "InputCore",
             "ToolMenus",
             "DeveloperSettings",
+            "ContentBrowser"
 		});
 	}
 }

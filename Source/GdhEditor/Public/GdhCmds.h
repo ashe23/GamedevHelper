@@ -45,4 +45,9 @@ public:
 	TSharedPtr<FUICommandInfo> BetProcess;
 	TSharedPtr<FUICommandInfo> BetRenderListRefresh;
 	TSharedPtr<FUICommandInfo> BetRenderListRemove;
+	TSharedPtr<FUICommandInfo> BetEncodePresetRefresh;
+	TSharedPtr<FUICommandInfo> BetEncodePresetCreate;
+	TSharedPtr<FUICommandInfo> BetEncodePresetDuplicate;
+	TSharedPtr<FUICommandInfo> BetEncodePresetRename;
+	TSharedPtr<FUICommandInfo> BetEncodePresetRemove;
 };

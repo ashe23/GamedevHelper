@@ -8,6 +8,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogGdhEditor, Log, All);
 
 class FGdhBetRenderListActions;
+class FGdhBetEncodePresetActions;
 
 class FGdhEditorModule final : public IModuleInterface
 {
@@ -37,4 +38,5 @@ private:
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
 	TSharedPtr<FExtender> MenuExtender;
 	TSharedPtr<FGdhBetRenderListActions> ActionsRenderList;
+	TSharedPtr<FGdhBetEncodePresetActions> ActionsEncodePreset;
 };

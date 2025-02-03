@@ -23,6 +23,7 @@ private:
 	void ListUpdateView();
 	void OnListRefresh();
 	void OnListRemove();
+	bool CanRemoveListItems();
 	void OnListDblClick(TWeakObjectPtr<UGdhBetRenderListItem> Item);
 
 	FReply OnDragDropTarget(TSharedPtr<FDragDropOperation> InOperation);

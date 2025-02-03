@@ -2,6 +2,7 @@
 
 #include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetActions.h"
 #include "BatchEncodeTool/CustomAssets/GdhBetEncodePreset.h"
+#include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetEdToolkit.h"
 
 FGdhBetEncodePresetActions::FGdhBetEncodePresetActions(
 	const EAssetTypeCategories::Type& InAssetTypeCategory
@@ -27,5 +28,5 @@ uint32 FGdhBetEncodePresetActions::GetCategories() {
 void FGdhBetEncodePresetActions::OpenAssetEditor(
 	const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor
 ) {
-	// MakeShared<FGdhRenderListEdToolkit>()->InitEditor(InObjects);
+	MakeShared<FGdhBetEncodePresetEdToolkit>()->InitEditor(InObjects);
 }

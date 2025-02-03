@@ -31,6 +31,11 @@ void FGdhCmds::RegisterCommands() {
 	UI_COMMAND(BetProcess, "Process", "Start Rendering and Encoding process", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(BetRenderListRefresh, "Refresh", "Refresh List", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(BetRenderListRemove, "Remove", "Remove Selected sequences from list", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetEncodePresetRefresh, "Refresh", "Refresh encode preset lists", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetEncodePresetCreate, "Create", "Create new encode preset", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetEncodePresetDuplicate, "Duplicate", "Duplicate existing encode preset", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetEncodePresetRename, "Rename", "Rename existing encode preset", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetEncodePresetRemove, "Remove", "Remove existing encode preset", EUserInterfaceActionType::Button, FInputChord());
 	// clang-format on
 }
 

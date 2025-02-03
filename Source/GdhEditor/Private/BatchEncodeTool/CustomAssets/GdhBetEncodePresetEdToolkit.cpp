@@ -1,13 +1,13 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetEdToolkit.h"
-#include "GdhLibEditor.h"
+#include "BatchEncodeTool/Slate/SGdhBetEncodePreset.h"
 
 void FGdhBetEncodePresetEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
-	EncodePreset = Cast<UGdhBetEncodePreset>(InObjects[0]);	  // TODO:ashe23 change later
+	EncodePreset = Cast<UGdhBetEncodePreset>(InObjects[0]);
 
 	// clang-format off
-	const TSharedRef<FTabManager::FLayout> Layout = FTabManager::NewLayout("GdhBetEncodePresetEditorLayout")
+	const TSharedRef<FTabManager::FLayout> Layout = FTabManager::NewLayout("GdhBetEncodePresetLayout")
 	->AddArea
 	(
 		FTabManager::NewPrimaryArea()
@@ -48,10 +48,9 @@ void FGdhBetEncodePresetEdToolkit::RegisterTabSpawners(const TSharedRef<FTabMana
 
 	InTabManager
 		->RegisterTabSpawner(
-			TaIdList,
-			FOnSpawnTab::CreateRaw(this, &FGdhBetEncodePresetEdToolkit::OnTabSpawnSequences)
+			TaIdList, FOnSpawnTab::CreateRaw(this, &FGdhBetEncodePresetEdToolkit::OnTabSpawn)
 		)
-		.SetDisplayName(INVTEXT("Sequences"))
+		.SetDisplayName(INVTEXT("Preset Settings"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 }
 
@@ -74,13 +73,6 @@ FString FGdhBetEncodePresetEdToolkit::GetWorldCentricTabPrefix() const {
 FLinearColor FGdhBetEncodePresetEdToolkit::GetWorldCentricTabColorScale() const {
 	return FLinearColor::Blue;
 }
-TSharedRef<SDockTab> FGdhBetEncodePresetEdToolkit::OnTabSpawnSequences(const FSpawnTabArgs& Args) {
-	// return SNew(SDockTab)[SNew(SGdhRenderList).RenderList(RenderList)];
-	FPropertyEditorModule& ModuleProperty = UGdhLibEditor::GetModulePropertyEditor();
-
-	FDetailsViewArgs DetailsViewArgs;
-	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
-	TSharedRef<IDetailsView> DetailsView = ModuleProperty.CreateDetailView(DetailsViewArgs);
-
-	return SNew(SDockTab);
+TSharedRef<SDockTab> FGdhBetEncodePresetEdToolkit::OnTabSpawn(const FSpawnTabArgs& Args) {
+	return SNew(SDockTab)[SNew(SGdhBetEncodePreset).EncodePreset(EncodePreset)];
 }

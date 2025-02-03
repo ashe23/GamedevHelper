@@ -25,7 +25,8 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 	);
 	Cmds->MapAction(
 		FGdhCmds::Get().BetRenderListRemove,
-		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemove)
+		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemove),
+		FCanExecuteAction::CreateRaw(this, &SGdhBetRenderList::CanRemoveListItems)
 	);
 
 	ListUpdateData();
@@ -138,6 +139,10 @@ void SGdhBetRenderList::OnListRemove() {
 
 	ListUpdateData();
 	ListUpdateView();
+}
+
+bool SGdhBetRenderList::CanRemoveListItems() {
+	return ListView && (ListView->GetSelectedItems().Num() > 0);
 }
 
 void SGdhBetRenderList::OnListDblClick(TWeakObjectPtr<UGdhBetRenderListItem> Item) {

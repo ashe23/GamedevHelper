@@ -21,8 +21,7 @@ public:
 
 private:
 
-	TSharedRef<SDockTab> OnTabSpawnSequences(const FSpawnTabArgs& Args);
-	// TSharedRef<SDockTab> OnTabSpawnDetails(const FSpawnTabArgs& Args);
+	TSharedRef<SDockTab> OnTabSpawn(const FSpawnTabArgs& Args);
 
 	UGdhBetEncodePreset* EncodePreset = nullptr;
 };

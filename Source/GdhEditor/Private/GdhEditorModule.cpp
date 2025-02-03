@@ -6,6 +6,7 @@
 #include "LevelEditor.h"
 #include "AssetToolsModule.h"
 #include "ActorNamingTool/Slate/SGdhAnt.h"
+#include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetActions.h"
 #include "BatchEncodeTool/CustomAssets/GdhBetRenderListActions.h"
 #include "BatchEncodeTool/Slate/SGdhBet.h"
 
@@ -156,9 +157,13 @@ void FGdhEditorModule::RegisterCustomAssets() {
 			);
 
 		ActionsRenderList = MakeShared<FGdhBetRenderListActions>(Category);
+		ActionsEncodePreset = MakeShared<FGdhBetEncodePresetActions>(Category);
 
 		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(ActionsRenderList.ToSharedRef(
 		));
+		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(
+			ActionsEncodePreset.ToSharedRef()
+		);
 	}
 }
 
@@ -175,6 +180,9 @@ void FGdhEditorModule::UnregisterCustomAssets() {
 	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
 		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(
 			ActionsRenderList.ToSharedRef()
+		);
+		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(
+			ActionsEncodePreset.ToSharedRef()
 		);
 	}
 }
