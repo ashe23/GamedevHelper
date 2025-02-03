@@ -4,7 +4,9 @@
 #include "GdhCmds.h"
 #include "GdhStyles.h"
 #include "LevelEditor.h"
+#include "AssetToolsModule.h"
 #include "ActorNamingTool/Slate/SGdhAnt.h"
+#include "BatchEncodeTool/CustomAssets/GdhBetRenderListActions.h"
 #include "BatchEncodeTool/Slate/SGdhBet.h"
 
 DEFINE_LOG_CATEGORY(LogGdhEditor);
@@ -147,16 +149,17 @@ void FGdhEditorModule::RegisterAssetContextMenu() {
 }
 
 void FGdhEditorModule::RegisterCustomAssets() {
-	// if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
-	// 	const EAssetTypeCategories::Type Category =
-	// FAssetToolsModule::GetModule().Get().RegisterAdvancedAssetCategory(
-	// GdhConstants::ModuleName, FText::FromName(GdhConstants::ModuleName)
-	// 	);
-	//
-	// 	RenderListActions = MakeShared<FGdhRenderListActions>(Category);
-	//
-	// 	FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(RenderListActions.ToSharedRef());
-	// }
+	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
+		const EAssetTypeCategories::Type Category =
+			FAssetToolsModule::GetModule().Get().RegisterAdvancedAssetCategory(
+				GdhConstants::ModuleName, FText::FromName(GdhConstants::ModuleName)
+			);
+
+		ActionsRenderList = MakeShared<FGdhBetRenderListActions>(Category);
+
+		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(ActionsRenderList.ToSharedRef(
+		));
+	}
 }
 
 void FGdhEditorModule::UnregisterCmds() {
@@ -169,9 +172,11 @@ void FGdhEditorModule::UnregisterTabs() {
 }
 
 void FGdhEditorModule::UnregisterCustomAssets() {
-	// if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
-	// 	FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(RenderListActions.ToSharedRef());
-	// }
+	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
+		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(
+			ActionsRenderList.ToSharedRef()
+		);
+	}
 }
 
 void FGdhEditorModule::OnRestartEditor() const {

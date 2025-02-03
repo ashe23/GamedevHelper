@@ -19,6 +19,7 @@ class GDHEDITOR_API UGdhLibEditor : public UBlueprintFunctionLibrary
 public:
 
 	static void TryOpenFile(const FString& Path);
+	static void OpenAssetEditor(UObject* Object);
 	static void OpenAssetEditor(const FAssetData& Asset);
 	static void OpenAssetInContentBrowser(const FAssetData& Asset, const bool bSpawnNewBrowser);
 	static void OpenPathInFileExplorer(const FString& Path);

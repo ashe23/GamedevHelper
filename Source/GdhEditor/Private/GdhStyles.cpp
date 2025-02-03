@@ -106,6 +106,10 @@ TSharedRef<FSlateStyleSet> FGdhStyles::Create() {
 	Style->Set("GamedevHelper.BetRefresh.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D {20.0f, 20.0f}));
 	Style->Set("GamedevHelper.BetProcess", new IMAGE_BRUSH(TEXT("IconPlay32"), FVector2D {32.0f, 32.0f}));
 	Style->Set("GamedevHelper.BetProcess.Small", new IMAGE_BRUSH(TEXT("IconPlay20"), FVector2D {20.0f, 20.0f}));
+	Style->Set("GamedevHelper.BetRenderListRefresh", new IMAGE_BRUSH(TEXT("IconRefresh32"), FVector2D {32.0f, 32.0f}));
+	Style->Set("GamedevHelper.BetRenderListRefresh.Small", new IMAGE_BRUSH(TEXT("IconRefresh20"), FVector2D {20.0f, 20.0f}));
+	Style->Set("GamedevHelper.BetRenderListRemove", new IMAGE_BRUSH(TEXT("IconDelete32"), FVector2D {32.0f, 32.0f}));
+	Style->Set("GamedevHelper.BetRenderListRemove.Small", new IMAGE_BRUSH(TEXT("IconDelete20"), FVector2D {20.0f, 20.0f}));
 
 	// tabs
 	// Style->Set("GamedevHelper.Tab.AssetNamingTool", new IMAGE_BRUSH(TEXT("IconAssetNamingTool16"), FVector2D{16.0f, 16.0f}));

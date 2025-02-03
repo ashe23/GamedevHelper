@@ -43,4 +43,6 @@ public:
 	// Batch Encoder Tool
 	TSharedPtr<FUICommandInfo> BetRefresh;
 	TSharedPtr<FUICommandInfo> BetProcess;
+	TSharedPtr<FUICommandInfo> BetRenderListRefresh;
+	TSharedPtr<FUICommandInfo> BetRenderListRemove;
 };

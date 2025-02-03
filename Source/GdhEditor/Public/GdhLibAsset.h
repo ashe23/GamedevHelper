@@ -32,9 +32,8 @@ public:
 	 * @param Assets TArray<FAssetData>
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void GetAssetByPath(
-		const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets
-	);
+	static void
+	GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets);
 
 	/**
 	 * @brief Returns all primary and derived from primary assets in project.
@@ -43,9 +42,7 @@ public:
 	 * @param bShowSlowTask bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void GetAssetsPrimary(
-		TArray<FAssetData>& Assets, const bool bShowSlowTask = true
-	);
+	static void GetAssetsPrimary(TArray<FAssetData>& Assets, const bool bShowSlowTask = true);
 
 	/**
 	 * @brief Returns assets that used in source code or config files
@@ -54,9 +51,7 @@ public:
 	 * @param bShowSlowTask bool - Show slow task progress bar or not
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void GetAssetsIndirect(
-		TArray<FAssetData>& Assets, const bool bShowSlowTask = true
-	);
+	static void GetAssetsIndirect(TArray<FAssetData>& Assets, const bool bShowSlowTask = true);
 
 	/**
 	 * @brief Returns assets that contain unicode characters in their name
@@ -64,9 +59,7 @@ public:
 	 * @param bShowSlowTask bool - Show slow task progress bar or not
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void GetAssetsUnicode(
-		TArray<FAssetData>& Assets, const bool bShowSlowTask = true
-	);
+	static void GetAssetsUnicode(TArray<FAssetData>& Assets, const bool bShowSlowTask = true);
 
 	/**
 	 * @brief Returns all primary assets class names
@@ -203,9 +196,8 @@ public:
 	 * @param bShowSlowTask bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void FixProjectRedirectors(
-		const TArray<FAssetData>& Redirectors, const bool bShowSlowTask = true
-	);
+	static void
+	FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask = true);
 
 	/**
 	 * @brief Renames given asset
@@ -217,8 +209,7 @@ public:
 	static bool RenameAsset(const FAssetData& Asset, const FString& NewName);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static FFrameRate
-	GetLevelSequenceFrameRate(const ULevelSequence* InLevelSequence);
+	static FFrameRate GetLevelSequenceFrameRate(const ULevelSequence* InLevelSequence);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
 	static int32 GetLevelSequenceStartFrame(
@@ -226,9 +217,8 @@ public:
 	);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static int32 GetLevelSequenceEndFrame(
-		const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate
-	);
+	static int32
+	GetLevelSequenceEndFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
 	static int32 GetLevelSequenceDurationInFrames(
@@ -241,8 +231,7 @@ public:
 	);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static bool LevelSequenceHasSlomoTrack(const ULevelSequence* InLevelSequence
-	);
+	static bool LevelSequenceHasSlomoTrack(const ULevelSequence* InLevelSequence);
 
 private:
 

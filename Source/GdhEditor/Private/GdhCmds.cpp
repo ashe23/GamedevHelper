@@ -29,6 +29,8 @@ void FGdhCmds::RegisterCommands() {
 	// Batch Encode Tool
 	UI_COMMAND(BetRefresh, "Refresh", "Refresh", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(BetProcess, "Process", "Start Rendering and Encoding process", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetRenderListRefresh, "Refresh", "Refresh List", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetRenderListRemove, "Remove", "Remove Selected sequences from list", EUserInterfaceActionType::Button, FInputChord());
 	// clang-format on
 }
 

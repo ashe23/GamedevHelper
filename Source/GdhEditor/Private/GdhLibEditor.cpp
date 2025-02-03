@@ -17,6 +17,13 @@ void UGdhLibEditor::TryOpenFile(const FString& Path) {
 	FPlatformProcess::LaunchFileInDefaultExternalApplication(*Path);
 }
 
+void UGdhLibEditor::OpenAssetEditor(UObject* Object) {
+	if (!Object) return;
+	if (!GEditor) return;
+
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(Object);
+}
+
 void UGdhLibEditor::OpenAssetEditor(const FAssetData& Asset) {
 	if (!Asset.IsValid()) return;
 	if (!GEditor) return;

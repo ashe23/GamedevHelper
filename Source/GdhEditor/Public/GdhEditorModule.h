@@ -7,7 +7,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGdhEditor, Log, All);
 
-// class FGdhRenderListActions;
+class FGdhBetRenderListActions;
 
 class FGdhEditorModule final : public IModuleInterface
 {
@@ -36,5 +36,5 @@ private:
 	TSharedPtr<FUICommandList> Commands;
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
 	TSharedPtr<FExtender> MenuExtender;
-	// TSharedPtr<FGdhRenderListActions> RenderListActions;
+	TSharedPtr<FGdhBetRenderListActions> ActionsRenderList;
 };
