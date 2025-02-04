@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GdhBetSettings.generated.h"
 
+class UGdhBetEncodePreset;
+class UMoviePipelineMasterConfig;
 /**
  * Batch Encode Tool Main Settings class
  */
@@ -47,6 +49,18 @@ public:
 	// you can modify it manually.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "General")
 	FFilePath FFmpegExePath;
+
+	// Which level to use when rendering
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
+	TSoftObjectPtr<UWorld> World;
+
+	// Main Movie Render Queue settings that will be used when rendering level sequences.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Render")
+	TSoftObjectPtr<UMoviePipelineMasterConfig> RenderSettings;
+
+	// Pipeline here is just means, that we will apply all encoding command that given here
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Encode")
+	TSet<TSoftObjectPtr<UGdhBetEncodePreset>> Pipelines;
 
 	// Mapping of audio track name => to audio file path.
 	// This mapping will be used in order to mix audio with videos.

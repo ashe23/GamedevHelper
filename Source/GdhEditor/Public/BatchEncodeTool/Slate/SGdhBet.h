@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ContentBrowserDelegates.h"
 #include "Widgets/SCompoundWidget.h"
+
+class UMoviePipelineExecutorBase;
+class UGdhBetSettings;
+class UGdhBetQueueItem;
 
 class SGdhBet final : public SCompoundWidget
 {
@@ -16,17 +19,28 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
-	void OnEncodePresetRefresh();
-	void OnEncodePresetCreate();
 
-	void OnPathSelected(const FString& InPath);
-	void FilterUpdate();
+	void OnQueueRefresh();
+	void OnQueueProcess();
+	void QueueUpdateData();
+	void QueueUpdateView();
+	void OnRenderFinished(UMoviePipelineExecutorBase* Executor, bool bSuccess);
 
-	TSharedRef<SWidget> CreateToolbarPresets() const;
-	// TSharedRef<SWidget> CreateToolbarQueue() const;
+	static void OnRenderListDblClick(const FAssetData& AssetData);
+	static void OnEncodePresetDblClick(const FAssetData& AssetData);
+	FReply OnDragDropTarget(TSharedPtr<FDragDropOperation> InOperation);
+	bool CanDragDropTarget(TSharedPtr<FDragDropOperation> InOperation);
+	FText GetQueueSummaryTxt() const;
 
-	FString PathCurrent;
-	FARFilter Filter;
+	TSharedRef<SHeaderRow> GetQueueHeaderRow();
+	TSharedRef<ITableRow> OnQueueGenerateRow(
+		TWeakObjectPtr<UGdhBetQueueItem> Item, const TSharedRef<STableViewBase>& OwnerTable
+	);
+	TSharedRef<SWidget> CreateToolbarQueue() const;
 	TSharedPtr<FUICommandList> Cmds;
-	FSetARFilterDelegate DelegateFilter;
+	UGdhBetSettings* Settings = nullptr;
+	TArray<TWeakObjectPtr<UGdhBetQueueItem>> QueueItems;
+	TSharedPtr<SListView<TWeakObjectPtr<UGdhBetQueueItem>>> QueueView;
+
+	TArray<FString> EncodeCmds;
 };
