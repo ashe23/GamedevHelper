@@ -28,5 +28,15 @@ uint32 FGdhBetRenderListActions::GetCategories() {
 void FGdhBetRenderListActions::OpenAssetEditor(
 	const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor
 ) {
+	// const EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid() ? EToolkitMode::WorldCentric : EToolkitMode::Standalone;
+	//
+	// for (auto ObjIt = InObjects.CreateConstIterator(); ObjIt; ++ObjIt)
+	// {
+	// 	if (UPaperSprite* Sprite = Cast<UPaperSprite>(*ObjIt))
+	// 	{
+	// 		TSharedRef<FSpriteEditor> NewSpriteEditor(new FSpriteEditor());
+	// 		NewSpriteEditor->InitSpriteEditor(Mode, EditWithinLevelEditor, Sprite);
+	// 	}
+	// }
 	MakeShared<FGdhBetRenderListEdToolkit>()->InitEditor(InObjects);
 }

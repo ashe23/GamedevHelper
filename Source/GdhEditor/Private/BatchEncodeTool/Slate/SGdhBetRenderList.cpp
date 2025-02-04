@@ -7,9 +7,11 @@
 #include "GdhStyles.h"
 #include "GdhLibAsset.h"
 #include "GdhLibEditor.h"
+#include "IContentBrowserSingleton.h"
 #include "LevelSequence.h"
 #include "SDropTarget.h"
 #include "DragAndDrop/AssetDragDropOp.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 
@@ -28,6 +30,21 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemove),
 		FCanExecuteAction::CreateRaw(this, &SGdhBetRenderList::CanRemoveListItems)
 	);
+	Cmds->MapAction(
+		FGdhCmds::Get().BetRenderListRemoveAll,
+		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemoveAll)
+	);
+
+	FARFilter Filter;
+	Filter.ClassNames.Add(ULevelSequence::StaticClass()->GetFName());
+
+	FAssetPickerConfig PickerConfig;
+	PickerConfig.Filter = Filter;
+	PickerConfig.bAllowNullSelection = true;
+	PickerConfig.bAllowDragging = true;
+
+	const auto SequencesBrowser =
+		UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(PickerConfig);
 
 	ListUpdateData();
 	ListUpdateView();
@@ -46,37 +63,52 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 		]
 		+ SVerticalBox::Slot().Padding(5.0f).FillHeight(1.0)
 		[
-			SNew(SDropTarget)
-			.OnDrop(this, &SGdhBetRenderList::OnDragDropTarget)
-			.OnAllowDrop(this, &SGdhBetRenderList::CanDragDropTarget)
-			.OnIsRecognized(this, &SGdhBetRenderList::CanDragDropTarget)
+			SNew(SSplitter)
+			.PhysicalSplitterHandleSize(3.0f)
+			.Style(FEditorStyle::Get(), "DetailsView.Splitter")
+			.Orientation(Orient_Horizontal)
+			+ SSplitter::Slot().Value(0.6f)
+			[
+				SNew(SDropTarget)
+				.OnDrop(this, &SGdhBetRenderList::OnDragDropTarget)
+				.OnAllowDrop(this, &SGdhBetRenderList::CanDragDropTarget)
+				.OnIsRecognized(this, &SGdhBetRenderList::CanDragDropTarget)
+				[
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
+					[
+						SNew(SScrollBox)
+						.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+						.AnimateWheelScrolling(true)
+						.AllowOverscroll(EAllowOverscroll::No)
+						+ SScrollBox::Slot()
+						[
+							SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhBetRenderListItem>>)
+							.ListItemsSource(&ListItems)
+							.SelectionMode(ESelectionMode::Multi)
+							.ClearSelectionOnClick(true)
+							.OnGenerateRow(this, &SGdhBetRenderList::OnGenerateRow)
+							.OnMouseButtonDoubleClick_Raw(this, &SGdhBetRenderList::OnListDblClick)
+							.HeaderRow(GetHeaderRow())
+						]
+					]
+					+ SVerticalBox::Slot().Padding(5.0f).AutoHeight()
+					[
+						SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Center).VAlign(VAlign_Center)
+						[
+							SNew(STextBlock).Text_Raw(this, &SGdhBetRenderList::GetSummaryTxt)
+						]
+					]
+				]
+			]
+			+ SSplitter::Slot().Value(0.4f)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
 				[
-					SNew(SScrollBox)
-					.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
-					.AnimateWheelScrolling(true)
-					.AllowOverscroll(EAllowOverscroll::No)
-					+ SScrollBox::Slot()
-					[
-						SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhBetRenderListItem>>)
-						.ListItemsSource(&ListItems)
-						.SelectionMode(ESelectionMode::Multi)
-						.ClearSelectionOnClick(true)
-						.OnGenerateRow(this, &SGdhBetRenderList::OnGenerateRow)
-						.OnMouseButtonDoubleClick_Raw(this, &SGdhBetRenderList::OnListDblClick)
-						.HeaderRow(GetHeaderRow())
-					]
+					SequencesBrowser
 				]
-			]
-		]
-		+ SVerticalBox::Slot().Padding(5.0f).AutoHeight()
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Center).VAlign(VAlign_Center)
-			[
-				SNew(STextBlock).Text_Raw(this, &SGdhBetRenderList::GetSummaryTxt)
 			]
 		]
 	];
@@ -141,6 +173,13 @@ void SGdhBetRenderList::OnListRemove() {
 	ListUpdateView();
 }
 
+void SGdhBetRenderList::OnListRemoveAll() {
+	RenderList->Sequences.Reset();
+	RenderList->Modify();
+	ListUpdateData();
+	ListUpdateView();
+}
+
 bool SGdhBetRenderList::CanRemoveListItems() {
 	return ListView && (ListView->GetSelectedItems().Num() > 0);
 }
@@ -159,13 +198,16 @@ FReply SGdhBetRenderList::OnDragDropTarget(TSharedPtr<FDragDropOperation> InOper
 	FScopedTransaction Transaction {FText::FromName(TEXT("GdhDragDropOperation"))};
 
 	const auto DraggedAssets = AssetDragDropOp->GetAssets();
+	bool bNotifyDuplicate = false;
 
 	RenderList->Sequences.Reserve(RenderList->Sequences.Num() + DraggedAssets.Num());
 	for (const auto& Asset : AssetDragDropOp->GetAssets()) {
 
 		const ULevelSequence* Sequence = Cast<ULevelSequence>(Asset.GetAsset());
 		if (!Sequence) continue;
-		if (RenderList->Sequences.Contains(Sequence)) continue;
+		if (RenderList->Sequences.Contains(Sequence)) {
+			bNotifyDuplicate = true;
+		}
 
 		RenderList->Sequences.Add(Sequence);
 	}
@@ -174,6 +216,11 @@ FReply SGdhBetRenderList::OnDragDropTarget(TSharedPtr<FDragDropOperation> InOper
 
 	ListUpdateData();
 	ListUpdateView();
+
+	if (bNotifyDuplicate) {
+		const FString Msg = FString::Printf(TEXT("Some sequences already in the list"));
+		UGdhLibEditor::ShowNotification(Msg, SNotificationItem::CS_Fail, 3.0f);
+	}
 
 	return FReply::Handled();
 }
@@ -211,7 +258,9 @@ TSharedRef<SWidget> SGdhBetRenderList::CreateToolbarMain() const {
 
 	ToolBarBuilder.BeginSection("GdhBetRenderListMainToolbar");
 	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().BetRenderListRefresh);
+	ToolBarBuilder.AddSeparator();
 	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().BetRenderListRemove);
+	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().BetRenderListRemoveAll);
 	ToolBarBuilder.EndSection();
 
 	return ToolBarBuilder.MakeWidget();

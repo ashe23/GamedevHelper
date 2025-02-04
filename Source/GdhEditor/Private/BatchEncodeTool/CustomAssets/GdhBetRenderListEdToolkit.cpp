@@ -3,6 +3,7 @@
 #include "BatchEncodeTool/CustomAssets/GdhBetRenderListEdToolkit.h"
 #include "BatchEncodeTool/CustomAssets/GdhBetRenderList.h"
 #include "BatchEncodeTool/Slate/SGdhBetRenderList.h"
+#include "GdhConstants.h"
 
 void FGdhBetRenderListEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
 	RenderList = Cast<UGdhBetRenderList>(InObjects[0]);
@@ -15,14 +16,9 @@ void FGdhBetRenderListEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
 		->SetOrientation(Orient_Vertical)
 		->Split
 		(
-			FTabManager::NewSplitter()
+			FTabManager::NewStack()
 			->SetSizeCoefficient(1.0f)
-			->SetOrientation(Orient_Horizontal)
-			->Split
-			(
-				FTabManager::NewStack()->SetSizeCoefficient(1.0f)
-				->AddTab("GdhBetRenderListTab", ETabState::OpenedTab)
-			)
+			->AddTab(GdhConstants::TabRenderList, ETabState::OpenedTab)
 		)
 	);
 	// clang-format on
@@ -35,15 +31,15 @@ void FGdhBetRenderListEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
 void FGdhBetRenderListEdToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) {
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
-	const FName TaIdList = TEXT("GdhBetRenderListTab");
 	const FText WorkspaceCategory = FText::FromString("GdhBet Render List Editor");
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(WorkspaceCategory);
 
 	InTabManager
 		->RegisterTabSpawner(
-			TaIdList, FOnSpawnTab::CreateRaw(this, &FGdhBetRenderListEdToolkit::OnSpawnTabSequences)
+			GdhConstants::TabRenderList,
+			FOnSpawnTab::CreateRaw(this, &FGdhBetRenderListEdToolkit::OnSpawnTabSequences)
 		)
-		.SetDisplayName(INVTEXT("Sequences"))
+		.SetDisplayName(INVTEXT("Render List"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 }
 
@@ -51,7 +47,7 @@ void FGdhBetRenderListEdToolkit::UnregisterTabSpawners(const TSharedRef<FTabMana
 ) {
 	FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
 
-	InTabManager->UnregisterTabSpawner("GdhBetRenderListTab");
+	InTabManager->UnregisterTabSpawner(GdhConstants::TabRenderList);
 }
 
 FName FGdhBetRenderListEdToolkit::GetToolkitFName() const {

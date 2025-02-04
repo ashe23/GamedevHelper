@@ -22,6 +22,7 @@ namespace GdhConstants
 	// static const FName TabAssetNamingTool {TEXT("TabGdhAssetNamingTool")};
 	static const FName TabActorNamingTool {TEXT("TabGdhActorNamingTool")};
 	static const FName TabBatchEncodeTool {TEXT("TabGdhBatchEncodeTool")};
+	static const FName TabRenderList {TEXT("TabGdhRenderList")};
 
 	// charsets
 	static const FString Digits = TEXT("0123456789");

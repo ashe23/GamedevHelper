@@ -28,5 +28,5 @@ public:
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<TSoftObjectPtr<ULevelSequence>> Sequences;
+	TSet<TSoftObjectPtr<ULevelSequence>> Sequences;
 };

@@ -17,12 +17,14 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
+
 private:
 
 	void ListUpdateData();
 	void ListUpdateView();
 	void OnListRefresh();
 	void OnListRemove();
+	void OnListRemoveAll();
 	bool CanRemoveListItems();
 	void OnListDblClick(TWeakObjectPtr<UGdhBetRenderListItem> Item);
 
