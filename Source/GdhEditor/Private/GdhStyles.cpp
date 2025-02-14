@@ -58,12 +58,8 @@ FSlateFontInfo FGdhStyles::GetFont(const FString& FontType, const uint32 FontSiz
 #define OTF_FONT(RelativePath, ...) FSlateFontInfo( Style->RootToContentDir( RelativePath, TEXT(".otf") ), __VA_ARGS__ )
 
 TSharedRef<FSlateStyleSet> FGdhStyles::Create() {
-	TSharedRef<FSlateStyleSet> Style =
-		MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
-	Style->SetContentRoot(
-		IPluginManager::Get().FindPlugin(GdhConstants::ModuleFullName.ToString())->GetBaseDir() /
-		TEXT("Resources")
-	);
+	TSharedRef<FSlateStyleSet> Style = MakeShareable(new FSlateStyleSet(GdhConstants::ModuleStylesName));
+	Style->SetContentRoot(IPluginManager::Get().FindPlugin(GdhConstants::ModuleFullName.ToString())->GetBaseDir() / TEXT("Resources"));
 
 	// clang-format off
 	// cmds

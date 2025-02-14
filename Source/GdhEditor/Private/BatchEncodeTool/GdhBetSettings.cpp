@@ -4,12 +4,11 @@
 #include "GdhLibPath.h"
 
 UGdhBetSettings::UGdhBetSettings() {
-	const FString DirSaved = FPaths::ProjectSavedDir();
-	const FString DirGdh = TEXT("GdhRenders");
-
-	DirOutput.Path = FPaths::ConvertRelativePathToFull(DirSaved / DirGdh);
-	DirOutputFmt = TEXT("{dir_output}/{list}/videos/{preset}/{track}/{sequence}");
 	FFmpegExePath.FilePath = UGdhLibPath::GetPathFromEnv(TEXT("ffmpeg"));
+
+	const FString DirSaved = FPaths::ProjectSavedDir();
+	const FString DirGdh = TEXT("GdhBatchEncoder");
+	DirOutput.Path = FPaths::ConvertRelativePathToFull(DirSaved / DirGdh);
 }
 
 void UGdhBetSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) {

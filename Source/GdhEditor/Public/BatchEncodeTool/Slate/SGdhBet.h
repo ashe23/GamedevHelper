@@ -33,9 +33,7 @@ private:
 	FText GetQueueSummaryTxt() const;
 
 	TSharedRef<SHeaderRow> GetQueueHeaderRow();
-	TSharedRef<ITableRow> OnQueueGenerateRow(
-		TWeakObjectPtr<UGdhBetQueueItem> Item, const TSharedRef<STableViewBase>& OwnerTable
-	);
+	TSharedRef<ITableRow> OnQueueGenerateRow(TWeakObjectPtr<UGdhBetQueueItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
 	TSharedRef<SWidget> CreateToolbarQueue() const;
 	TSharedPtr<FUICommandList> Cmds;
 	UGdhBetSettings* Settings = nullptr;

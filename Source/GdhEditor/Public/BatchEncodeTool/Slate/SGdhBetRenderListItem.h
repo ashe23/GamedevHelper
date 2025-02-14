@@ -21,13 +21,13 @@ public:
 	FString DurationFrames;
 	FString DurationHuman;
 	FString HasTrackSlomo;
+	FString EncodeCmdPreview;
 
 	UPROPERTY()
 	const ULevelSequence* Sequence = nullptr;
 };
 
-class SGdhBetRenderListItem final
-	: public SMultiColumnTableRow<TWeakObjectPtr<UGdhBetRenderListItem>>
+class SGdhBetRenderListItem final : public SMultiColumnTableRow<TWeakObjectPtr<UGdhBetRenderListItem>>
 {
 public:
 

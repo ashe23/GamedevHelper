@@ -15,12 +15,6 @@ public:
 
 	UGdhBetRenderListFactory();
 
-	virtual UObject* FactoryCreateNew(
-		UClass* InClass,
-		UObject* InParent,
-		FName InName,
-		EObjectFlags Flags,
-		UObject* Context,
-		FFeedbackContext* Warn
-	) override;
+	virtual UObject*
+	FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };

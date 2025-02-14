@@ -12,19 +12,10 @@ class UGdhAntListItem : public UObject
 
 public:
 
-	UPROPERTY()
 	FString Prefix;
-
-	UPROPERTY()
 	FString Suffix;
-
-	UPROPERTY()
 	FString OldName;
-
-	UPROPERTY()
 	FString NewName;
-
-	UPROPERTY()
 	FString FolderName;
 
 	UPROPERTY()

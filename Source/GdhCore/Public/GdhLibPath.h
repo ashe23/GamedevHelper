@@ -53,8 +53,7 @@ public:
 	 * @param OutFiles
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Path")
-	static void
-	GetFiles(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFiles);
+	static void GetFiles(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFiles);
 
 	/**
 	 * @brief Returns list of files inside given path with specified file extension settings
@@ -80,9 +79,7 @@ public:
 	 * @param OutFolders
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Path")
-	static void GetFolders(
-		const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders
-	);
+	static void GetFolders(const FString& InSearchPath, const bool bSearchRecursive, TArray<FString>& OutFolders);
 
 	/**
 	 * @brief Returns size of given file in bytes

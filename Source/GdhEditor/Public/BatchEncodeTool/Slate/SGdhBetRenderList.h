@@ -20,6 +20,7 @@ public:
 
 private:
 
+	void ListUpdate();
 	void ListUpdateData();
 	void ListUpdateView();
 	void OnListRefresh();
@@ -33,9 +34,7 @@ private:
 	FText GetSummaryTxt() const;
 	TSharedRef<SWidget> CreateToolbarMain() const;
 	TSharedRef<SHeaderRow> GetHeaderRow();
-	TSharedRef<ITableRow> OnGenerateRow(
-		TWeakObjectPtr<UGdhBetRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable
-	);
+	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhBetRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TArray<TWeakObjectPtr<UGdhBetRenderListItem>> ListItems;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhBetRenderListItem>>> ListView;

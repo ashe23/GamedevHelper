@@ -6,6 +6,9 @@
 #include "GdhConstants.h"
 
 void FGdhBetRenderListEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
+
+	if (!InObjects.IsValidIndex(0)) return;
+
 	RenderList = Cast<UGdhBetRenderList>(InObjects[0]);
 
 	// clang-format off
@@ -23,9 +26,7 @@ void FGdhBetRenderListEdToolkit::InitEditor(const TArray<UObject*>& InObjects) {
 	);
 	// clang-format on
 
-	FAssetEditorToolkit::InitAssetEditor(
-		EToolkitMode::Standalone, {}, "GdhBetRenderListEditor", Layout, true, true, InObjects
-	);
+	FAssetEditorToolkit::InitAssetEditor(EToolkitMode::Standalone, {}, "GdhBetRenderListEditor", Layout, true, true, InObjects);
 }
 
 void FGdhBetRenderListEdToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) {
@@ -34,17 +35,12 @@ void FGdhBetRenderListEdToolkit::RegisterTabSpawners(const TSharedRef<FTabManage
 	const FText WorkspaceCategory = FText::FromString("GdhBet Render List Editor");
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(WorkspaceCategory);
 
-	InTabManager
-		->RegisterTabSpawner(
-			GdhConstants::TabRenderList,
-			FOnSpawnTab::CreateRaw(this, &FGdhBetRenderListEdToolkit::OnSpawnTabSequences)
-		)
+	InTabManager->RegisterTabSpawner(GdhConstants::TabRenderList, FOnSpawnTab::CreateRaw(this, &FGdhBetRenderListEdToolkit::OnSpawnTabSequences))
 		.SetDisplayName(INVTEXT("Render List"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 }
 
-void FGdhBetRenderListEdToolkit::UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager
-) {
+void FGdhBetRenderListEdToolkit::UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) {
 	FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
 
 	InTabManager->UnregisterTabSpawner(GdhConstants::TabRenderList);

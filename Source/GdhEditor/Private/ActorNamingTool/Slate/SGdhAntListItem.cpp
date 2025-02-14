@@ -4,15 +4,10 @@
 
 #include "GdhStyles.h"
 
-void SGdhAntListItem::Construct(
-	const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView
-) {
+void SGdhAntListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView) {
 	ListItem = InArgs._ListItem;
 
-	SMultiColumnTableRow::Construct(
-		SMultiColumnTableRow::FArguments().Padding(FMargin {0.0f, 2.0f, 0.0f, 0.0f}),
-		InOwnerTableView
-	);
+	SMultiColumnTableRow::Construct(SMultiColumnTableRow::FArguments().Padding(FMargin {0.0f, 2.0f, 0.0f, 0.0f}), InOwnerTableView);
 }
 TSharedRef<SWidget> SGdhAntListItem::GenerateWidgetForColumn(const FName& InColumnName) {
 

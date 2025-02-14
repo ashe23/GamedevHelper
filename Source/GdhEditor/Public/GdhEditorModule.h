@@ -38,5 +38,4 @@ private:
 	TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensibilityManager;
 	TSharedPtr<FExtender> MenuExtender;
 	TSharedPtr<FGdhBetRenderListActions> ActionsRenderList;
-	TSharedPtr<FGdhBetEncodePresetActions> ActionsEncodePreset;
 };

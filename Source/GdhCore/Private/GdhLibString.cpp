@@ -292,8 +292,7 @@ FString UGdhLibString::ConvertToPascalCase(const FString& Str) {
 
 	for (const auto& Part : Parts) {
 		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-		const FString RestOfStr =
-			UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
 		CapitalizedParts.Add(FirstLetter + RestOfStr);
 	}
 
@@ -326,11 +325,9 @@ FString UGdhLibString::ConvertToCamelCase(const FString& Str) {
 
 	int32 Index = 0;
 	for (const auto& Part : Parts) {
-		const FString FirstLetter = Index == 0
-			? UKismetStringLibrary::GetSubstring(Part, 0, 1).ToLower()
-			: UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-		const FString RestOfStr =
-			UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+		const FString FirstLetter =
+			Index == 0 ? UKismetStringLibrary::GetSubstring(Part, 0, 1).ToLower() : UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
+		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
 		CapitalizedParts.Add(FirstLetter + RestOfStr);
 
 		++Index;
@@ -358,8 +355,7 @@ FString UGdhLibString::ConvertToPascalSnakeCase(const FString& Str) {
 
 	for (const auto& Part : Parts) {
 		const FString FirstLetter = UKismetStringLibrary::GetSubstring(Part, 0, 1).ToUpper();
-		const FString RestOfStr =
-			UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
+		const FString RestOfStr = UKismetStringLibrary::GetSubstring(Part, 1, Part.Len() - 1).ToLower();
 		CapitalizedParts.Add(FirstLetter + RestOfStr);
 	}
 

@@ -3,7 +3,6 @@
 #include "BatchEncodeTool/Slate/SGdhBet.h"
 #include "BatchEncodeTool/GdhBetSettings.h"
 #include "BatchEncodeTool/CustomAssets/GdhBetRenderList.h"
-#include "BatchEncodeTool/CustomAssets/GdhBetEncodePreset.h"
 // #include "GdhCmds.h"
 // #include "GdhConstants.h"
 #include "GdhCmds.h"
@@ -28,12 +27,8 @@ void SGdhBet::Construct(const FArguments& InArgs) {
 	if (!Settings) return;
 
 	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(
-		FGdhCmds::Get().BetRefresh, FExecuteAction::CreateRaw(this, &SGdhBet::OnQueueRefresh)
-	);
-	Cmds->MapAction(
-		FGdhCmds::Get().BetProcess, FExecuteAction::CreateRaw(this, &SGdhBet::OnQueueProcess)
-	);
+	Cmds->MapAction(FGdhCmds::Get().BetRefresh, FExecuteAction::CreateRaw(this, &SGdhBet::OnQueueRefresh));
+	Cmds->MapAction(FGdhCmds::Get().BetProcess, FExecuteAction::CreateRaw(this, &SGdhBet::OnQueueProcess));
 
 	FPropertyEditorModule& PropertyEditor = UGdhLibEditor::GetModulePropertyEditor();
 
@@ -54,7 +49,6 @@ void SGdhBet::Construct(const FArguments& InArgs) {
 	FARFilter FilterEncodePreset;
 
 	FilterRenderList.ClassNames.Add(UGdhBetRenderList::StaticClass()->GetFName());
-	FilterEncodePreset.ClassNames.Add(UGdhBetEncodePreset::StaticClass()->GetFName());
 
 	FAssetPickerConfig PickerConfigRenderList;
 	PickerConfigRenderList.bAllowNullSelection = true;
@@ -64,19 +58,7 @@ void SGdhBet::Construct(const FArguments& InArgs) {
 	PickerConfigRenderList.InitialAssetViewType = EAssetViewType::Column;
 	PickerConfigRenderList.OnAssetDoubleClicked.BindStatic(&SGdhBet::OnRenderListDblClick);
 
-	const auto BrowserRenderList =
-		UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(PickerConfigRenderList);
-
-	FAssetPickerConfig PickerConfigEncodePreset;
-	PickerConfigEncodePreset.bAllowNullSelection = true;
-	PickerConfigEncodePreset.bAllowDragging = true;
-	PickerConfigEncodePreset.bAddFilterUI = false;
-	PickerConfigEncodePreset.Filter = FilterEncodePreset;
-	PickerConfigEncodePreset.InitialAssetViewType = EAssetViewType::Tile;
-	PickerConfigEncodePreset.OnAssetDoubleClicked.BindStatic(&SGdhBet::OnEncodePresetDblClick);
-
-	const auto BrowserEncodePreset =
-		UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(PickerConfigEncodePreset);
+	const auto BrowserRenderList = UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(PickerConfigRenderList);
 
 	// clang-format off
 	ChildSlot
@@ -128,10 +110,6 @@ void SGdhBet::Construct(const FArguments& InArgs) {
 							.Font(FGdhStyles::GetFont("Bold", 12))
 							.Text(FText::FromString(TEXT("Encode Presets")))
 						]
-					]
-					+ SVerticalBox::Slot().Padding(5.0f).AutoHeight()
-					[
-						BrowserEncodePreset
 					]
 				]
 			]
@@ -231,98 +209,92 @@ void SGdhBet::OnQueueProcess() {
 
 	if (!GEditor) return;
 	if (!Settings) return;
-	if (!Settings->World.LoadSynchronous()) return;
-	if (!Settings->RenderSettings.LoadSynchronous()) return;
-	if (Settings->Pipelines.Num() == 0) return;
+	// if (!Settings->World.LoadSynchronous()) return;
+	// if (!Settings->RenderSettings.LoadSynchronous()) return;
 
-	for (const auto& Preset : Settings->Pipelines) {
-		if (!Preset.LoadSynchronous()) return;
-	}
-
-	UMoviePipelineQueue* Queue =
-		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	UMoviePipelineQueue* Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
 	if (!Queue) return;
 
 	for (const auto& Job : Queue->GetJobs()) {
 		Queue->DeleteJob(Job);
 	}
 
-	UMoviePipelineOutputSetting* OutputSetting =
-		Cast<UMoviePipelineOutputSetting>(Settings->RenderSettings->FindOrAddSettingByClass(
-			UMoviePipelineOutputSetting::StaticClass()
-		));
-	if (!OutputSetting) return;
+	// UMoviePipelineOutputSetting* OutputSetting =
+	// 	Cast<UMoviePipelineOutputSetting>(Settings->RenderSettings->FindOrAddSettingByClass(
+	// 		UMoviePipelineOutputSetting::StaticClass()
+	// 	));
+	// if (!OutputSetting) return;
 
-	OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
-	OutputSetting->bOverrideExistingOutput = true;
-	OutputSetting->ZeroPadFrameNumbers = 4;
-	OutputSetting->FrameNumberOffset = 0;
-	OutputSetting->HandleFrameCount = 0;
-	OutputSetting->OutputFrameStep = 1;
-	OutputSetting->bUseCustomPlaybackRange = false;
+	// OutputSetting->FileNameFormat = TEXT("{sequence_name}_{frame_number_rel}");
+	// OutputSetting->bOverrideExistingOutput = true;
+	// OutputSetting->ZeroPadFrameNumbers = 4;
+	// OutputSetting->FrameNumberOffset = 0;
+	// OutputSetting->HandleFrameCount = 0;
+	// OutputSetting->OutputFrameStep = 1;
+	// OutputSetting->bUseCustomPlaybackRange = false;
 	// OutputSetting->CustomStartFrame = GetLevelSequenceStartFrame(InLevelSequence,
 	// Settings->Framerate); OutputSetting->CustomEndFrame =
 	// GetLevelSequenceEndFrame(InLevelSequence, Settings->Framerate);
 
-	const FString DirOutput = FPaths::ConvertRelativePathToFull(Settings->DirOutput.Path);
+	// const FString DirOutput = FPaths::ConvertRelativePathToFull(Settings->DirOutput.Path);
+	//
+	// EncodeCmds.Reset();
+	//
+	// for (const auto& Item : QueueItems) {
+	// 	if (Item->bDragRow) continue;
+	//
+	// 	const auto Job = Queue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+	// 	Job->Map = Settings->World.ToSoftObjectPath();
+	// 	Job->SetSequence(Item->LevelSequence);
+	//
+	// 	// {output}/{list}/images/{sequence}/{sequence}.*png
+	// 	const FString NameList = Item->NameRenderList;
+	// 	const FString NameSequence = Item->NameSequence;
+	// 	const FString DirOutputImages =
+	// 		FString::Printf(TEXT("%s/%s/images/%s"), *DirOutput, *NameList, *NameSequence);
+	//
+	// 	if (FPaths::DirectoryExists(*DirOutputImages)) {
+	// 		FPlatformFileManager::Get().GetPlatformFile().DeleteDirectory(*DirOutputImages);
+	// 	}
+	// 	FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirOutputImages);
+	//
+	// 	OutputSetting->OutputDirectory.Path = DirOutputImages;
+	//
+	// 	Job->SetConfiguration(Settings->RenderSettings.Get());
 
-	EncodeCmds.Reset();
-
-	for (const auto& Item : QueueItems) {
-		if (Item->bDragRow) continue;
-
-		const auto Job = Queue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
-		Job->Map = Settings->World.ToSoftObjectPath();
-		Job->SetSequence(Item->LevelSequence);
-
-		// {output}/{list}/images/{sequence}/{sequence}.*png
-		const FString NameList = Item->NameRenderList;
-		const FString NameSequence = Item->NameSequence;
-		const FString DirOutputImages =
-			FString::Printf(TEXT("%s/%s/images/%s"), *DirOutput, *NameList, *NameSequence);
-
-		if (FPaths::DirectoryExists(*DirOutputImages)) {
-			FPlatformFileManager::Get().GetPlatformFile().DeleteDirectory(*DirOutputImages);
-		}
-		FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirOutputImages);
-
-		OutputSetting->OutputDirectory.Path = DirOutputImages;
-
-		Job->SetConfiguration(Settings->RenderSettings.Get());
-
-		// ENCODING
-		for (const auto& Preset : Settings->Pipelines) {
-			const FString PresetName = Preset->PresetName.ToString();
-			const FString EncodeCmd =
-				UKismetStringLibrary::JoinStringArray(Preset->EncodeCmd, TEXT(" "));
-			const FString TokenSeqPath =
-				FString::Printf(TEXT("\"%s/%s.%%04d.png\""), *DirOutputImages, *NameSequence);
-
-			// {output}/{list}/videos/{preset}/{sequence}.mp4
-			const FString DirOutputVideo =
-				FString::Printf(TEXT("%s/%s/videos/%s"), *DirOutput, *NameList, *PresetName);
-
-			if (FPaths::DirectoryExists(*DirOutputVideo)) {
-				FPlatformFileManager::Get().GetPlatformFile().DeleteDirectory(*DirOutputVideo);
-			}
-			FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirOutputVideo);
-
-			const FString TokenVideoPath = DirOutputVideo / NameSequence;
-			const FString FinalCommand = EncodeCmd.Replace(TEXT("{seq_path}"), *TokenSeqPath)
-											 .Replace(TEXT("{video_path}"), *TokenVideoPath);
-
-			EncodeCmds.Add(FinalCommand);
-		}
-	}
-
-	const auto Executor = Cast<UMoviePipelinePIEExecutor>(
-		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(
-			UMoviePipelinePIEExecutor::StaticClass()
-		)
-	);
-	if (!Executor) return;
-
-	Executor->OnExecutorFinished().AddRaw(this, &SGdhBet::OnRenderFinished);
+	// ENCODING
+	// for (const auto& Preset : Settings->Pipelines) {
+	// 	const FString PresetName = Preset->PresetName.ToString();
+	// 	const FString EncodeCmd =
+	// 		UKismetStringLibrary::JoinStringArray(Preset->EncodeCmd, TEXT(" "));
+	// 	const FString TokenSeqPath =
+	// 		FString::Printf(TEXT("\"%s/%s.%%04d.png\""), *DirOutputImages, *NameSequence);
+	//
+	// 	// {output}/{list}/videos/{preset}/{sequence}.mp4
+	// 	const FString DirOutputVideo =
+	// 		FString::Printf(TEXT("%s/%s/videos/%s"), *DirOutput, *NameList, *PresetName);
+	//
+	// 	if (FPaths::DirectoryExists(*DirOutputVideo)) {
+	// 		FPlatformFileManager::Get().GetPlatformFile().DeleteDirectory(*DirOutputVideo);
+	// 	}
+	// 	FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirOutputVideo);
+	//
+	// 	const FString TokenVideoPath = DirOutputVideo / NameSequence;
+	// 	const FString FinalCommand = EncodeCmd.Replace(TEXT("{seq_path}"), *TokenSeqPath)
+	// 									 .Replace(TEXT("{video_path}"), *TokenVideoPath);
+	//
+	// 	EncodeCmds.Add(FinalCommand);
+	// }
+	// }
+	//
+	// const auto Executor = Cast<UMoviePipelinePIEExecutor>(
+	// 	GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(
+	// 		UMoviePipelinePIEExecutor::StaticClass()
+	// 	)
+	// );
+	// if (!Executor) return;
+	//
+	// Executor->OnExecutorFinished().AddRaw(this, &SGdhBet::OnRenderFinished);
 }
 
 void SGdhBet::QueueUpdateData() {
@@ -338,21 +310,11 @@ void SGdhBet::QueueUpdateView() {
 void SGdhBet::OnRenderFinished(UMoviePipelineExecutorBase* Executor, bool bSuccess) {
 	if (!bSuccess) return;
 
-
 	for (const auto& Cmd : EncodeCmds) {
 
 		uint32 ProcessId;
-		FProcHandle ProcessHandle = FPlatformProcess::CreateProc(
-			*Settings->FFmpegExePath.FilePath,
-			*(TEXT(" ") + Cmd),
-			true,
-			false,
-			false,
-			&ProcessId,
-			0,
-			nullptr,
-			nullptr
-		);
+		FProcHandle ProcessHandle =
+			FPlatformProcess::CreateProc(*Settings->FFmpegExePath.FilePath, *(TEXT(" ") + Cmd), true, false, false, &ProcessId, 0, nullptr, nullptr);
 
 		if (ProcessHandle.IsValid()) {
 			FPlatformProcess::WaitForProc(ProcessHandle);
@@ -483,9 +445,7 @@ TSharedRef<SHeaderRow> SGdhBet::GetQueueHeaderRow() {
 	// clang-format on
 }
 
-TSharedRef<ITableRow> SGdhBet::OnQueueGenerateRow(
-	TWeakObjectPtr<UGdhBetQueueItem> Item, const TSharedRef<STableViewBase>& OwnerTable
-) {
+TSharedRef<ITableRow> SGdhBet::OnQueueGenerateRow(TWeakObjectPtr<UGdhBetQueueItem> Item, const TSharedRef<STableViewBase>& OwnerTable) {
 	return SNew(SGdhBetQueueItem, OwnerTable).QueueItem(Item);
 }
 

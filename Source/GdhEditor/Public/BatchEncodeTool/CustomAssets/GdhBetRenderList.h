@@ -6,6 +6,10 @@
 #include "LevelSequence.h"
 #include "GdhBetRenderList.generated.h"
 
+class UMoviePipelineMasterConfig;
+
+DECLARE_MULTICAST_DELEGATE(FOnRenderListChanged)
+
 /**
  * UGdhBetRenderList
  *
@@ -27,6 +31,29 @@ public:
 
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
+	// Which level to use when rendering
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Render")
+	TSoftObjectPtr<UWorld> World;
+
+	// Main Movie Render Queue settings that will be used when rendering level sequences.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Render")
+	TSoftObjectPtr<UMoviePipelineMasterConfig> RenderSettings;
+
+	// List of sequences that should be rendered and encoded
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Render")
 	TSet<TSoftObjectPtr<ULevelSequence>> Sequences;
+
+	// FFmpeg encode command to use for encoding
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Encode")
+	TArray<FString> EncodeCmd;
+
+	// Optional audio track name to path mapping, if we want to embed audio in final video
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Encode")
+	TMap<FName, FFilePath> AudioTracks;
+
+	FOnRenderListChanged OnRenderListChanged;
 };

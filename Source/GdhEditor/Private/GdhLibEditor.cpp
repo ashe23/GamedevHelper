@@ -34,14 +34,10 @@ void UGdhLibEditor::OpenAssetEditor(const FAssetData& Asset) {
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorsForAssets(AssetNames);
 }
 
-void UGdhLibEditor::OpenAssetInContentBrowser(
-	const FAssetData& Asset, const bool bSpawnNewBrowser
-) {
+void UGdhLibEditor::OpenAssetInContentBrowser(const FAssetData& Asset, const bool bSpawnNewBrowser) {
 	if (!Asset.IsValid()) return;
 
-	GetModuleContentBrowser().Get().SyncBrowserToAssets(
-		TArray<FAssetData> {Asset}, false, true, FName {}, bSpawnNewBrowser
-	);
+	GetModuleContentBrowser().Get().SyncBrowserToAssets(TArray<FAssetData> {Asset}, false, true, FName {}, bSpawnNewBrowser);
 }
 
 void UGdhLibEditor::OpenPathInFileExplorer(const FString& Path) {
@@ -76,9 +72,7 @@ void UGdhLibEditor::ShaderCompilationDisable() {
 	GShaderCompilingManager->SkipShaderCompilation(true);
 }
 
-void UGdhLibEditor::ShowNotification(
-	const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration
-) {
+void UGdhLibEditor::ShowNotification(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration) {
 	FNotificationInfo Info {FText::FromString(Msg)};
 	Info.Text = FText::FromString(Msg);
 	Info.ExpireDuration = Duration;
@@ -89,9 +83,7 @@ void UGdhLibEditor::ShowNotification(
 	NotificationPtr.Get()->SetCompletionState(State);
 }
 
-void UGdhLibEditor::ShowNotificationWithOutputLog(
-	const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration
-) {
+void UGdhLibEditor::ShowNotificationWithOutputLog(const FString& Msg, const SNotificationItem::ECompletionState State, const float Duration) {
 	FNotificationInfo Info {FText::FromString(Msg)};
 	Info.Text = FText::FromString(Msg);
 	Info.ExpireDuration = Duration;
@@ -111,18 +103,13 @@ FAssetToolsModule& UGdhLibEditor::GetModuleAssetTools() {
 }
 
 FAssetRegistryModule& UGdhLibEditor::GetModuleAssetRegistry() {
-	return FModuleManager::LoadModuleChecked<FAssetRegistryModule>(GdhConstants::ModuleAssetRegistry
-	);
+	return FModuleManager::LoadModuleChecked<FAssetRegistryModule>(GdhConstants::ModuleAssetRegistry);
 }
 
 FContentBrowserModule& UGdhLibEditor::GetModuleContentBrowser() {
-	return FModuleManager::LoadModuleChecked<FContentBrowserModule>(
-		GdhConstants::ModuleContentBrowser
-	);
+	return FModuleManager::LoadModuleChecked<FContentBrowserModule>(GdhConstants::ModuleContentBrowser);
 }
 
 FPropertyEditorModule& UGdhLibEditor::GetModulePropertyEditor() {
-	return FModuleManager::LoadModuleChecked<FPropertyEditorModule>(
-		GdhConstants::ModulePropertyEditor
-	);
+	return FModuleManager::LoadModuleChecked<FPropertyEditorModule>(GdhConstants::ModulePropertyEditor);
 }

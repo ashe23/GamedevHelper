@@ -11,6 +11,8 @@
 #include "LevelSequence.h"
 #include "SDropTarget.h"
 #include "DragAndDrop/AssetDragDropOp.h"
+// #include "Kismet/KismetStringLibrary.h"
+#include "BatchEncodeTool/GdhBetSettings.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
@@ -19,35 +21,42 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 	if (!InArgs._RenderList) return;
 
 	RenderList = InArgs._RenderList;
+	RenderList->OnRenderListChanged.AddRaw(this, &SGdhBetRenderList::ListUpdate);
 
 	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(
-		FGdhCmds::Get().BetRenderListRefresh,
-		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRefresh)
-	);
+	Cmds->MapAction(FGdhCmds::Get().BetRenderListRefresh, FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRefresh));
 	Cmds->MapAction(
 		FGdhCmds::Get().BetRenderListRemove,
 		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemove),
 		FCanExecuteAction::CreateRaw(this, &SGdhBetRenderList::CanRemoveListItems)
 	);
-	Cmds->MapAction(
-		FGdhCmds::Get().BetRenderListRemoveAll,
-		FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemoveAll)
-	);
+	Cmds->MapAction(FGdhCmds::Get().BetRenderListRemoveAll, FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemoveAll));
 
 	FARFilter Filter;
 	Filter.ClassNames.Add(ULevelSequence::StaticClass()->GetFName());
 
 	FAssetPickerConfig PickerConfig;
 	PickerConfig.Filter = Filter;
-	PickerConfig.bAllowNullSelection = true;
 	PickerConfig.bAllowDragging = true;
 
-	const auto SequencesBrowser =
-		UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(PickerConfig);
+	const auto SequencesBrowser = UGdhLibEditor::GetModuleContentBrowser().Get().CreateAssetPicker(PickerConfig);
 
-	ListUpdateData();
-	ListUpdateView();
+	ListUpdate();
+
+	FPropertyEditorModule& PropertyEditor = UGdhLibEditor::GetModulePropertyEditor();
+
+	FDetailsViewArgs DetailsViewArgs;
+	DetailsViewArgs.bUpdatesFromSelection = false;
+	DetailsViewArgs.bLockable = false;
+	DetailsViewArgs.bAllowSearch = false;
+	DetailsViewArgs.bShowOptions = false;
+	DetailsViewArgs.bAllowFavoriteSystem = false;
+	DetailsViewArgs.bShowPropertyMatrixButton = false;
+	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+	DetailsViewArgs.ViewIdentifier = "GdhBetRenderListSettings";
+
+	const auto SettingsProperty = PropertyEditor.CreateDetailView(DetailsViewArgs);
+	SettingsProperty->SetObject(RenderList);
 
 	// clang-format off
 	ChildSlot
@@ -67,6 +76,29 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 			.PhysicalSplitterHandleSize(3.0f)
 			.Style(FEditorStyle::Get(), "DetailsView.Splitter")
 			.Orientation(Orient_Horizontal)
+			+ SSplitter::Slot().Value(0.2f)
+			[
+				SNew(SScrollBox)
+				.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+				.AnimateWheelScrolling(true)
+				.AllowOverscroll(EAllowOverscroll::No)
+				+ SScrollBox::Slot()
+				[
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
+					[
+						SettingsProperty
+					]
+				]
+			]
+			+ SSplitter::Slot().Value(0.2f)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
+				[
+					SequencesBrowser
+				]
+			]
 			+ SSplitter::Slot().Value(0.6f)
 			[
 				SNew(SDropTarget)
@@ -80,7 +112,8 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 						SNew(SScrollBox)
 						.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
 						.AnimateWheelScrolling(true)
-						.AllowOverscroll(EAllowOverscroll::No)
+						.ScrollBarVisibility(EVisibility::Visible)
+						// .AllowOverscroll(EAllowOverscroll::No)
 						+ SScrollBox::Slot()
 						[
 							SAssignNew(ListView, SListView<TWeakObjectPtr<UGdhBetRenderListItem>>)
@@ -102,21 +135,22 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 					]
 				]
 			]
-			+ SSplitter::Slot().Value(0.4f)
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
-				[
-					SequencesBrowser
-				]
-			]
+
 		]
 	];
 	// clang-format on
 }
 
+void SGdhBetRenderList::ListUpdate() {
+	ListUpdateData();
+	ListUpdateView();
+}
+
 void SGdhBetRenderList::ListUpdateData() {
 	ListItems.Reset(RenderList->Sequences.Num());
+
+	const UGdhBetSettings* BetSettings = GetDefault<UGdhBetSettings>();
+	if (!BetSettings) return;
 
 	for (const auto& Seq : RenderList->Sequences) {
 
@@ -133,6 +167,34 @@ void SGdhBetRenderList::ListUpdateData() {
 		const float DurSec = UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
 		const bool bHasSlomoTrack = UGdhLibAsset::LevelSequenceHasSlomoTrack(Sequence);
 
+		FString EncodeCmdRaw = UKismetStringLibrary::JoinStringArray(RenderList->EncodeCmd, TEXT(" "));
+
+		// {dir_output}/{render_list}/{sequence_name}/{sequence_name}.%0{padding}d.{img_format}
+		// FString FinalEncodeCmd = BetSettings->FFmpegExePath.FilePath;
+		// FinalEncodeCmd.Append(TEXT(" "));
+		const FString TokenInputImg = FString::Printf(
+			TEXT("\"%s/%s/%s/%s.%%0%dd.%s\""),
+			*FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path),
+			*RenderList->GetName(),
+			*Sequence->GetName(),
+			*Sequence->GetName(),
+			4,	 // TODO:ashe23 fix later
+			TEXT("png")	  // TODO:ashe23 fix later
+		);
+
+		// {dir_output}/{render_list}/*
+		const FString TokenOutputDir = *FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path);
+
+		// TODO:ashe23 finalize token list and show it in user interface for user
+		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{input_img}"), *TokenInputImg);
+		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{output_dir}"), *TokenOutputDir);
+		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{name_sequence}"), *Sequence->GetName());
+		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{name_renderlist}"), *RenderList->GetName());
+		// EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{input_audio:en}"), *TokenSeqPath);
+
+		const FString FinalCmd =
+			FString::Printf(TEXT("\"%s\" %s"), *FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath), *EncodeCmdRaw);
+
 		NewItem->Name = Sequence->GetName();
 		NewItem->FrameStart = FString::FromInt(FrameStart);
 		NewItem->FrameEnd = FString::FromInt(FrameEnd);
@@ -140,6 +202,7 @@ void SGdhBetRenderList::ListUpdateData() {
 		NewItem->DurationFrames = FString::FromInt(DurFrames);
 		NewItem->DurationHuman = FString::Printf(TEXT("%.2f sec"), DurSec);
 		NewItem->HasTrackSlomo = bHasSlomoTrack ? TEXT("Yes") : TEXT("No");
+		NewItem->EncodeCmdPreview = FinalCmd;
 		NewItem->Sequence = Sequence;
 
 		ListItems.Add(NewItem);
@@ -153,8 +216,7 @@ void SGdhBetRenderList::ListUpdateView() {
 }
 
 void SGdhBetRenderList::OnListRefresh() {
-	ListUpdateData();
-	ListUpdateView();
+	ListUpdate();
 }
 
 void SGdhBetRenderList::OnListRemove() {
@@ -169,15 +231,13 @@ void SGdhBetRenderList::OnListRemove() {
 
 	RenderList->Modify();
 
-	ListUpdateData();
-	ListUpdateView();
+	ListUpdate();
 }
 
 void SGdhBetRenderList::OnListRemoveAll() {
 	RenderList->Sequences.Reset();
 	RenderList->Modify();
-	ListUpdateData();
-	ListUpdateView();
+	ListUpdate();
 }
 
 bool SGdhBetRenderList::CanRemoveListItems() {
@@ -214,8 +274,7 @@ FReply SGdhBetRenderList::OnDragDropTarget(TSharedPtr<FDragDropOperation> InOper
 
 	RenderList->Modify();
 
-	ListUpdateData();
-	ListUpdateView();
+	ListUpdate();
 
 	if (bNotifyDuplicate) {
 		const FString Msg = FString::Printf(TEXT("Some sequences already in the list"));
@@ -245,12 +304,10 @@ FText SGdhBetRenderList::GetSummaryTxt() const {
 	const int32 Total = RenderList->Sequences.Num();
 
 	if (Selected > 0) {
-		return FText::FromString(
-			FString::Printf(TEXT("Total: %d - (Selected %d) sequences"), Total, Selected)
-		);
+		return FText::FromString(FString::Printf(TEXT("Sequences: %d - (Selected %d)"), Total, Selected));
 	}
 
-	return FText::FromString(FString::Printf(TEXT("Total: %d sequences"), Total));
+	return FText::FromString(FString::Printf(TEXT("Sequences: %d"), Total));
 }
 
 TSharedRef<SWidget> SGdhBetRenderList::CreateToolbarMain() const {
@@ -316,6 +373,7 @@ TSharedRef<SHeaderRow> SGdhBetRenderList::GetHeaderRow() {
 		+ SHeaderRow::Column(TEXT("DurationFrames"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
+		.FixedWidth(120.0f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
@@ -324,22 +382,35 @@ TSharedRef<SHeaderRow> SGdhBetRenderList::GetHeaderRow() {
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		]
 		+SHeaderRow::Column(TEXT("DurationHuman"))
-	   .HAlignHeader(HAlign_Center)
-	   .VAlignHeader(VAlign_Center)
-	   .HeaderContentPadding(FMargin{5.0f})
-	   [
-		   SNew(STextBlock)
-		   .Text(FText::FromString(TEXT("Duration In Sec")))
-		   .ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
-		   .Font(FGdhStyles::GetFont("Light", 10.0f))
-	   ]
-		+ SHeaderRow::Column(TEXT("TrackSlomo"))
 		.HAlignHeader(HAlign_Center)
 		.VAlignHeader(VAlign_Center)
+		.FixedWidth(100.0f)
 		.HeaderContentPadding(FMargin{5.0f})
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("Has Slomo Track")))
+			.Text(FText::FromString(TEXT("Duration In Sec")))
+			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+			.Font(FGdhStyles::GetFont("Light", 10.0f))
+		]
+		// + SHeaderRow::Column(TEXT("TrackSlomo"))
+		// .HAlignHeader(HAlign_Center)
+		// .VAlignHeader(VAlign_Center)
+		// .FixedWidth(100.0f)
+		// .HeaderContentPadding(FMargin{5.0f})
+		// [
+		// 	SNew(STextBlock)
+		// 	.Text(FText::FromString(TEXT("Has Slomo Track")))
+		// 	.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+		// 	.Font(FGdhStyles::GetFont("Light", 10.0f))
+		// ]
+		+ SHeaderRow::Column(TEXT("EncodeCmdPreview"))
+		.HAlignHeader(HAlign_Center)
+		.VAlignHeader(VAlign_Center)
+		.HeaderContentPadding(FMargin{5.0f})
+		.FixedWidth(200.0f)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("Encode Cmd Preview")))
 			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		];
@@ -347,8 +418,6 @@ TSharedRef<SHeaderRow> SGdhBetRenderList::GetHeaderRow() {
 	// clang-format on
 }
 
-TSharedRef<ITableRow> SGdhBetRenderList::OnGenerateRow(
-	TWeakObjectPtr<UGdhBetRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable
-) {
+TSharedRef<ITableRow> SGdhBetRenderList::OnGenerateRow(TWeakObjectPtr<UGdhBetRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable) {
 	return SNew(SGdhBetRenderListItem, OwnerTable).ListItem(Item);
 }

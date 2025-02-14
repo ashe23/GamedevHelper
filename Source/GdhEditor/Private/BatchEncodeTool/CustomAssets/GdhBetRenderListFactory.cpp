@@ -9,12 +9,7 @@ UGdhBetRenderListFactory::UGdhBetRenderListFactory() {
 }
 
 UObject* UGdhBetRenderListFactory::FactoryCreateNew(
-	UClass* InClass,
-	UObject* InParent,
-	FName InName,
-	EObjectFlags Flags,
-	UObject* Context,
-	FFeedbackContext* Warn
+	UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn
 ) {
 	return NewObject<UGdhBetRenderList>(InParent, InClass, InName, Flags, Context);
 }

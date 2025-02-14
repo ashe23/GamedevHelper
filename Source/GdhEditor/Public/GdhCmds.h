@@ -10,13 +10,7 @@ class GDHEDITOR_API FGdhCmds final : public TCommands<FGdhCmds>
 {
 public:
 
-	FGdhCmds() :
-		TCommands(
-			GdhConstants::ModuleFullName,
-			FText::FromString("GamedevHelper Plugin"),
-			NAME_None,
-			GdhConstants::ModuleStylesName
-		) {}
+	FGdhCmds() : TCommands(GdhConstants::ModuleFullName, FText::FromString("GamedevHelper Plugin"), NAME_None, GdhConstants::ModuleStylesName) {}
 
 	virtual void RegisterCommands() override;
 

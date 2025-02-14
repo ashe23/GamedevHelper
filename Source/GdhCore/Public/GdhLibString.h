@@ -66,12 +66,7 @@ public:
 	 * @param Num int32
 	 * @return FString
 	 */
-	UFUNCTION(
-		BlueprintCallable,
-		BlueprintPure,
-		Category = "Gdh|Lib_String",
-		meta = (DisplayName = "Repeat String")
-	)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_String", meta = (DisplayName = "Repeat String"))
 	static FString Repeat(const FString& Str, const int32 Num);
 
 	/**
@@ -82,12 +77,7 @@ public:
 	 * @param Seed int32
 	 * @return FString
 	 */
-	UFUNCTION(
-		BlueprintCallable,
-		BlueprintPure,
-		Category = "Gdh|Lib_String",
-		meta = (DisplayName = "Random String")
-	)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_String", meta = (DisplayName = "Random String"))
 	static FString Random(const int32 Len, const FString& Charset, const int32 Seed = 0);
 
 	// STRING CHECKS

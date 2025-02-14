@@ -23,9 +23,7 @@ struct GDHCORE_API FGdhAssetAffixRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(
-		BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (ShowTreeView, AllowAbstract)
-	)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (ShowTreeView, AllowAbstract))
 	TSoftClassPtr<UObject> AssetClass;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh")
@@ -43,26 +41,15 @@ struct GDHCORE_API FGdhActorAffixRow : public FTableRowBase
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh")
 	bool bEnabled = true;
 
-	UPROPERTY(
-		BlueprintReadOnly,
-		EditDefaultsOnly,
-		Category = "Gdh",
-		meta = (ShowTreeView, AllowAbstract, EditCondition = "bEnabled")
-	)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (ShowTreeView, AllowAbstract, EditCondition = "bEnabled"))
 	TSoftClassPtr<UObject> ActorClass;
 
-	UPROPERTY(
-		BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled")
-	)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled"))
 	FString Prefix;
 
-	UPROPERTY(
-		BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled")
-	)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled"))
 	FString Suffix;
 
-	UPROPERTY(
-		BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled")
-	)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled"))
 	FString Folder;
 };

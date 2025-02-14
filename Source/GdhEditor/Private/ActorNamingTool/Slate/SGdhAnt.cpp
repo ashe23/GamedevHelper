@@ -91,28 +91,17 @@ void SGdhAnt::Construct(const FArguments& InArgs) {
 }
 void SGdhAnt::CmdsRegister() {
 	Cmds = MakeShareable(new FUICommandList);
-	Cmds->MapAction(
-		FGdhCmds::Get().AntScanActors, FExecuteAction::CreateRaw(this, &SGdhAnt::OnScanActors)
-	);
-	Cmds->MapAction(
-		FGdhCmds::Get().AntOrganizeActors,
-		FExecuteAction::CreateRaw(this, &SGdhAnt::OnOrganizeActors)
-	);
-	Cmds->MapAction(
-		FGdhCmds::Get().AntRenameActors, FExecuteAction::CreateRaw(this, &SGdhAnt::OnRenameActors)
-	);
-	Cmds->MapAction(
-		FGdhCmds::Get().AntUndoAction, FExecuteAction::CreateRaw(this, &SGdhAnt::OnUndo)
-	);
+	Cmds->MapAction(FGdhCmds::Get().AntScanActors, FExecuteAction::CreateRaw(this, &SGdhAnt::OnScanActors));
+	Cmds->MapAction(FGdhCmds::Get().AntOrganizeActors, FExecuteAction::CreateRaw(this, &SGdhAnt::OnOrganizeActors));
+	Cmds->MapAction(FGdhCmds::Get().AntRenameActors, FExecuteAction::CreateRaw(this, &SGdhAnt::OnRenameActors));
+	Cmds->MapAction(FGdhCmds::Get().AntUndoAction, FExecuteAction::CreateRaw(this, &SGdhAnt::OnUndo));
 }
 void SGdhAnt::OnScanActors() {
 	UpdateListData();
 	UpdateListView();
 }
 void SGdhAnt::OnOrganizeActors() {
-	UKismetSystemLibrary::BeginTransaction(
-		TEXT("ActorNamingTool"), FText::FromString(TEXT("Actor Naming Tool: Organizing")), nullptr
-	);
+	UKismetSystemLibrary::BeginTransaction(TEXT("ActorNamingTool"), FText::FromString(TEXT("Actor Naming Tool: Organizing")), nullptr);
 
 	for (const auto& Item : ListItems) {
 		if (!Item.IsValid()) continue;
@@ -125,9 +114,7 @@ void SGdhAnt::OnOrganizeActors() {
 	UKismetSystemLibrary::EndTransaction();
 }
 void SGdhAnt::OnRenameActors() {
-	UKismetSystemLibrary::BeginTransaction(
-		TEXT("ActorNamingTool"), FText::FromString(TEXT("Actor Naming Tool: Renaming")), nullptr
-	);
+	UKismetSystemLibrary::BeginTransaction(TEXT("ActorNamingTool"), FText::FromString(TEXT("Actor Naming Tool: Renaming")), nullptr);
 
 	for (const auto& Item : ListItems) {
 		if (!Item.IsValid()) continue;
@@ -191,21 +178,16 @@ void SGdhAnt::UpdateListData() {
 		ActorBaseName.RemoveFromStart(Affix->Prefix.ToLower());
 		ActorBaseName.RemoveFromEnd(Affix->Suffix.ToLower());
 
-		const FString Prefix = Affix->Prefix.IsEmpty()
-			? ""
-			: UGdhLibString::ConvertNamingCase(Affix->Prefix, AntSettings->PrefixNamingCase) +
-				TEXT("_");
-		const FString Suffix = Affix->Suffix.IsEmpty() ? ""
-													   : TEXT("_") +
-				UGdhLibString::ConvertNamingCase(Affix->Suffix, AntSettings->SuffixNamingCase);
-		const FString ActorName =
-			UGdhLibString::ConvertNamingCase(Actor->GetActorLabel(), AntSettings->ActorNamingCase);
+		const FString Prefix =
+			Affix->Prefix.IsEmpty() ? "" : UGdhLibString::ConvertNamingCase(Affix->Prefix, AntSettings->PrefixNamingCase) + TEXT("_");
+		const FString Suffix =
+			Affix->Suffix.IsEmpty() ? "" : TEXT("_") + UGdhLibString::ConvertNamingCase(Affix->Suffix, AntSettings->SuffixNamingCase);
+		const FString ActorName = UGdhLibString::ConvertNamingCase(Actor->GetActorLabel(), AntSettings->ActorNamingCase);
 		const FString NewName = Prefix + ActorName + Suffix;
 
 		if (NewName.Equals(Actor->GetActorLabel(), ESearchCase::CaseSensitive)) continue;
 
-		const FString FolderName =
-			UGdhLibString::ConvertNamingCase(Affix->Folder, AntSettings->FolderNamingCase);
+		const FString FolderName = UGdhLibString::ConvertNamingCase(Affix->Folder, AntSettings->FolderNamingCase);
 
 		NewItem->Prefix = Affix->Prefix;
 		NewItem->Suffix = Affix->Suffix;
@@ -294,8 +276,6 @@ TSharedRef<SHeaderRow> SGdhAnt::GetHeaderRow() {
 
 	// clang-format on
 }
-TSharedRef<ITableRow> SGdhAnt::OnGenerateRow(
-	TWeakObjectPtr<UGdhAntListItem> Item, const TSharedRef<STableViewBase>& OwnerTable
-) {
+TSharedRef<ITableRow> SGdhAnt::OnGenerateRow(TWeakObjectPtr<UGdhAntListItem> Item, const TSharedRef<STableViewBase>& OwnerTable) {
 	return SNew(SGdhAntListItem, OwnerTable).ListItem(Item);
 }

@@ -32,8 +32,7 @@ public:
 	 * @param Assets TArray<FAssetData>
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void
-	GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets);
+	static void GetAssetByPath(const FString& Path, const bool bRecursive, TArray<FAssetData>& Assets);
 
 	/**
 	 * @brief Returns all primary and derived from primary assets in project.
@@ -95,11 +94,7 @@ public:
 	 * @return FGdhAssetNameAffix
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static FGdhAffix GetAssetNameAffix(
-		const FAssetData& Asset,
-		const UDataTable* Mappings,
-		const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes
-	);
+	static FGdhAffix GetAssetNameAffix(const FAssetData& Asset, const UDataTable* Mappings, const TMap<EGdhBlueprintType, FGdhAffix>& BlueprintTypes);
 
 	/**
 	 * @brief Returns corrected name of asset by naming convention
@@ -196,8 +191,7 @@ public:
 	 * @param bShowSlowTask bool
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Gdh|Lib_Asset")
-	static void
-	FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask = true);
+	static void FixProjectRedirectors(const TArray<FAssetData>& Redirectors, const bool bShowSlowTask = true);
 
 	/**
 	 * @brief Renames given asset
@@ -212,23 +206,16 @@ public:
 	static FFrameRate GetLevelSequenceFrameRate(const ULevelSequence* InLevelSequence);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static int32 GetLevelSequenceStartFrame(
-		const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate
-	);
+	static int32 GetLevelSequenceStartFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static int32
-	GetLevelSequenceEndFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
+	static int32 GetLevelSequenceEndFrame(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static int32 GetLevelSequenceDurationInFrames(
-		const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate
-	);
+	static int32 GetLevelSequenceDurationInFrames(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
-	static float GetLevelSequenceDurationInSeconds(
-		const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate
-	);
+	static float GetLevelSequenceDurationInSeconds(const ULevelSequence* InLevelSequence, const FFrameRate& InFrameRate);
 
 	UFUNCTION(BlueprintCallable, Category = "Gdh|Lib_Asset")
 	static bool LevelSequenceHasSlomoTrack(const ULevelSequence* InLevelSequence);

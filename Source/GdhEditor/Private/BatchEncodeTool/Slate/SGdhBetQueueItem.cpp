@@ -1,33 +1,23 @@
 ﻿// Copyright Ashot Barkhudaryan. All Rights Reserved.
 
 #include "BatchEncodeTool/Slate/SGdhBetQueueItem.h"
-#include "BatchEncodeTool/CustomAssets/GdhBetEncodePreset.h"
 #include "SDropTarget.h"
 #include "DragAndDrop/AssetDragDropOp.h"
 
-void SGdhBetQueueItem::Construct(
-	const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView
-) {
+void SGdhBetQueueItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView) {
 	QueueItem = InArgs._QueueItem;
 
-	SMultiColumnTableRow::Construct(
-		SMultiColumnTableRow::FArguments().Padding(FMargin {0.0f, 2.0f, 0.0f, 0.0f}),
-		InOwnerTableView
-	);
+	SMultiColumnTableRow::Construct(SMultiColumnTableRow::FArguments().Padding(FMargin {0.0f, 2.0f, 0.0f, 0.0f}), InOwnerTableView);
 }
 
 TSharedRef<SWidget> SGdhBetQueueItem::GenerateWidgetForColumn(const FName& InColumnName) {
 
 	if (InColumnName == TEXT("RenderList") && QueueItem->bDragRow) {
-		return SNew(STextBlock)
-			.Text(FText::FromString(QueueItem->NameRenderList))
-			.Justification(ETextJustify::Center);
+		return SNew(STextBlock).Text(FText::FromString(QueueItem->NameRenderList)).Justification(ETextJustify::Center);
 	}
 
 	if (InColumnName == TEXT("SeqName") && !QueueItem->bDragRow) {
-		return SNew(STextBlock)
-			.Text(FText::FromString(QueueItem->NameSequence))
-			.Justification(ETextJustify::Center);
+		return SNew(STextBlock).Text(FText::FromString(QueueItem->NameSequence)).Justification(ETextJustify::Center);
 	}
 
 	// if (QueueItem->bDragRow) {
@@ -79,12 +69,12 @@ bool SGdhBetQueueItem::CanDragDropTarget(TSharedPtr<FDragDropOperation> InOperat
 	if (!InOperation) return false;
 	if (!InOperation->IsOfType<FAssetDragDropOp>()) return false;
 
-	const auto AssetDragDropOp = StaticCastSharedPtr<FAssetDragDropOp>(InOperation);
-	for (const auto& Asset : AssetDragDropOp->GetAssets()) {
-		if (Cast<UGdhBetEncodePreset>(Asset.GetAsset())) {
-			return true;
-		}
-	}
+	// const auto AssetDragDropOp = StaticCastSharedPtr<FAssetDragDropOp>(InOperation);
+	// for (const auto& Asset : AssetDragDropOp->GetAssets()) {
+	// 	if (Cast<UGdhBetEncodePreset>(Asset.GetAsset())) {
+	// 		return true;
+	// 	}
+	// }
 
 	return false;
 }

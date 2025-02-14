@@ -30,9 +30,7 @@ private:
 
 	TSharedRef<SWidget> CreateToolbarMain() const;
 	TSharedRef<SHeaderRow> GetHeaderRow();
-	TSharedRef<ITableRow> OnGenerateRow(
-		TWeakObjectPtr<UGdhAntListItem> Item, const TSharedRef<STableViewBase>& OwnerTable
-	);
+	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhAntListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TSharedPtr<FUICommandList> Cmds;
 	TArray<TWeakObjectPtr<UGdhAntListItem>> ListItems;

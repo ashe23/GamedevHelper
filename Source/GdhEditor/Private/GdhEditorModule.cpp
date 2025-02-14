@@ -6,7 +6,6 @@
 #include "LevelEditor.h"
 #include "AssetToolsModule.h"
 #include "ActorNamingTool/Slate/SGdhAnt.h"
-#include "BatchEncodeTool/CustomAssets/GdhBetEncodePresetActions.h"
 #include "BatchEncodeTool/CustomAssets/GdhBetRenderListActions.h"
 #include "BatchEncodeTool/Slate/SGdhBet.h"
 
@@ -33,36 +32,21 @@ void FGdhEditorModule::RegisterCmds() {
 	FGdhCmds::Register();
 
 	Commands = MakeShareable(new FUICommandList);
-	Commands->MapAction(
-		FGdhCmds::Get().RestartEditor,
-		FExecuteAction::CreateRaw(this, &FGdhEditorModule::OnRestartEditor)
-	);
-	Commands->MapAction(
-		FGdhCmds::Get().OpenActorNamingTool,
-		FExecuteAction::CreateRaw(this, &FGdhEditorModule::OnOpenAnt)
-	);
-	Commands->MapAction(
-		FGdhCmds::Get().OpenBatchEncodeTool,
-		FExecuteAction::CreateRaw(this, &FGdhEditorModule::OnOpenBet)
-	);
+	Commands->MapAction(FGdhCmds::Get().RestartEditor, FExecuteAction::CreateRaw(this, &FGdhEditorModule::OnRestartEditor));
+	Commands->MapAction(FGdhCmds::Get().OpenActorNamingTool, FExecuteAction::CreateRaw(this, &FGdhEditorModule::OnOpenAnt));
+	Commands->MapAction(FGdhCmds::Get().OpenBatchEncodeTool, FExecuteAction::CreateRaw(this, &FGdhEditorModule::OnOpenBet));
 }
 
 void FGdhEditorModule::RegisterTabs() {
 
 	FGlobalTabmanager::Get()
-		->RegisterNomadTabSpawner(
-			GdhConstants::TabActorNamingTool,
-			FOnSpawnTab::CreateRaw(this, &FGdhEditorModule::OnTabSpawnAnt)
-		)
+		->RegisterNomadTabSpawner(GdhConstants::TabActorNamingTool, FOnSpawnTab::CreateRaw(this, &FGdhEditorModule::OnTabSpawnAnt))
 		.SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.ActorNamingTool"))
 		.SetDisplayName(FText::FromName(TEXT("Actor Naming Tool")))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 
 	FGlobalTabmanager::Get()
-		->RegisterNomadTabSpawner(
-			GdhConstants::TabBatchEncodeTool,
-			FOnSpawnTab::CreateRaw(this, &FGdhEditorModule::OnTabSpawnBet)
-		)
+		->RegisterNomadTabSpawner(GdhConstants::TabBatchEncodeTool, FOnSpawnTab::CreateRaw(this, &FGdhEditorModule::OnTabSpawnBet))
 		.SetIcon(FGdhStyles::GetIcon("GamedevHelper.Tab.BatchEncodeTool"))
 		.SetDisplayName(FText::FromName(TEXT("Batch Encode Tool")))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
@@ -71,15 +55,11 @@ void FGdhEditorModule::RegisterTabs() {
 void FGdhEditorModule::RegisterMainToolbar() {
 	if (IsRunningCommandlet()) return;
 
-	FLevelEditorModule& LevelEditorModule =
-		FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	LevelEditorMenuExtensibilityManager = LevelEditorModule.GetMenuExtensibilityManager();
 	MenuExtender = MakeShareable(new FExtender);
 	MenuExtender->AddMenuBarExtension(
-		"Window",
-		EExtensionHook::After,
-		Commands,
-		FMenuBarExtensionDelegate::CreateLambda([&](FMenuBarBuilder& MenuBarBuilder) {
+		"Window", EExtensionHook::After, Commands, FMenuBarExtensionDelegate::CreateLambda([&](FMenuBarBuilder& MenuBarBuilder) {
 			MenuBarBuilder.AddPullDownMenu(
 				FText::FromString(GdhConstants::ModuleName.ToString()),
 				FText::FromString("Open GamedevHelper Main Menu"),
@@ -103,21 +83,22 @@ void FGdhEditorModule::RegisterMainToolbar() {
 }
 
 void FGdhEditorModule::RegisterAssetContextMenu() {
-	// UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu");
+	// UToolMenu* Menu =
+	// UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu");
 	// FToolMenuSection& Section = Menu->FindOrAddSection("GdhActions");
-	// Section.InsertPosition = FToolMenuInsert("CommonAssetActions", EToolMenuInsertType::After);
-	// Section.AddSubMenu(
+	// Section.InsertPosition = FToolMenuInsert("CommonAssetActions",
+	// EToolMenuInsertType::After); Section.AddSubMenu(
 	// 	TEXT("GamedevHelperActionsSubMenu"),
 	// 	FText::FromString(TEXT("Gdh Actions")),
 	// 	FText::FromString(TEXT("Asset Helper Actions")),
 	// 	FNewMenuDelegate::CreateLambda([](FMenuBuilder& MenuBuilder)
 	// 	{
-	// 		MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex Anim Tools"));
-	// 		MenuBuilder.AddMenuEntry(
+	// 		MenuBuilder.BeginSection("Section_VAT", FText::FromString("Vertex
+	// Anim Tools")); 		MenuBuilder.AddMenuEntry(
 	// 			FText::FromString(TEXT("Configure for VertexAnim")),
-	// 			FText::FromString(TEXT("Configure selected static meshes for vertex animation")),
-	// 			FSlateIcon(FGdhStyles::GetStyleSetName(), "GamedevHelper.Icon.VertexAnim"),
-	// 			FUIAction(
+	// 			FText::FromString(TEXT("Configure selected static meshes for
+	// vertex animation")), 			FSlateIcon(FGdhStyles::GetStyleSetName(),
+	// "GamedevHelper.Icon.VertexAnim"), 			FUIAction(
 	// 				FExecuteAction::CreateLambda([]()
 	// 				{
 	// 					UE_LOG(LogGdhTools, Warning, TEXT("Hello"));
@@ -125,11 +106,12 @@ void FGdhEditorModule::RegisterAssetContextMenu() {
 	// 			)
 	// 		);
 	// 		MenuBuilder.EndSection();
-	// 		MenuBuilder.BeginSection("Section_Util", FText::FromString("Utility"));
-	// 		MenuBuilder.AddMenuEntry(
+	// 		MenuBuilder.BeginSection("Section_Util",
+	// FText::FromString("Utility")); 		MenuBuilder.AddMenuEntry(
 	// 			FText::FromString(TEXT("Disable Collision")),
-	// 			FText::FromString(TEXT("Disables collision on selected static meshes, included all
-	// LODS")), 			FSlateIcon(FGdhStyles::GetStyleSetName(),
+	// 			FText::FromString(TEXT("Disables collision on selected static
+	// meshes, included all LODS")),
+	// FSlateIcon(FGdhStyles::GetStyleSetName(),
 	// "GamedevHelper.Icon.Collision"), 			FUIAction(
 	// FExecuteAction::CreateLambda([]()
 	// 				{
@@ -146,24 +128,18 @@ void FGdhEditorModule::RegisterAssetContextMenu() {
 	// UToolMenus* ToolMenus = UToolMenus::Get();
 	// UToolMenu* Menu = ToolMenus->ExtendMenu("LevelEditor.ActorContextMenu");
 	// FToolMenuSection& Section = Menu->AddSection("GdhActions",
-	// FText::FromName(TEXT("GdhActions"))); Section.AddMenuEntry(FGdhCmds::Get().RenameAssets);
+	// FText::FromName(TEXT("GdhActions")));
+	// Section.AddMenuEntry(FGdhCmds::Get().RenameAssets);
 }
 
 void FGdhEditorModule::RegisterCustomAssets() {
 	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
 		const EAssetTypeCategories::Type Category =
-			FAssetToolsModule::GetModule().Get().RegisterAdvancedAssetCategory(
-				GdhConstants::ModuleName, FText::FromName(GdhConstants::ModuleName)
-			);
+			FAssetToolsModule::GetModule().Get().RegisterAdvancedAssetCategory(GdhConstants::ModuleName, FText::FromName(GdhConstants::ModuleName));
 
 		ActionsRenderList = MakeShared<FGdhBetRenderListActions>(Category);
-		ActionsEncodePreset = MakeShared<FGdhBetEncodePresetActions>(Category);
 
-		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(ActionsRenderList.ToSharedRef(
-		));
-		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(
-			ActionsEncodePreset.ToSharedRef()
-		);
+		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(ActionsRenderList.ToSharedRef());
 	}
 }
 
@@ -178,12 +154,7 @@ void FGdhEditorModule::UnregisterTabs() {
 
 void FGdhEditorModule::UnregisterCustomAssets() {
 	if (FModuleManager::Get().IsModuleLoaded(GdhConstants::ModuleAssetTools)) {
-		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(
-			ActionsRenderList.ToSharedRef()
-		);
-		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(
-			ActionsEncodePreset.ToSharedRef()
-		);
+		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(ActionsRenderList.ToSharedRef());
 	}
 }
 
