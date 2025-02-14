@@ -3,6 +3,7 @@
 #include "BatchEncodeTool/Slate/SGdhBetRenderListItem.h"
 #include "LevelSequence.h"
 #include "Widgets/Input/SHyperlink.h"
+#include "Widgets/Input/SMultiLineEditableTextBox.h"
 
 void SGdhBetRenderListItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView) {
 	ListItem = InArgs._ListItem;
@@ -76,12 +77,16 @@ TSharedRef<SWidget> SGdhBetRenderListItem::GenerateWidgetForColumn(const FName& 
 					TSharedRef<SWindow> WindowEncodeCmd =
 						SNew(SWindow)
 						.Title(FText::FromString(TEXT("Encode Command Preview")))
-						.ClientSize(FVector2D {1280, 720})
+						.ClientSize(FVector2D {800, 400})
 						[
 							SNew(SVerticalBox)
 							+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
 							[
-								SNew(SEditableText).IsReadOnly(true).Text(FText::FromString(ListItem->EncodeCmdPreview)).Justification(ETextJustify::Left)
+								SNew(SMultiLineEditableText)
+								.IsReadOnly(true)
+								.AutoWrapText(true)
+								.Justification(ETextJustify::Left)
+								.Text(FText::FromString(ListItem->EncodeCmdPreview))
 							]
 						];
 

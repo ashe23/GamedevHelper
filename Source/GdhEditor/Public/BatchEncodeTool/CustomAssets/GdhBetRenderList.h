@@ -53,7 +53,7 @@ public:
 
 	// Optional audio track name to path mapping, if we want to embed audio in final video
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Encode")
-	TMap<FName, FFilePath> AudioTracks;
+	TMap<FString, FFilePath> AudioTracks;
 
 	FOnRenderListChanged OnRenderListChanged;
 };

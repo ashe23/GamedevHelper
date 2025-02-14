@@ -32,6 +32,7 @@ void FGdhCmds::RegisterCommands() {
 	UI_COMMAND(BetRenderListRefresh, "Refresh", "Refresh List", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(BetRenderListRemove, "Remove", "Remove Selected sequences from list", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(BetRenderListRemoveAll, "Remove All", "Remove All sequences from list", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(BetRenderListRencode, "Rencode", "Render and encode sequences", EUserInterfaceActionType::Button, FInputChord());
 
 	// clang-format on
 }

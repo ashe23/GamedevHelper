@@ -12,8 +12,13 @@
 #include "SDropTarget.h"
 #include "DragAndDrop/AssetDragDropOp.h"
 // #include "Kismet/KismetStringLibrary.h"
+#include "GdhLibEncoder.h"
+#include "MoviePipelineOutputSetting.h"
+#include "MoviePipelinePIEExecutor.h"
+#include "MoviePipelineQueueSubsystem.h"
 #include "BatchEncodeTool/GdhBetSettings.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/ScopedSlowTask.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 
@@ -31,6 +36,10 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 		FCanExecuteAction::CreateRaw(this, &SGdhBetRenderList::CanRemoveListItems)
 	);
 	Cmds->MapAction(FGdhCmds::Get().BetRenderListRemoveAll, FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnListRemoveAll));
+	Cmds->MapAction(
+		FGdhCmds::Get().BetRenderListRencode, FExecuteAction::CreateRaw(this, &SGdhBetRenderList::OnRencode)
+		// FCanExecuteAction::CreateRaw(this, &SGdhBetRenderList::CanRemoveListItems)
+	);
 
 	FARFilter Filter;
 	Filter.ClassNames.Add(ULevelSequence::StaticClass()->GetFName());
@@ -76,7 +85,7 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 			.PhysicalSplitterHandleSize(3.0f)
 			.Style(FEditorStyle::Get(), "DetailsView.Splitter")
 			.Orientation(Orient_Horizontal)
-			+ SSplitter::Slot().Value(0.2f)
+			+ SSplitter::Slot().Value(0.4f)
 			[
 				SNew(SScrollBox)
 				.ScrollWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
@@ -99,7 +108,7 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 					SequencesBrowser
 				]
 			]
-			+ SSplitter::Slot().Value(0.6f)
+			+ SSplitter::Slot().Value(0.4f)
 			[
 				SNew(SDropTarget)
 				.OnDrop(this, &SGdhBetRenderList::OnDragDropTarget)
@@ -120,7 +129,7 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 							.ListItemsSource(&ListItems)
 							.SelectionMode(ESelectionMode::Multi)
 							.ClearSelectionOnClick(true)
-							.OnGenerateRow(this, &SGdhBetRenderList::OnGenerateRow)
+							.OnGenerateRow_Static(&SGdhBetRenderList::OnGenerateRow)
 							.OnMouseButtonDoubleClick_Raw(this, &SGdhBetRenderList::OnListDblClick)
 							.HeaderRow(GetHeaderRow())
 						]
@@ -152,6 +161,9 @@ void SGdhBetRenderList::ListUpdateData() {
 	const UGdhBetSettings* BetSettings = GetDefault<UGdhBetSettings>();
 	if (!BetSettings) return;
 
+	const FString MainOutputDir = FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path);
+	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath);
+
 	for (const auto& Seq : RenderList->Sequences) {
 
 		const ULevelSequence* Sequence = Seq.LoadSynchronous();
@@ -167,33 +179,44 @@ void SGdhBetRenderList::ListUpdateData() {
 		const float DurSec = UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
 		const bool bHasSlomoTrack = UGdhLibAsset::LevelSequenceHasSlomoTrack(Sequence);
 
-		FString EncodeCmdRaw = UKismetStringLibrary::JoinStringArray(RenderList->EncodeCmd, TEXT(" "));
+		FString EncodeCmd = UKismetStringLibrary::JoinStringArray(RenderList->EncodeCmd, TEXT(" "));
 
-		// {dir_output}/{render_list}/{sequence_name}/{sequence_name}.%0{padding}d.{img_format}
-		// FString FinalEncodeCmd = BetSettings->FFmpegExePath.FilePath;
-		// FinalEncodeCmd.Append(TEXT(" "));
+		// {dir_output}/{render_list}/images/{sequence_name}/{sequence_name}.%0{padding}d.{img_format}
 		const FString TokenInputImg = FString::Printf(
 			TEXT("\"%s/%s/%s/%s.%%0%dd.%s\""),
-			*FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path),
+			*MainOutputDir,
 			*RenderList->GetName(),
 			*Sequence->GetName(),
 			*Sequence->GetName(),
-			4,	 // TODO:ashe23 fix later
-			TEXT("png")	  // TODO:ashe23 fix later
+			UGdhLibEncoder::GetZeroPadding(RenderList->RenderSettings.LoadSynchronous()),
+			*UGdhLibEncoder::GetImageExtension(RenderList->RenderSettings.LoadSynchronous())
 		);
 
-		// {dir_output}/{render_list}/*
-		const FString TokenOutputDir = *FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path);
-
 		// TODO:ashe23 finalize token list and show it in user interface for user
-		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{input_img}"), *TokenInputImg);
-		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{output_dir}"), *TokenOutputDir);
-		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{name_sequence}"), *Sequence->GetName());
-		EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{name_renderlist}"), *RenderList->GetName());
-		// EncodeCmdRaw = EncodeCmdRaw.Replace(TEXT("{input_audio:en}"), *TokenSeqPath);
+		EncodeCmd = EncodeCmd.Replace(TEXT("{input_img}"), *TokenInputImg);
+		EncodeCmd = EncodeCmd.Replace(TEXT("{output_dir}"), *MainOutputDir);
+		EncodeCmd = EncodeCmd.Replace(TEXT("{name_sequence}"), *Sequence->GetName());
+		EncodeCmd = EncodeCmd.Replace(TEXT("{name_renderlist}"), *RenderList->GetName());
 
-		const FString FinalCmd =
-			FString::Printf(TEXT("\"%s\" %s"), *FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath), *EncodeCmdRaw);
+		// token => path
+		TMap<FString, FString> AudioTrackTokenMap;
+
+		if (RenderList->AudioTracks.Num() > 0) {
+			for (const auto& AudioTrack : RenderList->AudioTracks) {
+				const FString AudioTrackName = AudioTrack.Key;
+				const FString AudioTrackPath = FPaths::ConvertRelativePathToFull(AudioTrack.Value.FilePath);
+
+				AudioTrackTokenMap.Add(FString::Printf(TEXT("{input_audio:%s}"), *AudioTrackName), *AudioTrackPath);
+			}
+		}
+
+		for (const auto& Token : AudioTrackTokenMap) {
+			if (EncodeCmd.Contains(Token.Key)) {
+				EncodeCmd = EncodeCmd.Replace(*Token.Key, *Token.Value);
+			}
+		}
+
+		const FString FinalCmd = FString::Printf(TEXT("%s %s"), *FFmpegExePath, *EncodeCmd);
 
 		NewItem->Name = Sequence->GetName();
 		NewItem->FrameStart = FString::FromInt(FrameStart);
@@ -209,7 +232,7 @@ void SGdhBetRenderList::ListUpdateData() {
 	}
 }
 
-void SGdhBetRenderList::ListUpdateView() {
+void SGdhBetRenderList::ListUpdateView() const {
 	if (!ListView) return;
 
 	ListView->RebuildList();
@@ -237,6 +260,83 @@ void SGdhBetRenderList::OnListRemove() {
 void SGdhBetRenderList::OnListRemoveAll() {
 	RenderList->Sequences.Reset();
 	RenderList->Modify();
+	ListUpdate();
+}
+
+void SGdhBetRenderList::OnRencode() {
+
+	const UGdhBetSettings* BetSettings = GetDefault<UGdhBetSettings>();
+	if (!BetSettings) return;
+
+	UMoviePipelineMasterConfig* RenderSettings = RenderList->RenderSettings.LoadSynchronous();
+	if (!RenderSettings) return;
+
+	const FString MainOutputDir = FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path);
+	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath);
+
+	UMoviePipelineQueue* Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
+	if (!Queue) return;
+
+	for (const auto& Job : Queue->GetJobs()) {
+		Queue->DeleteJob(Job);
+	}
+
+	UMoviePipelineOutputSetting* OutputSetting = RenderSettings->FindSetting<UMoviePipelineOutputSetting>();
+	if (!OutputSetting) return;
+
+	EncodeCmds.Reset(ListItems.Num());
+
+	for (const auto& Item : ListItems) {
+		const auto Job = Queue->AllocateNewJob(UMoviePipelineExecutorJob::StaticClass());
+		Job->Map = RenderList->World.LoadSynchronous();
+		Job->SetSequence(Item->Sequence);
+
+		// {dir_output}/{list}/{sequence}
+		const FString DirOutput = FString::Printf(TEXT("%s/%s/%s"), *MainOutputDir, *RenderList->GetName(), *Item->Sequence->GetName());
+		OutputSetting->OutputDirectory.Path = DirOutput;
+
+		Job->SetConfiguration(RenderSettings);
+
+		FString EncodeCmdInternal = Item->EncodeCmdPreview;
+		EncodeCmdInternal.RemoveFromStart(FFmpegExePath);
+
+		EncodeCmds.Add(EncodeCmdInternal);
+	}
+
+	OutputSetting->FileNameFormat = TEXT("{sequence_name}.{frame_number_rel}");
+	OutputSetting->bOverrideExistingOutput = true;
+
+	const auto Executor = Cast<UMoviePipelinePIEExecutor>(
+		GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->RenderQueueWithExecutor(UMoviePipelinePIEExecutor::StaticClass())
+	);
+	if (!Executor) return;
+
+	Executor->OnExecutorFinished().AddRaw(this, &SGdhBetRenderList::OnRencodeFinished);
+}
+
+void SGdhBetRenderList::OnRencodeFinished(UMoviePipelineExecutorBase*, bool bSuccess) {
+	if (!bSuccess) return;
+
+	const UGdhBetSettings* BetSettings = GetDefault<UGdhBetSettings>();
+	if (!BetSettings) return;
+
+	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath);
+
+	FScopedSlowTask SlowTask {static_cast<float>(EncodeCmds.Num()), FText::FromString(TEXT("Encoding ..."))};
+	SlowTask.MakeDialog();
+
+	for (const auto& Cmd : EncodeCmds) {
+		SlowTask.EnterProgressFrame(1.0f);
+
+		uint32 ProcessId;
+		FProcHandle ProcessHandle =
+			FPlatformProcess::CreateProc(*FFmpegExePath, *(TEXT(" ") + Cmd), true, false, false, &ProcessId, 0, nullptr, nullptr);
+
+		if (ProcessHandle.IsValid()) {
+			FPlatformProcess::WaitForProc(ProcessHandle);
+		}
+	}
+
 	ListUpdate();
 }
 
@@ -318,6 +418,8 @@ TSharedRef<SWidget> SGdhBetRenderList::CreateToolbarMain() const {
 	ToolBarBuilder.AddSeparator();
 	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().BetRenderListRemove);
 	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().BetRenderListRemoveAll);
+	ToolBarBuilder.AddSeparator();
+	ToolBarBuilder.AddToolBarButton(FGdhCmds::Get().BetRenderListRencode);
 	ToolBarBuilder.EndSection();
 
 	return ToolBarBuilder.MakeWidget();

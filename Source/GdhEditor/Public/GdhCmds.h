@@ -40,4 +40,5 @@ public:
 	TSharedPtr<FUICommandInfo> BetRenderListRefresh;
 	TSharedPtr<FUICommandInfo> BetRenderListRemove;
 	TSharedPtr<FUICommandInfo> BetRenderListRemoveAll;
+	TSharedPtr<FUICommandInfo> BetRenderListRencode;
 };

@@ -7,6 +7,7 @@
 
 class UGdhBetRenderList;
 class UGdhBetRenderListItem;
+class UMoviePipelineExecutorBase;
 
 class SGdhBetRenderList final : public SCompoundWidget
 {
@@ -22,10 +23,12 @@ private:
 
 	void ListUpdate();
 	void ListUpdateData();
-	void ListUpdateView();
+	void ListUpdateView() const;
 	void OnListRefresh();
 	void OnListRemove();
 	void OnListRemoveAll();
+	void OnRencode();
+	void OnRencodeFinished(UMoviePipelineExecutorBase*, bool);
 	bool CanRemoveListItems();
 	void OnListDblClick(TWeakObjectPtr<UGdhBetRenderListItem> Item);
 
@@ -33,9 +36,10 @@ private:
 	bool CanDragDropTarget(TSharedPtr<FDragDropOperation> InOperation);
 	FText GetSummaryTxt() const;
 	TSharedRef<SWidget> CreateToolbarMain() const;
-	TSharedRef<SHeaderRow> GetHeaderRow();
-	TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhBetRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	static TSharedRef<SHeaderRow> GetHeaderRow();
+	static TSharedRef<ITableRow> OnGenerateRow(TWeakObjectPtr<UGdhBetRenderListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
+	TArray<FString> EncodeCmds;
 	TArray<TWeakObjectPtr<UGdhBetRenderListItem>> ListItems;
 	TSharedPtr<SListView<TWeakObjectPtr<UGdhBetRenderListItem>>> ListView;
 	TSharedPtr<FUICommandList> Cmds;

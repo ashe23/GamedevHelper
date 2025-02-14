@@ -31,7 +31,7 @@ public class GdhEditor : ModuleRules
             "InputCore",
             "ToolMenus",
             "DeveloperSettings",
-            "ContentBrowser"
+            "ContentBrowser",
 		});
 	}
 }
