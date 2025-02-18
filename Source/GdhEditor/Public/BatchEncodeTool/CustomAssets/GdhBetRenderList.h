@@ -35,6 +35,10 @@ public:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
+	// Main output directory for rendered images and encoded videos.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", DisplayName = "OutputDir")
+	FDirectoryPath DirOutput;
+
 	// Which level to use when rendering
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Render")
 	TSoftObjectPtr<UWorld> World;
