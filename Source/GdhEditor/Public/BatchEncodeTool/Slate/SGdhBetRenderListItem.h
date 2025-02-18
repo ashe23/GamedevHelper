@@ -21,6 +21,7 @@ public:
 	FString DurationFrames;
 	FString DurationHuman;
 	FString HasTrackSlomo;
+	FString EncodePresetName;
 	FString EncodeCmdPreview;
 
 	UPROPERTY()

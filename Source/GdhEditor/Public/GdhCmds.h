@@ -34,6 +34,14 @@ public:
 	TSharedPtr<FUICommandInfo> AntRenameActors;
 	TSharedPtr<FUICommandInfo> AntUndoAction;
 
+	// Render List Asset
+	// TSharedPtr<FUICommandInfo> RlRefresh;
+	// TSharedPtr<FUICommandInfo> RlRencode;
+	// TSharedPtr<FUICommandInfo> RlOutputDirOpen;
+	// TSharedPtr<FUICommandInfo> RlOutputDirClear;
+	// TSharedPtr<FUICommandInfo> RlListRemoveSelected;
+	// TSharedPtr<FUICommandInfo> RlListRemoveAll;
+
 	// Batch Encoder Tool
 	TSharedPtr<FUICommandInfo> BetRefresh;
 	TSharedPtr<FUICommandInfo> BetProcess;

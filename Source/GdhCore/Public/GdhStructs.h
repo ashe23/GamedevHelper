@@ -53,3 +53,13 @@ struct GDHCORE_API FGdhActorAffixRow : public FTableRowBase
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Gdh", meta = (EditCondition = "bEnabled"))
 	FString Folder;
 };
+
+// FFmpeg encode command to use for encoding
+USTRUCT(BlueprintType)
+struct GDHCORE_API FGdhEncodePreset
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Gdh")
+	TArray<FString> EncodeCmd;
+};

@@ -60,6 +60,10 @@ TSharedRef<SWidget> SGdhBetRenderListItem::GenerateWidgetForColumn(const FName& 
 		return SNew(STextBlock).Text(FText::FromString(ListItem->HasTrackSlomo)).Justification(ETextJustify::Center);
 	}
 
+	if (InColumnName == TEXT("EncodePreset")) {
+		return SNew(STextBlock).Text(FText::FromString(ListItem->EncodePresetName)).Justification(ETextJustify::Center);
+	}
+
 	if (InColumnName == TEXT("EncodeCmdPreview")) {
 		// clang-format off
 		return

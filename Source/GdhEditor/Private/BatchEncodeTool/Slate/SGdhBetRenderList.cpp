@@ -13,6 +13,7 @@
 #include "DragAndDrop/AssetDragDropOp.h"
 // #include "Kismet/KismetStringLibrary.h"
 #include "GdhLibEncoder.h"
+#include "GdhPluginSettings.h"
 #include "MoviePipelineOutputSetting.h"
 #include "MoviePipelinePIEExecutor.h"
 #include "MoviePipelineQueueSubsystem.h"
@@ -94,6 +95,44 @@ void SGdhBetRenderList::Construct(const FArguments& InArgs) {
 				+ SScrollBox::Slot()
 				[
 					SNew(SVerticalBox)
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Center).VAlign(VAlign_Center)
+						[
+							SNew(STextBlock)
+							.Justification(ETextJustify::Center)
+							.ColorAndOpacity(FGdhStyles::Get().GetColor("GamedevHelper.Color.Gray"))
+							.ShadowOffset(FVector2D{1.5f, 1.5f})
+							.ShadowColorAndOpacity(FLinearColor::Black)
+							.Font(FGdhStyles::GetFont("Bold", 15))
+							.Text(FText::FromString(TEXT("Tokens")))
+						]
+					]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(STextBlock).Text(FText::FromString(TEXT("{input_img} - full path to rendered image sequences")))
+					]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(STextBlock).Text(FText::FromString(TEXT("{output_dir} - full path to output directory")))
+					]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(STextBlock).Text(FText::FromString(TEXT("{input_audio:{track_name}} - full path to audio track name that specified in AudioTrack parameter, change {track_name} with your desired track")))
+					]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(STextBlock).Text(FText::FromString(TEXT("{name_sequence} - name of level sequence currently processing")))
+					]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(STextBlock).Text(FText::FromString(TEXT("{name_renderlist} - name of current render list asset")))
+					]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5.0f)
+					[
+						SNew(SSeparator).Thickness(3.0f)
+					]
 					+ SVerticalBox::Slot().FillHeight(1.0f).Padding(5.0f)
 					[
 						SettingsProperty
@@ -156,79 +195,86 @@ void SGdhBetRenderList::ListUpdate() {
 }
 
 void SGdhBetRenderList::ListUpdateData() {
-	ListItems.Reset(RenderList->Sequences.Num());
 
-	const UGdhBetSettings* BetSettings = GetDefault<UGdhBetSettings>();
-	if (!BetSettings) return;
+	const UGdhPluginSettings* PluginSettings = GetDefault<UGdhPluginSettings>();
+	if (!PluginSettings) return;
 
-	const FString MainOutputDir = FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path);
-	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath);
+	const FString MainOutputDir = FPaths::ConvertRelativePathToFull(RenderList->DirOutput.Path);
+	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(PluginSettings->FFmpegExePath.FilePath);
+
+	ListItems.Reset(RenderList->Sequences.Num() * RenderList->EncodePresets.Num());
+
+	// token => path
+	TMap<FString, FString> AudioTrackTokenMap;
+
+	if (RenderList->AudioTracks.Num() > 0) {
+		for (const auto& AudioTrack : RenderList->AudioTracks) {
+			const FString AudioTrackName = AudioTrack.Key;
+			const FString AudioTrackPath = FPaths::ConvertRelativePathToFull(AudioTrack.Value.FilePath);
+
+			AudioTrackTokenMap.Add(FString::Printf(TEXT("{input_audio:%s}"), *AudioTrackName), *AudioTrackPath);
+		}
+	}
 
 	for (const auto& Seq : RenderList->Sequences) {
 
 		const ULevelSequence* Sequence = Seq.LoadSynchronous();
 		if (!Sequence) continue;
 
-		UGdhBetRenderListItem* NewItem = NewObject<UGdhBetRenderListItem>();
-		if (!NewItem) continue;
+		for (const auto& EncodePreset : RenderList->EncodePresets) {
 
-		const FFrameRate FrameRate = UGdhLibAsset::GetLevelSequenceFrameRate(Sequence);
-		const int32 FrameStart = UGdhLibAsset::GetLevelSequenceStartFrame(Sequence, FrameRate);
-		const int32 FrameEnd = UGdhLibAsset::GetLevelSequenceEndFrame(Sequence, FrameRate);
-		const int32 DurFrames = UGdhLibAsset::GetLevelSequenceDurationInFrames(Sequence, FrameRate);
-		const float DurSec = UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
-		const bool bHasSlomoTrack = UGdhLibAsset::LevelSequenceHasSlomoTrack(Sequence);
+			UGdhBetRenderListItem* NewItem = NewObject<UGdhBetRenderListItem>();
+			if (!NewItem) continue;
 
-		FString EncodeCmd = UKismetStringLibrary::JoinStringArray(RenderList->EncodeCmd, TEXT(" "));
+			const FFrameRate FrameRate = UGdhLibAsset::GetLevelSequenceFrameRate(Sequence);
+			const int32 FrameStart = UGdhLibAsset::GetLevelSequenceStartFrame(Sequence, FrameRate);
+			const int32 FrameEnd = UGdhLibAsset::GetLevelSequenceEndFrame(Sequence, FrameRate);
+			const int32 DurFrames = UGdhLibAsset::GetLevelSequenceDurationInFrames(Sequence, FrameRate);
+			const float DurSec = UGdhLibAsset::GetLevelSequenceDurationInSeconds(Sequence, FrameRate);
+			const bool bHasSlomoTrack = UGdhLibAsset::LevelSequenceHasSlomoTrack(Sequence);
 
-		// {dir_output}/{render_list}/images/{sequence_name}/{sequence_name}.%0{padding}d.{img_format}
-		const FString TokenInputImg = FString::Printf(
-			TEXT("\"%s/%s/%s/%s.%%0%dd.%s\""),
-			*MainOutputDir,
-			*RenderList->GetName(),
-			*Sequence->GetName(),
-			*Sequence->GetName(),
-			UGdhLibEncoder::GetZeroPadding(RenderList->RenderSettings.LoadSynchronous()),
-			*UGdhLibEncoder::GetImageExtension(RenderList->RenderSettings.LoadSynchronous())
-		);
+			const FString EncodePresetName = EncodePreset.Key;
 
-		// TODO:ashe23 finalize token list and show it in user interface for user
-		EncodeCmd = EncodeCmd.Replace(TEXT("{input_img}"), *TokenInputImg);
-		EncodeCmd = EncodeCmd.Replace(TEXT("{output_dir}"), *MainOutputDir);
-		EncodeCmd = EncodeCmd.Replace(TEXT("{name_sequence}"), *Sequence->GetName());
-		EncodeCmd = EncodeCmd.Replace(TEXT("{name_renderlist}"), *RenderList->GetName());
+			FString EncodeCmd = UKismetStringLibrary::JoinStringArray(EncodePreset.Value.EncodeCmd, TEXT(" "));
 
-		// token => path
-		TMap<FString, FString> AudioTrackTokenMap;
+			// {dir_output}/images/{renderlist}/{sequence_name}/{sequence_name}.%0{padding}d.{img_format}
+			const FString TokenInputImg = FString::Printf(
+				TEXT("\"%s/images/%s/%s/%s.%%0%dd.%s\""),
+				*MainOutputDir,
+				*RenderList->GetName(),
+				*Sequence->GetName(),
+				*Sequence->GetName(),
+				UGdhLibEncoder::GetZeroPadding(RenderList->RenderSettings.LoadSynchronous()),
+				*UGdhLibEncoder::GetImageExtension(RenderList->RenderSettings.LoadSynchronous())
+			);
 
-		if (RenderList->AudioTracks.Num() > 0) {
-			for (const auto& AudioTrack : RenderList->AudioTracks) {
-				const FString AudioTrackName = AudioTrack.Key;
-				const FString AudioTrackPath = FPaths::ConvertRelativePathToFull(AudioTrack.Value.FilePath);
+			// TODO:ashe23 finalize token list and show it in user interface for user
+			EncodeCmd = EncodeCmd.Replace(TEXT("{input_img}"), *TokenInputImg);
+			EncodeCmd = EncodeCmd.Replace(TEXT("{output_dir}"), *MainOutputDir);
+			EncodeCmd = EncodeCmd.Replace(TEXT("{name_sequence}"), *Sequence->GetName());
+			EncodeCmd = EncodeCmd.Replace(TEXT("{name_renderlist}"), *RenderList->GetName());
 
-				AudioTrackTokenMap.Add(FString::Printf(TEXT("{input_audio:%s}"), *AudioTrackName), *AudioTrackPath);
+			for (const auto& Token : AudioTrackTokenMap) {
+				if (EncodeCmd.Contains(Token.Key)) {
+					EncodeCmd = EncodeCmd.Replace(*Token.Key, *Token.Value);
+				}
 			}
+
+			const FString FinalCmd = FString::Printf(TEXT("%s %s"), *FFmpegExePath, *EncodeCmd);
+
+			NewItem->Name = Sequence->GetName();
+			NewItem->FrameStart = FString::FromInt(FrameStart);
+			NewItem->FrameEnd = FString::FromInt(FrameEnd);
+			NewItem->FrameRate = FString::Printf(TEXT("%s"), *FrameRate.ToPrettyText().ToString());
+			NewItem->DurationFrames = FString::FromInt(DurFrames);
+			NewItem->DurationHuman = FString::Printf(TEXT("%.2f sec"), DurSec);
+			NewItem->HasTrackSlomo = bHasSlomoTrack ? TEXT("Yes") : TEXT("No");
+			NewItem->EncodePresetName = EncodePresetName;
+			NewItem->EncodeCmdPreview = FinalCmd;
+			NewItem->Sequence = Sequence;
+
+			ListItems.Add(NewItem);
 		}
-
-		for (const auto& Token : AudioTrackTokenMap) {
-			if (EncodeCmd.Contains(Token.Key)) {
-				EncodeCmd = EncodeCmd.Replace(*Token.Key, *Token.Value);
-			}
-		}
-
-		const FString FinalCmd = FString::Printf(TEXT("%s %s"), *FFmpegExePath, *EncodeCmd);
-
-		NewItem->Name = Sequence->GetName();
-		NewItem->FrameStart = FString::FromInt(FrameStart);
-		NewItem->FrameEnd = FString::FromInt(FrameEnd);
-		NewItem->FrameRate = FString::Printf(TEXT("%s"), *FrameRate.ToPrettyText().ToString());
-		NewItem->DurationFrames = FString::FromInt(DurFrames);
-		NewItem->DurationHuman = FString::Printf(TEXT("%.2f sec"), DurSec);
-		NewItem->HasTrackSlomo = bHasSlomoTrack ? TEXT("Yes") : TEXT("No");
-		NewItem->EncodeCmdPreview = FinalCmd;
-		NewItem->Sequence = Sequence;
-
-		ListItems.Add(NewItem);
 	}
 }
 
@@ -264,15 +310,66 @@ void SGdhBetRenderList::OnListRemoveAll() {
 }
 
 void SGdhBetRenderList::OnRencode() {
+	ListUpdate();
 
-	const UGdhBetSettings* BetSettings = GetDefault<UGdhBetSettings>();
-	if (!BetSettings) return;
+	const UGdhPluginSettings* PluginSettings = GetDefault<UGdhPluginSettings>();
+	if (!PluginSettings) return;
 
-	UMoviePipelineMasterConfig* RenderSettings = RenderList->RenderSettings.LoadSynchronous();
-	if (!RenderSettings) return;
+	if (PluginSettings->FFmpegExePath.FilePath.IsEmpty()) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("FFmpeg Exe Path not specified")));
+		return;
+	}
 
-	const FString MainOutputDir = FPaths::ConvertRelativePathToFull(BetSettings->DirOutput.Path);
-	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(BetSettings->FFmpegExePath.FilePath);
+	if (RenderList->DirOutput.Path.IsEmpty()) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Output directory not specified")));
+		return;
+	}
+
+	if (!FPaths::FileExists(PluginSettings->FFmpegExePath.FilePath)) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Invalid FFmpeg Exe Path")));
+		return;
+	}
+
+	if (!FPaths::DirectoryExists(RenderList->DirOutput.Path)) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Invalid Output Directory")));
+		return;
+	}
+
+	if (!RenderList->World.LoadSynchronous()) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Failed to load World asset")));
+		return;
+	}
+
+	if (!RenderList->RenderSettings.LoadSynchronous()) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Failed to load RenderSettings")));
+		return;
+	}
+
+	const FString MainOutputDir = FPaths::ConvertRelativePathToFull(RenderList->DirOutput.Path);
+	const FString FFmpegExePath = FPaths::ConvertRelativePathToFull(PluginSettings->FFmpegExePath.FilePath);
+
+	for (const auto& AudioTrack : RenderList->AudioTracks) {
+		const FString AudioTrackName = AudioTrack.Key;
+		const FString AudioTrackPath = FPaths::ConvertRelativePathToFull(AudioTrack.Value.FilePath);
+
+		if (AudioTrackName.IsEmpty()) {
+			FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Audio Track name cant be empty")));
+			return;
+		}
+
+		if (!FPaths::FileExists(AudioTrackPath)) {
+			const FString Msg = FString::Printf(TEXT("Invalid audio file specified for %s track"), *AudioTrackName);
+			FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(Msg));
+			return;
+		}
+	}
+
+	if (RenderList->Sequences.Num() == 0) {
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Specify Level Sequence assets in order to proceed")));
+		return;
+	}
+
+	UMoviePipelineMasterConfig* RenderSettings = RenderList->RenderSettings.Get();
 
 	UMoviePipelineQueue* Queue = GEditor->GetEditorSubsystem<UMoviePipelineQueueSubsystem>()->GetQueue();
 	if (!Queue) return;
@@ -291,8 +388,8 @@ void SGdhBetRenderList::OnRencode() {
 		Job->Map = RenderList->World.LoadSynchronous();
 		Job->SetSequence(Item->Sequence);
 
-		// {dir_output}/{list}/{sequence}
-		const FString DirOutput = FString::Printf(TEXT("%s/%s/%s"), *MainOutputDir, *RenderList->GetName(), *Item->Sequence->GetName());
+		// TODO:ashe23 move this into separate function?
+		const FString DirOutput = FString::Printf(TEXT("\"%s/images/%s/%s/\""), *MainOutputDir, *RenderList->GetName(), *Item->Sequence->GetName());
 		OutputSetting->OutputDirectory.Path = DirOutput;
 
 		Job->SetConfiguration(RenderSettings);
@@ -400,14 +497,18 @@ bool SGdhBetRenderList::CanDragDropTarget(TSharedPtr<FDragDropOperation> InOpera
 }
 
 FText SGdhBetRenderList::GetSummaryTxt() const {
-	const int32 Selected = ListView->GetSelectedItems().Num();
-	const int32 Total = RenderList->Sequences.Num();
+	const int32 NumSequences = RenderList->Sequences.Num();
+	const int32 NumEncodePresets = RenderList->EncodePresets.Num();
+	const int32 NumJobsTotal = ListItems.Num();
+	const int32 NumJobsSelected = ListView->GetSelectedItems().Num();
 
-	if (Selected > 0) {
-		return FText::FromString(FString::Printf(TEXT("Sequences: %d - (Selected %d)"), Total, Selected));
+	if (NumJobsSelected > 0) {
+		return FText::FromString(
+			FString::Printf(TEXT("Sequences: %d Jobs: %d Presets: %d Selected: %d"), NumSequences, NumJobsTotal, NumEncodePresets, NumJobsSelected)
+		);
 	}
 
-	return FText::FromString(FString::Printf(TEXT("Sequences: %d"), Total));
+	return FText::FromString(FString::Printf(TEXT("Sequences: %d Jobs: %d Presets: %d"), NumSequences, NumJobsTotal, NumEncodePresets));
 }
 
 TSharedRef<SWidget> SGdhBetRenderList::CreateToolbarMain() const {
@@ -491,6 +592,17 @@ TSharedRef<SHeaderRow> SGdhBetRenderList::GetHeaderRow() {
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(TEXT("Duration In Sec")))
+			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
+			.Font(FGdhStyles::GetFont("Light", 10.0f))
+		]
+		+SHeaderRow::Column(TEXT("EncodePreset"))
+		.HAlignHeader(HAlign_Center)
+		.VAlignHeader(VAlign_Center)
+		.FixedWidth(100.0f)
+		.HeaderContentPadding(FMargin{5.0f})
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("Encode Preset")))
 			.ColorAndOpacity(FGdhStyles::Get().GetSlateColor("GamedevHelper.Color.Title"))
 			.Font(FGdhStyles::GetFont("Light", 10.0f))
 		]

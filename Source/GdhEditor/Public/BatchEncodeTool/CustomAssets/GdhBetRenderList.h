@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "LevelSequence.h"
+#include "GdhStructs.h"
 #include "GdhBetRenderList.generated.h"
 
 class UMoviePipelineMasterConfig;
@@ -35,8 +36,8 @@ public:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	// Main output directory for rendered images and encoded videos.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", DisplayName = "OutputDir")
+	// Output directory for rendered images and encoded videos.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Render", DisplayName = "OutputDir")
 	FDirectoryPath DirOutput;
 
 	// Which level to use when rendering
@@ -51,9 +52,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Render")
 	TSet<TSoftObjectPtr<ULevelSequence>> Sequences;
 
-	// FFmpeg encode command to use for encoding
+	// Encode presets that should be used when encoding videos
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Encode")
-	TArray<FString> EncodeCmd;
+	TMap<FString, FGdhEncodePreset> EncodePresets;
 
 	// Optional audio track name to path mapping, if we want to embed audio in final video
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Encode")
